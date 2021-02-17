@@ -1,6 +1,6 @@
 {
   "name": "pmtiles",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "PMTiles archive decoder for browsers",
   "main": "pmtiles.js",
   "scripts": {

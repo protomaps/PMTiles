@@ -8,11 +8,11 @@
   }
 }(typeof self !== 'undefined' ? self : this, function () {
     const getUint24 = (dataview, pos) => {
-      return (dataview.getUint16(pos+1,true) << 8) + dataview.getUint8(pos,true);
+      return (dataview.getUint16(pos+1,true) << 8) + dataview.getUint8(pos,true)
     }
 
     const getUint48 = (dataview, pos) => {
-        return (dataview.getUint32(pos+2,true) << 16) + dataview.getUint16(pos,true);
+        return (dataview.getUint32(pos+2,true) << 16) + dataview.getUint16(pos,true)
     }
 
     const parseHeader = dataview => {
@@ -92,11 +92,37 @@
             })
         }
 
+        transformRequest = (u,t,tile,done) => {
+            if (t == 'Tile' && done) {
+                var tid = tile.tileID.canonical
+                var strid = tid.z + '_' + tid.x + '_' + tid.y
+                this.apex.then(map => {
+                    if (map.has(strid) && map.get(strid)[2] == 0) {
+                        var val = map.get(strid)
+                        done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
+                    } else {
+                        if (tid.z >= 7) {
+                            var z7_tile_diff = (tid.z - 7)
+                            var z7_tile = [7,Math.trunc(tid.x / (1 << z7_tile_diff)), Math.trunc(tid.y / (1 << z7_tile_diff))]
+                            var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
+                            this.getLeaf(z7_tile_str).then(map => {
+                                if (map.has(strid)) {
+                                    var val = map.get(strid)
+                                    done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
+                                }
+                            })
+                        }
+                    }
+                })
+            }
+            return {url: u}
+        }
+
         leafletLayer = options => {
             const self = this
             var cls = L.GridLayer.extend({
                 createTile: function(coords, done){
-                    var tile = document.createElement('img');
+                    var tile = document.createElement('img')
                     var error
 
                     self.apex.then(map => {
@@ -106,16 +132,14 @@
                             fetch(self.url,{headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}}).then(resp => {
                                 return resp.arrayBuffer()
                             }).then(buf => {
-                                var blob = new Blob( [buf], { type: "image/png" } );
-                                var imageUrl = window.URL.createObjectURL(blob);
-                                tile.src = imageUrl;
+                                var blob = new Blob( [buf], { type: "image/png" } )
+                                var imageUrl = window.URL.createObjectURL(blob)
+                                tile.src = imageUrl
                                 done(error,tile)
                             })
                         }
                     })
-
-                    return tile;
-
+                    return tile
                 },
 
                 _removeTile: function (key) {
@@ -135,6 +159,5 @@
             return new cls()
         }
     }
-
     return {PMTiles:PMTiles}
-}));
+}))

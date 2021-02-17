@@ -1,0 +1,30 @@
+<html>
+    <head>
+    </head>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+        <script src="../js/pmtiles.js"></script>
+        <style>
+            body, #map {
+                height:100vh;
+                margin:0px;
+            }
+        </style>
+    </head>
+    <body>
+       <div id="map"></div> 
+       <script>
+        const map = L.map('map')
+        const ready = metadata => {
+            map.options.maxZoom = +metadata.maxzoom
+            const b = metadata.bounds.split(',')
+            map.fitBounds([[+b[1],+b[0]],[+b[3],+b[2]]],{maxZoom:+metadata.maxzoom})
+        }
+        const p = new pmtiles.PMTiles('http://localhost:8500/example.pmtiles',ready);
+        p.leafletLayer().addTo(map)
+       </script>
+    </body>
+</html>

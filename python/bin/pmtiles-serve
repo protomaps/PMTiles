@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import sys
+import re
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pmtiles.reader import read
+
+if len(sys.argv) <= 1:
+    print("Usage: pmtiles-serve PMTILES_FILE")
+    exit(1)
+
+with read(sys.argv[1]) as reader:
+    fmt = reader.metadata['format']
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            match = re.match("/(\d+)/(\d+)/(\d+)." + fmt, self.path)
+            if not match:
+                self.send_response(400)
+                self.wfile.write("bad request".encode('utf-8'))
+                return
+            z = int(match.group(1))
+            x = int(match.group(2))
+            y = int(match.group(3))
+            data = reader.get(z,x,y)
+            if not data:
+                self.send_response(404)
+                self.wfile.write("tile not found".encode('utf-8'))
+                return
+            self.send_response(200)
+            self.send_header('Content-Type','image/png')
+            self.end_headers()
+            self.wfile.write(data)
+
+    print('serving localhost:8000/{z}/{x}/{y}.' + fmt)
+    httpd = HTTPServer(('', 8000), Handler)
+    httpd.serve_forever()

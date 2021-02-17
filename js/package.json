@@ -1,0 +1,12 @@
+{
+  "name": "pmtiles",
+  "version": "0.0.2",
+  "description": "PMTiles archive decoder for browsers",
+  "main": "pmtiles.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "homepage": "https://github.com/protomaps/pmtiles",
+  "author": "Brandon Liu",
+  "license": "BSD-3-Clause"
+}

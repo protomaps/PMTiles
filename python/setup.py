@@ -19,6 +19,6 @@ setuptools.setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
     ],
-    scripts=['bin/mbtiles2pmtiles','bin/pmtiles-show'],
+    scripts=['bin/mbtiles2pmtiles','bin/pmtiles-serve','bin/pmtiles-show'],
     requires_python='>=3.0'
 )

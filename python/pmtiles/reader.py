@@ -4,11 +4,11 @@ from contextlib import contextmanager
 
 @contextmanager
 def read(fname):
-    f = Reader(fname)
+    r = Reader(fname)
     try:
-        yield f
+        yield r
     finally:
-        f.close()
+        r.close()
 
 class Reader:
     def __init__(self,fname):

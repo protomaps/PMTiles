@@ -57,7 +57,7 @@
                     })
                 }
             })
-            // TODO make this LRU
+            this.step = 0
             this.leaves = new Map()
             this.outstanding_requests = new Map()
         }
@@ -65,7 +65,8 @@
         getLeaf = (offset, len) => {
             return new Promise((resolve,reject) => {
                 if (this.leaves.has(offset)) {
-                    resolve(this.leaves.get(offset))
+                    this.leaves.get(offset)[0]++
+                    resolve(this.leaves.get(offset)[1])
                 } else if (this.outstanding_requests.has(offset)) {
                     this.outstanding_requests.get(offset).push(resolve)
                 } else {
@@ -74,12 +75,22 @@
                         return resp.arrayBuffer()
                     }).then(buf => {
                         var map = bytesToMap(new DataView(buf),len/17)
-                        this.leaves.set(offset,map)
+                        if (this.leaves.size > 32) {
+                            var minStep = Infinity
+                            var minKey = undefined
+                            this.leaves.forEach((val,key) => {
+                                if (val[0] < minStep) {
+                                    minStep = val[0]
+                                    minKey = key
+                                }
+                            })
+                            this.leaves.delete(minKey)
+                        }
+
+                        this.leaves.set(offset,[this.step++,map])
                         resolve(map)
-                        this.outstanding_requests.get(offset).forEach(f => {
-                            f(map)
-                        })
-                        console.log("leaves: ", this.leaves.size)
+                        this.outstanding_requests.get(offset).forEach(f => f(map))
+                        this.outstanding_requests.delete(offset)
                     })
                 }
             })

@@ -8,8 +8,14 @@ if len(sys.argv) <= 1:
     exit(1)
 
 with read(sys.argv[1]) as reader:
-    print('spec version: ',reader.version)
-    print('metadata:')
-    for k, v in reader.metadata.items():
-        print(k,'=',v)
-    print('root entries:', reader.root_entries)
+    if len(sys.argv) == 2:
+        print('spec version: ',reader.version)
+        print('metadata:')
+        for k, v in reader.metadata.items():
+            print(k,'=',v)
+        print('root entries:', reader.root_entries)
+    else:
+        z = int(sys.argv[2])
+        x = int(sys.argv[3])
+        y = int(sys.argv[4])
+        print(reader.get(z,x,y))

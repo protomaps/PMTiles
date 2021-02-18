@@ -42,7 +42,7 @@
     class PMTiles {
         constructor(url,ready) {
             this.url = url
-            this.apex = fetch(this.url,{method:'HEAD',headers:{'Range':'bytes=0-511999'}}).then(resp => {
+            this.rootdir = fetch(this.url,{method:'HEAD',headers:{'Range':'bytes=0-511999'}}).then(resp => {
                 if (resp.status == 206) { // this does not work on Azure, it returns 200 instead of 206
                     console.log("Check succeeded: server supports byte ranges")
                     return fetch(this.url,{headers:{'Range':'bytes=0-511999'}}).then(resp => {
@@ -70,19 +70,20 @@
                     this.outstanding_requests.get(tilestr).push(resolve)
                 } else {
                     this.outstanding_requests.set(tilestr,[])
-                    this.apex.then(apex_map => {
-                        if (apex_map.has(tilestr)) {
-                            var val = apex_map.get(tilestr)
+                    this.rootdir.then(rootdir => {
+                        if (rootdir.has(tilestr)) {
+                            var val = rootdir.get(tilestr)
                             if (val[2] == 1) { // it is a directory
                                 fetch(this.url, {headers:{'range':'bytes=' + val[0] + '-' + (val[0] + val[1]-1)}}).then(resp => {
-                                    return resp.arraybuffer()
+                                    return resp.arrayBuffer()
                                 }).then(buf => {
-                                    var map = bytestomap(buf,val[1]/17)
+                                    var map = bytesToMap(new DataView(buf),val[1]/17)
                                     this.leaves.set(tilestr,map)
                                     resolve(map)
-                                    this.outstanding_requests.get(tilestr).foreach(f => {
+                                    this.outstanding_requests.get(tilestr).forEach(f => {
                                         f(map)
                                     })
+                                    // TODO fix duplication of multiple leaves in same directory
                                     console.log("leaves: ", this.leaves.size)
                                 })
                             }
@@ -92,52 +93,71 @@
             })
         }
 
-        transformRequest = (u,t,tile,done) => {
-            if (t == 'Tile' && done) {
-                var tid = tile.tileID.canonical
-                var strid = tid.z + '_' + tid.x + '_' + tid.y
-                this.apex.then(map => {
-                    if (map.has(strid) && map.get(strid)[2] == 0) {
-                        var val = map.get(strid)
-                        done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
-                    } else {
-                        if (tid.z >= 7) {
-                            var z7_tile_diff = (tid.z - 7)
-                            var z7_tile = [7,Math.trunc(tid.x / (1 << z7_tile_diff)), Math.trunc(tid.y / (1 << z7_tile_diff))]
-                            var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
-                            this.getLeaf(z7_tile_str).then(map => {
-                                if (map.has(strid)) {
-                                    var val = map.get(strid)
-                                    done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
-                                }
-                            })
-                        }
-                    }
-                })
-            }
-            return {url: u}
+        getZxy = (z,x,y) => {
+            var strid = z + '_' + x + '_' + y
+            return this.rootdir.then(rootdir => {
+                if (rootdir.has(strid) && rootdir.get(strid)[2] == 0) {
+                    return rootdir.get(strid)
+                } else {
+                   if (z >= 7) {
+                        var z7_tile_diff = (z - 7)
+                        var z7_tile = [7,Math.trunc(x / (1 << z7_tile_diff)), Math.trunc(y / (1 << z7_tile_diff))]
+                        var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
+                        return this.getLeaf(z7_tile_str).then(leafdir => {
+                            if (leafdir.has(strid)) {
+                                return leafdir.get(strid)
+                            }
+                            return null
+                        })
+                   } 
+                }
+                return null
+            }) 
         }
+
+        // transformRequest = (u,t,tile,done) => {
+        //     if (t == 'Tile' && done) {
+        //         var tid = tile.tileID.canonical
+        //         var strid = tid.z + '_' + tid.x + '_' + tid.y
+        //         this.rootdir.then(rootdir => {
+        //             if (rootdir.has(strid) && rootdir.get(strid)[2] == 0) {
+        //                 var val = rootdir.get(strid)
+        //                 done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
+        //             } else {
+        //                 if (tid.z >= 7) {
+        //                     var z7_tile_diff = (tid.z - 7)
+        //                     var z7_tile = [7,Math.trunc(tid.x / (1 << z7_tile_diff)), Math.trunc(tid.y / (1 << z7_tile_diff))]
+        //                     var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
+        //                     this.getLeaf(z7_tile_str).then(leafdir => {
+        //                         if (leafdir.has(strid)) {
+        //                             var val = leafdir.get(strid)
+        //                             done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
+        //                         }
+        //                     })
+        //                 }
+        //             }
+        //         })
+        //     }
+        //     return {url: u}
+        // }
 
         leafletLayer = options => {
             const self = this
             var cls = L.GridLayer.extend({
-                createTile: function(coords, done){
+                createTile: function(coord, done){
                     var tile = document.createElement('img')
                     var error
 
-                    self.apex.then(map => {
-                        var strid = coords.z + '_' + coords.x + '_' + coords.y
-                        if (map.has(strid)) {
-                            var val = map.get(strid)
-                            fetch(self.url,{headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}}).then(resp => {
-                                return resp.arrayBuffer()
-                            }).then(buf => {
-                                var blob = new Blob( [buf], { type: "image/png" } )
-                                var imageUrl = window.URL.createObjectURL(blob)
-                                tile.src = imageUrl
-                                done(error,tile)
-                            })
-                        }
+                    self.getZxy(coord.z,coord.x,coord.y).then(result => {
+                        if (result === null) return
+                        fetch(self.url,{headers:{'Range':'bytes=' + result[0] + '-' + (result[0]+result[1]-1)}}).then(resp => {
+                            return resp.arrayBuffer()
+                        }).then(buf => {
+                            var blob = new Blob( [buf], { type: "image/png" } )
+                            var imageUrl = window.URL.createObjectURL(blob)
+                            tile.src = imageUrl
+                            done(error,tile)
+                        })
                     })
                     return tile
                 },

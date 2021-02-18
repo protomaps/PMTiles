@@ -97,8 +97,8 @@ class Writer:
             if len(leafdir_tiles):
                 self.write_leafdir(leafdir_tiles)
 
-            root = [group for group in itertools.groupby(self.tiles,key=by_parent) if group[0][0] == 0][0]
-            root_tiles = list(root[1])
+            root = [(group[0],list(group[1])) for group in itertools.groupby(self.tiles,key=by_parent) if group[0][0] == 0][0]
+            root_tiles = root[1]
             self.f.seek(0)
             self.write_header(metadata,len(root_tiles) + len(self.leaves))
             for entry in root_tiles:

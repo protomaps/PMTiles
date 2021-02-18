@@ -47,6 +47,7 @@ class Reader:
     def root_entries(self):
         return int.from_bytes(self.mmap[8:10],byteorder='little')
 
+    # TODO support recursive directories
     def get(self,z,x,y):
         val = self.root_dir.get((z,x,y))
         if val:

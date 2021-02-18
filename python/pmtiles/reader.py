@@ -15,17 +15,23 @@ class Reader:
         self.f = open(fname, "r+b")
         self.mmap = mmap.mmap(self.f.fileno(), 0)
         assert int.from_bytes(self.mmap[0:2],byteorder='little') == 0x4D50
-
-        self.root_dir = {}
         first_entry_idx = 10+self.metadata_len
-        last_entry_idx = first_entry_idx + self.root_entries * 17
-        for i in range(first_entry_idx,last_entry_idx,17):
+        self.root_dir, self.leaves = self.load_directory(first_entry_idx,self.root_entries)
+
+    def load_directory(self,offset,num_entries):
+        directory = {}
+        leaves = {}
+        for i in range(offset,offset+num_entries*17,17):
             z = int.from_bytes(self.mmap[i:i+1],byteorder='little')
             x = int.from_bytes(self.mmap[i+1:i+4],byteorder='little')
             y = int.from_bytes(self.mmap[i+4:i+7],byteorder='little')
             tile_off = int.from_bytes(self.mmap[i+7:i+13],byteorder='little')
             tile_len = int.from_bytes(self.mmap[i+13:i+17],byteorder='little')
-            self.root_dir[(z,x,y)] = (tile_off,tile_len)
+            if (z & 0b10000000):
+                leaves[(z & 0b01111111,x,y)] = (tile_off,tile_len)
+            else:
+                directory[(z,x,y)] = (tile_off,tile_len)
+        return (directory,leaves)
 
     def close(self):
         self.f.close()
@@ -47,8 +53,17 @@ class Reader:
     def root_entries(self):
         return int.from_bytes(self.mmap[8:10],byteorder='little')
 
-    # TODO support recursive directories
     def get(self,z,x,y):
         val = self.root_dir.get((z,x,y))
         if val:
             return self.mmap[val[0]:val[0]+val[1]]
+        else:
+            z7_tile_diff = z - 7
+            z7_tile = (7,x // (1 << z7_tile_diff),y // (1 << z7_tile_diff))
+            val = self.leaves.get(z7_tile)
+            if val:
+                directory, _ = self.load_directory(val[0],val[1]//17)
+                val = directory.get((z,x,y))
+                if val:
+                    return self.mmap[val[0]:val[0]+val[1]]
+

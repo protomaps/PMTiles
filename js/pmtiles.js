@@ -40,12 +40,13 @@
     }
 
     class PMTiles {
-        constructor(url,ready) {
+        constructor(url,headers={},ready) {
+            headers.Range = 'bytes=0-511999'
             this.url = url
-            this.rootdir = fetch(this.url,{method:'HEAD',headers:{'Range':'bytes=0-511999'}}).then(resp => {
+            this.rootdir = fetch(this.url,{method:'HEAD',headers:headers}).then(resp => {
                 if (resp.status == 206) { // this does not work on Azure, it returns 200 instead of 206
                     console.log("Check succeeded: server supports byte ranges")
-                    return fetch(this.url,{headers:{'Range':'bytes=0-511999'}}).then(resp => {
+                    return fetch(this.url,{headers:headers}).then(resp => {
                         return resp.arrayBuffer()
                     }).then(buf => {
                         const header = parseHeader(new DataView(buf,0,10))
@@ -55,6 +56,8 @@
                         }
                         return bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
                     })
+                } else {
+                    throw new Error("Invalid response: " + resp.status)
                 }
             })
             this.step = 0

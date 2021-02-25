@@ -40,13 +40,12 @@
     }
 
     class PMTiles {
-        constructor(url,headers={},ready) {
-            headers.Range = 'bytes=0-511999'
+        constructor(url,ready) {
             this.url = url
-            this.rootdir = fetch(this.url,{method:'HEAD',headers:headers}).then(resp => {
+            this.rootdir = fetch(this.url,{method:'HEAD',headers:{Range:'bytes=0-511999'}}).then(resp => {
                 if (resp.status == 206) { // this does not work on Azure, it returns 200 instead of 206
                     console.log("Check succeeded: server supports byte ranges")
-                    return fetch(this.url,{headers:headers}).then(resp => {
+                    return fetch(this.url,{headers:{Range:'bytes=0-511999'}}).then(resp => {
                         return resp.arrayBuffer()
                     }).then(buf => {
                         const header = parseHeader(new DataView(buf,0,10))
@@ -74,7 +73,7 @@
                     this.outstanding_requests.get(offset).push(resolve)
                 } else {
                     this.outstanding_requests.set(offset,[])
-                    fetch(this.url, {headers:{'range':'bytes=' + offset + '-' + (offset + len-1)}}).then(resp => {
+                    fetch(this.url, {headers:{Range:'bytes=' + offset + '-' + (offset + len-1)}}).then(resp => {
                         return resp.arrayBuffer()
                     }).then(buf => {
                         var map = bytesToMap(new DataView(buf),len/17)
@@ -146,7 +145,7 @@
 
                     self.getZxy(coord.z,coord.x,coord.y).then(result => {
                         if (result === null) return
-                        fetch(self.url,{headers:{'Range':'bytes=' + result[0] + '-' + (result[0]+result[1]-1)}}).then(resp => {
+                        fetch(self.url,{headers:{Range:'bytes=' + result[0] + '-' + (result[0]+result[1]-1)}}).then(resp => {
                             return resp.arrayBuffer()
                         }).then(buf => {
                             var blob = new Blob( [buf], { type: "image/png" } )

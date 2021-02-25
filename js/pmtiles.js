@@ -121,31 +121,18 @@
             }) 
         }
 
-        // transformRequest = (u,t,tile,done) => {
-        //     if (t == 'Tile' && done) {
-        //         var tid = tile.tileID.canonical
-        //         var strid = tid.z + '_' + tid.x + '_' + tid.y
-        //         this.rootdir.then(rootdir => {
-        //             if (rootdir.has(strid) && rootdir.get(strid)[2] == 0) {
-        //                 var val = rootdir.get(strid)
-        //                 done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
-        //             } else {
-        //                 if (tid.z >= 7) {
-        //                     var z7_tile_diff = (tid.z - 7)
-        //                     var z7_tile = [7,Math.trunc(tid.x / (1 << z7_tile_diff)), Math.trunc(tid.y / (1 << z7_tile_diff))]
-        //                     var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
-        //                     this.getLeaf(z7_tile_str).then(leafdir => {
-        //                         if (leafdir.has(strid)) {
-        //                             var val = leafdir.get(strid)
-        //                             done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
-        //                         }
-        //                     })
-        //                 }
-        //             }
-        //         })
-        //     }
-        //     return {url: u}
-        // }
+        transformRequest = (u,t,tile,done) => {
+            if (u.endsWith('.pmtiles') && done) {
+                var tid = tile.tileID.canonical
+                var strid = tid.z + '_' + tid.x + '_' + tid.y
+                this.getZxy(tid.z,tid.x,tid.y).then(val => {
+                    if (val) {
+                        done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
+                    }
+                })
+            }
+            return {url: u}
+        }
 
         leafletLayer = options => {
             const self = this

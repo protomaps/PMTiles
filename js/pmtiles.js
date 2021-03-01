@@ -40,9 +40,9 @@
     }
 
     class PMTiles {
-        constructor(url,ready) {
+        constructor(url) {
             this.url = url
-            this.rootdir = fetch(this.url,{method:'HEAD',headers:{Range:'bytes=0-511999'}}).then(resp => {
+            this.root = fetch(this.url,{method:'HEAD',headers:{Range:'bytes=0-511999'}}).then(resp => {
                 if (resp.status == 206) { // this does not work on Azure, it returns 200 instead of 206
                     console.log("Check succeeded: server supports byte ranges")
                     return fetch(this.url,{headers:{Range:'bytes=0-511999'}}).then(resp => {
@@ -50,10 +50,10 @@
                     }).then(buf => {
                         const header = parseHeader(new DataView(buf,0,10))
                         var dec = new TextDecoder("utf-8")
-                        if (ready) {
-                            ready(JSON.parse(dec.decode(new DataView(buf,10,header.json_size))))
+                        return {
+                            metadata: JSON.parse(dec.decode(new DataView(buf,10,header.json_size))),
+                            dir:bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
                         }
-                        return bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
                     })
                 } else {
                     throw new Error("Invalid response: " + resp.status)
@@ -62,6 +62,12 @@
             this.step = 0
             this.leaves = new Map()
             this.outstanding_requests = new Map()
+        }
+
+        metadata = func => {
+            this.root.then(root => {
+                func(root.metadata)
+            })
         }
 
         getLeaf = (offset, len) => {
@@ -100,16 +106,16 @@
 
         getZxy = (z,x,y) => {
             var strid = z + '_' + x + '_' + y
-            return this.rootdir.then(rootdir => {
-                if (rootdir.has(strid) && rootdir.get(strid)[2] == 0) {
-                    return rootdir.get(strid)
+            return this.root.then(root => {
+                if (root.dir.has(strid) && root.dir.get(strid)[2] == 0) {
+                    return root.dir.get(strid)
                 } else {
                    if (z >= 7) {
                         var z7_tile_diff = (z - 7)
                         var z7_tile = [7,Math.trunc(x / (1 << z7_tile_diff)), Math.trunc(y / (1 << z7_tile_diff))]
                         var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
-                        if (rootdir.has(z7_tile_str)) {
-                            const val = rootdir.get(z7_tile_str)
+                        if (root.dir.has(z7_tile_str)) {
+                            const val = root.dir.get(z7_tile_str)
                             return this.getLeaf(val[0],val[1]).then(leafdir => {
                                 if (leafdir.has(strid)) {
                                     return leafdir.get(strid)

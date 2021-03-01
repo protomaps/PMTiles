@@ -42,14 +42,11 @@ class Writer:
         self.f.write(entry[3].to_bytes(6,byteorder='little'))
         self.f.write(entry[4].to_bytes(4,byteorder='little'))
 
-    def write_leafdir(self,tiles):
-        total_len = 0
+    def write_leafdir(self,tiles,total_len):
         for t in tiles:
-            total_len += len(t[1])
             self.leaves.append((t[0][0],t[0][1],t[0][2],self.offset,17*total_len))
             for entry in t[1]:
                 self.write_entry(entry)
-        return 17 * total_len
 
     def write_header(self,metadata,root_entries_len):
         self.f.write((0x4D50).to_bytes(2,byteorder='little'))
@@ -89,13 +86,14 @@ class Writer:
                     leafdir_tiles.append((group[0],entries))
                     leafdir_len = leafdir_len + len(entries)
                 else:
-                    self.offset = self.offset + self.write_leafdir(leafdir_tiles)
+                    self.write_leafdir(leafdir_tiles,leafdir_len)
+                    self.offset += 17 * leafdir_len
                     leafdir_tiles = [(group[0],entries)]
                     leafdir_len = len(entries)
 
             # finalize
             if len(leafdir_tiles):
-                self.write_leafdir(leafdir_tiles)
+                self.write_leafdir(leafdir_tiles,leafdir_len)
 
             root = [(group[0],list(group[1])) for group in itertools.groupby(self.tiles,key=by_parent) if group[0][0] == 0][0]
             root_tiles = root[1]

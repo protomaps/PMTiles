@@ -142,6 +142,7 @@
             return {url: u}
         }
 
+        // take URL here
         leafletLayer = options => {
             const self = this
             var cls = L.GridLayer.extend({

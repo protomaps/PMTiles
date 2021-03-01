@@ -114,7 +114,7 @@
                         var z7_tile_diff = (z - 7)
                         var z7_tile = [7,Math.trunc(x / (1 << z7_tile_diff)), Math.trunc(y / (1 << z7_tile_diff))]
                         var z7_tile_str = z7_tile[0] + "_" + z7_tile[1] + "_" + z7_tile[2]
-                        if (root.dir.has(z7_tile_str)) {
+                        if (root.dir.has(z7_tile_str) && root.dir.get(z7_tile_str)[2] == 1) {
                             const val = root.dir.get(z7_tile_str)
                             return this.getLeaf(val[0],val[1]).then(leafdir => {
                                 if (leafdir.has(strid)) {

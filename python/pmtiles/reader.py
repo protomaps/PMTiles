@@ -67,3 +67,11 @@ class Reader:
                 if val:
                     return self.mmap[val[0]:val[0]+val[1]]
 
+    def tiles(self):
+        for k,v in self.root_dir.items():
+            yield (k,self.mmap[v[0]:v[0]+v[1]])
+        for val in self.leaves.values():
+            leaf_dir, _ = self.load_directory(val[0],val[1]//17)
+            for k,v in leaf_dir.items():
+                yield (k,self.mmap[v[0]:v[0]+v[1]])
+

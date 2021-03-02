@@ -4,15 +4,24 @@
 #pmtiles to mbtiles
 #mbtiles to pmtiles
 
+import os
 import argparse
 import sqlite3
+from pmtiles.reader import read
 from pmtiles.writer import write
 
 parser = argparse.ArgumentParser(description='Convert between PMTiles and other archive formats.')
 parser.add_argument('input',help='Input .mbtiles or .pmtiles')
 parser.add_argument('output',help='Output .mbtiles, .pmtiles, or directory')
 parser.add_argument('--maxzoom', help='the maximum zoom level to include in the output.')
+parser.add_argument('--overwrite', help='Overwrite the existing output.',action='store_true')
 args = parser.parse_args()
+
+if os.path.exists(args.output) and not args.overwrite:
+    print("Output exists, use --overwrite to overwrite the output.")
+    exit(1)
+if os.path.exists(args.output) and args.overwrite:
+    os.remove(args.output)
 
 if args.input.endswith('.mbtiles') and args.output.endswith('.pmtiles'):
     conn = sqlite3.connect(args.input)
@@ -34,7 +43,20 @@ if args.input.endswith('.mbtiles') and args.output.endswith('.pmtiles'):
 
     conn.close()
 elif args.input.endswith('.pmtiles') and args.output.endswith('.mbtiles'):
-    print("PMTiles to MBTiles not yet implemented")
+    conn = sqlite3.connect(args.output)
+    cursor = conn.cursor()
+    cursor.execute('CREATE TABLE metadata (name text, value text);')
+    cursor.execute('CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);')
+
+    with read(args.input) as reader:
+        for k,v in reader.metadata.items():
+            cursor.execute('INSERT INTO metadata VALUES(?,?)',(k,v))
+        for tile, data in reader.tiles():
+            cursor.execute('INSERT INTO tiles VALUES(?,?,?,?)',(tile[0],tile[1],tile[2],data))
+
+    cursor.execute('CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);')
+    conn.commit()
+    conn.close()
 elif args.input.endswith(".pmtiles"):
     print("PMTiles to directory not yet implemented")
 else:

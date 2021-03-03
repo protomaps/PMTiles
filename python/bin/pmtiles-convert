@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 #pmtiles to files
-#pmtiles to mbtiles
-#mbtiles to pmtiles
-
-import os
 import argparse
+import json
+import os
 import sqlite3
+import shutil
 from pmtiles.reader import read
 from pmtiles.writer import write
 
@@ -20,8 +19,11 @@ args = parser.parse_args()
 if os.path.exists(args.output) and not args.overwrite:
     print("Output exists, use --overwrite to overwrite the output.")
     exit(1)
-if os.path.exists(args.output) and args.overwrite:
-    os.remove(args.output)
+if args.overwrite:
+    if os.path.isfile(args.output):
+        os.remove(args.output)
+    elif os.path.isdir(args.output):
+        shutil.rmtree(args.output)
 
 if args.input.endswith('.mbtiles') and args.output.endswith('.pmtiles'):
     conn = sqlite3.connect(args.input)
@@ -58,6 +60,20 @@ elif args.input.endswith('.pmtiles') and args.output.endswith('.mbtiles'):
     conn.commit()
     conn.close()
 elif args.input.endswith(".pmtiles"):
-    print("PMTiles to directory not yet implemented")
+    os.makedirs(args.output)
+
+    with read(args.input) as reader:
+        metadata = reader.metadata
+        metadata['format']
+        with open(os.path.join(args.output,'metadata.json'),'w') as f:
+            f.write(json.dumps(metadata))
+
+        for tile, data in reader.tiles():
+            directory = os.path.join(args.output,str(tile[0]),str(tile[1]))
+            path = os.path.join(directory,str(tile[2]) + '.' + metadata['format'])
+            os.makedirs(directory,exist_ok=True)
+            with open(path,'wb') as f:
+                f.write(data)
+
 else:
     print("Conversion not implemented")

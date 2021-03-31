@@ -2,6 +2,7 @@
 
 #pmtiles to files
 import argparse
+import gzip
 import json
 import os
 import sqlite3
@@ -13,8 +14,14 @@ parser = argparse.ArgumentParser(description='Convert between PMTiles and other 
 parser.add_argument('input',help='Input .mbtiles or .pmtiles')
 parser.add_argument('output',help='Output .mbtiles, .pmtiles, or directory')
 parser.add_argument('--maxzoom', help='the maximum zoom level to include in the output.')
+parser.add_argument('--gzip', help='Add gzip encoding to the output if it is not already gzipped.',action='store_true')
 parser.add_argument('--overwrite', help='Overwrite the existing output.',action='store_true')
 args = parser.parse_args()
+
+def may_compress(data,compress):
+    if compress and data[0:2] !=  b'\x1f\x8b':
+        return gzip.compress(data)
+    return data
 
 if os.path.exists(args.output) and not args.overwrite:
     print("Output exists, use --overwrite to overwrite the output.")
@@ -54,7 +61,7 @@ elif args.input.endswith('.pmtiles') and args.output.endswith('.mbtiles'):
         for k,v in reader.metadata.items():
             cursor.execute('INSERT INTO metadata VALUES(?,?)',(k,v))
         for tile, data in reader.tiles():
-            cursor.execute('INSERT INTO tiles VALUES(?,?,?,?)',(tile[0],tile[1],tile[2],data))
+            cursor.execute('INSERT INTO tiles VALUES(?,?,?,?)',(tile[0],tile[1],tile[2],may_compress(data,args.gzip)))
 
     cursor.execute('CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);')
     conn.commit()
@@ -73,7 +80,7 @@ elif args.input.endswith(".pmtiles"):
             path = os.path.join(directory,str(tile[2]) + '.' + metadata['format'])
             os.makedirs(directory,exist_ok=True)
             with open(path,'wb') as f:
-                f.write(data)
+                f.write(may_compress(data,args.gzip))
 
 else:
     print("Conversion not implemented")

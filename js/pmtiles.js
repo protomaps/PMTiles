@@ -178,7 +178,7 @@
                     })
                 },
             })
-            return new cls()
+            return new cls(options)
         }
     }
     return {PMTiles:PMTiles}

@@ -40,10 +40,11 @@
     }
 
     class PMTiles {
-        constructor(url) {
+        constructor(url, options) {
             this.url = url
             this.root = fetch(this.url,{method:'HEAD',headers:{Range:'bytes=0-511999'}}).then(resp => {
-                if (resp.status == 206) { // this does not work on Azure, it returns 200 instead of 206
+                 // for servers like Azure, GH Pages which return 200 instead of 206
+                if (resp.status == 206 || (resp.status == 200 && options.allow_200)) {
                     console.log("Check succeeded: server supports byte ranges")
                     return fetch(this.url,{headers:{Range:'bytes=0-511999'}}).then(resp => {
                         return resp.arrayBuffer()

@@ -13,6 +13,7 @@ A detailed specification is forthcoming. PMTiles is a binary serialization forma
 
 ### Design considerations
 * Directories are recursive, with a maximum of 21,845 entries per directory.
+  * *21845 is the total tiles of a pyramid with 7 levels, or 1+4+16+64+256+1024+4096+16384*
 * Deduplication of tile data is handled by multiple entries pointing to the same offset in the archive.
 
 ### Details

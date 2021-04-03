@@ -7,12 +7,17 @@
         root.pmtiles = factory()
   }
 }(typeof self !== 'undefined' ? self : this, function () {
+    const shift = (number, shift) => {
+        return number * Math.pow(2, shift)
+    }
+
+
     const getUint24 = (dataview, pos) => {
-      return (dataview.getUint16(pos+1,true) << 8) + dataview.getUint8(pos,true)
+      return shift(dataview.getUint16(pos+1,true),8) + dataview.getUint8(pos,true)
     }
 
     const getUint48 = (dataview, pos) => {
-        return (dataview.getUint32(pos+2,true) << 16) + dataview.getUint16(pos,true)
+        return shift(dataview.getUint32(pos+2,true),16) + dataview.getUint16(pos,true)
     }
 
     const parseHeader = dataview => {

@@ -45,7 +45,7 @@
     }
 
     class PMTiles {
-        constructor(url, options) {
+        constructor(url, options = {}) {
             this.url = url
             this.root = fetch(this.url,{method:'HEAD',headers:{Range:'bytes=0-511999'}}).then(resp => {
                  // for servers like Azure, GH Pages which return 200 instead of 206

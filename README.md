@@ -31,34 +31,43 @@ Example of a raster PMTiles archive decoded and displayed in Leaflet:
     
 ## Specification
 
-![layout](layout.png)
+PMTiles is a binary serialization format designed for two main access patterns: over the network, via HTTP 1.1 Byte Serving (`Range:` requests), or via memory-mapped files on disk. All integer values are little-endian
 
-A detailed specification is forthcoming. PMTiles is a binary serialization format designed for two main access patterns: over the network, via HTTP 1.1 Byte Serving (`Range:` requests), or via memory-mapped files on disk.
+A PMTiles archive is composed of:
+* a fixed-size 512,000 byte header section
+* Followed by any number of tiles in arbitrary format
+* Optionally followed by any number of *leaf directories*
 
-### Design considerations
-* Directories are recursive, with a maximum of 21,845 entries per directory.
-  * *21845 is the total tiles of a pyramid with 8 levels, or 1+4+16+64+256+1024+4096+16384*
-* Deduplication of tile data is handled by multiple entries pointing to the same offset in the archive.
-* The order of tile data in the archive is unspecified; an optimized implementation should arrange tiles on a 2D space-filling curve. 
-
-### Details
-* The first 512,000 bytes of a PMTiles archive are reserved, and contain the headers as well as a root directory.
-* All integer values are little-endian.
-* The headers begin with a 2-byte magic number, "PM"
-* 2 bytes: the PMTiles specification version, right now always 1.
-* 4 bytes: the length of metadata (M bytes)
-* 2 bytes: the number of entries in the root directory (N)
-* M bytes: the metadata, by convention a JSON object.
-* N * 17 bytes: the root directory.
+### Header
+* The header begins with a 2-byte magic number, "PM"
+* Followed by 2 bytes, the PMTiles specification version (currently 1)
+* Followed by 4 bytes, the length of metadata (M bytes)
+* Followed by 2 bytes, the number of entries in the *root directory* (N entries)
+* Followed by M bytes of metadata, by convention a JSON object
+* Followed by N * 17 bytes, the root directory.
 
 ### Directory structure
+A directory is a contiguous sequence of 17 byte entries. A directory can have at most 21,845 entries. 
 
-A directory is a sequence of 17 byte entries. An entry consists of:
-* 1 byte: the zoom level (Z) of the entry, with the top bit set to 1 instead of 0 to indicate the data is a child directory, not tile content.
+An entry consists of:
+* 1 byte: the zoom level (Z) of the entry, with the top bit set to 1 instead of 0 to indicate the offset/length points to a leaf directory and not a tile.
 * 3 bytes: the X (column) of the entry.
 * 3 bytes: the Y (row) of the entry.
-* 6 bytes: the offset of where the data begins in the archive.
-* 4 bytes: the length of the data.
+* 6 bytes: the offset of where the tile begins in the archive.
+* 4 bytes: the length of the tile, in bytes.
+
+![layout](layout.png)
+
+### Notes
+* A full directory of 21,845 entries holds exactly a complete pyramid with 8 levels, or 1+4+16+64+256+1024+4096+16384.
+* A PMTiles archive with less than 21,845 tiles should have a root directory and no leaf directories.
+* Multiple tile entries can point to the same offset; this is useful for de-duplicating certain tiles, such as an empty "ocean" tile.
+* Analogously, multiple leaf directory entries can point to the same offset; this can avoid inefficiently-packed small leaf directories.
+
+### Implementation suggestions
+* PMTiles is designed to make implementing a writer simple. Reserve 512KB, then write all tiles, recording their entry information; then write all leaf directories; finally, rewind to 0 and write the header.
+* The order of tile data in the archive is unspecified; an optimized implementation should arrange tiles on a 2D space-filling curve.
+* PMTiles readers should cache directory entries by byte offset, not by Z/X/Y. This means that deduplicated leaf directories result in cache hits.
 
 ## License
 

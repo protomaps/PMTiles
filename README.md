@@ -31,7 +31,9 @@ Example of a raster PMTiles archive decoded and displayed in Leaflet:
     
 ## Specification
 
-PMTiles is a binary serialization format designed for two main access patterns: over the network, via HTTP 1.1 Byte Serving (`Range:` requests), or via memory-mapped files on disk. All integer values are little-endian
+![layout](layout.png)
+
+PMTiles is a binary serialization format designed for two main access patterns: over the network, via HTTP 1.1 Byte Serving (`Range:` requests), or via memory-mapped files on disk. **All integer values are little-endian.**
 
 A PMTiles archive is composed of:
 * a fixed-size 512,000 byte header section
@@ -55,8 +57,6 @@ An entry consists of:
 * 3 bytes: the Y (row) of the entry.
 * 6 bytes: the offset of where the tile begins in the archive.
 * 4 bytes: the length of the tile, in bytes.
-
-![layout](layout.png)
 
 ### Notes
 * A full directory of 21,845 entries holds exactly a complete pyramid with 8 levels, or 1+4+16+64+256+1024+4096+16384.

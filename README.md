@@ -31,6 +31,8 @@ Example of a raster PMTiles archive decoded and displayed in Leaflet:
     
 ## Specification
 
+![layout](layout.png)
+
 A detailed specification is forthcoming. PMTiles is a binary serialization format designed for two main access patterns: over the network, via HTTP 1.1 Byte Serving (`Range:` requests), or via memory-mapped files on disk.
 
 ### Design considerations

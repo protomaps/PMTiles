@@ -2,9 +2,17 @@
   "name": "pmtiles",
   "version": "0.0.6",
   "description": "PMTiles archive decoder for browsers",
-  "main": "pmtiles.js",
+  "main": "index",
+  "module":"index.mjs",
+  "unpkg":"index.js",
+  "jsdelivr":"index.js",
+  "files":[
+    "index.mjs",
+    "index.js"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild index.mjs --outfile=index.js --target=es2015 --global-name=pmtiles --format=iife"
   },
   "homepage": "https://github.com/protomaps/pmtiles",
   "author": "Brandon Liu",

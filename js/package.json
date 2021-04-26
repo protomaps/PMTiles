@@ -1,12 +1,12 @@
 {
   "name": "pmtiles",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "PMTiles archive decoder for browsers",
   "main": "index",
-  "module":"index.mjs",
-  "unpkg":"index.js",
-  "jsdelivr":"index.js",
-  "files":[
+  "module": "index.mjs",
+  "unpkg": "index.js",
+  "jsdelivr": "index.js",
+  "files": [
     "index.mjs",
     "index.js"
   ],

@@ -52,6 +52,7 @@ export class PMTiles {
                     }
                 })
             } else {
+                console.log("Check failed: if you know this server supports byte serving, pass allow_200: true")
                 throw new Error("Invalid response: " + resp.status)
             }
         })

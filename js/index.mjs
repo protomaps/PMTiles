@@ -37,25 +37,23 @@ const bytesToMap = dataview => {
 export class PMTiles {
     constructor(url, options = {}) {
         this.url = url
-        this.root = fetch(this.url,{method:'HEAD',headers:{Range:'bytes=0-511999'}}).then(resp => {
-             // for servers like Azure, GH Pages which return 200 instead of 206
-            if (resp.status == 206 || (resp.status == 200 && options.allow_200)) {
-                console.log("Check succeeded: server supports byte ranges")
-                return fetch(this.url,{headers:{Range:'bytes=0-511999'}}).then(resp => {
-                    return resp.arrayBuffer()
-                }).then(buf => {
-                    const header = parseHeader(new DataView(buf,0,10))
-                    var dec = new TextDecoder("utf-8")
-                    return {
-                        metadata: JSON.parse(dec.decode(new DataView(buf,10,header.json_size))),
-                        dir:bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
-                    }
-                })
-            } else {
-                console.log("Check failed: if you know this server supports byte serving, pass allow_200: true")
-                throw new Error("Invalid response: " + resp.status)
+        const controller = new AbortController()
+        const signal = controller.signal
+        this.root = fetch(this.url,{signal:signal, headers:{Range:'bytes=0-511999'}}).then(resp => {
+            if (resp.headers.get('Content-Length') != 512000) {
+                console.error("Content-Length mismatch indicates byte serving not supported; aborting.")
+                controller.abort()
+            }
+            return resp.arrayBuffer()
+        }).then(buf => {
+            const header = parseHeader(new DataView(buf,0,10))
+            var dec = new TextDecoder("utf-8")
+            return {
+                metadata: JSON.parse(dec.decode(new DataView(buf,10,header.json_size))),
+                dir:bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
             }
         })
+
         this.step = 0
         this.leaves = new Map()
         this.outstanding_requests = new Map()

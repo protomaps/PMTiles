@@ -19,7 +19,7 @@
        <div id="map"></div> 
        <script>
         const map = L.map('map',{maxZoom:4}).setView([0,0],0)
-        const p = new pmtiles.PMTiles('osm_carto.pmtiles',{allow_200:true})
+        const p = new pmtiles.PMTiles('osm_carto.pmtiles')
         p.leafletLayer({attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
        </script>
     </body>

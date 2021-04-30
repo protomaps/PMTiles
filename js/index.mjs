@@ -35,7 +35,7 @@ const bytesToMap = dataview => {
 }
 
 export class PMTiles {
-    constructor(url, options = {}) {
+    constructor(url) {
         this.url = url
         const controller = new AbortController()
         const signal = controller.signal
@@ -60,8 +60,10 @@ export class PMTiles {
     }
 
     metadata = func => {
-        this.root.then(root => {
-            func(root.metadata)
+        return new Promise((resolve,reject) => {
+            this.root.then(root => {
+                resolve(root.metadata)
+            })
         })
     }
 

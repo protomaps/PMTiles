@@ -9,8 +9,13 @@ See also:
 
 ## How To Use
 
-Python library: `pip install pmtiles`
+### Go
 
+See https://github.com/protomaps/go-pmtiles
+
+### Python
+
+    pip install pmtiles
     pmtiles-convert TILES.mbtiles TILES.pmtiles
     pmtiles-convert TILES.pmtiles DIRECTORY
     pmtiles-show TILES.pmtiles // see info about a PMTiles directory
@@ -18,9 +23,7 @@ Python library: `pip install pmtiles`
 
 See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usage
 
-JavaScript usage:
-
-Include the script:
+### JavaScript
 
     <script src="https://unpkg.com/pmtiles@0.0.4/pmtiles.js"></script>
 

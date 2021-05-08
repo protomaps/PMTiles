@@ -38,7 +38,8 @@ if args.input.endswith('.mbtiles') and args.output.endswith('.pmtiles'):
 
     with write(args.output) as writer:
         for row in cursor.execute('SELECT zoom_level,tile_column,tile_row,tile_data FROM tiles WHERE zoom_level <= ? ORDER BY zoom_level,tile_column,tile_row ASC',(args.maxzoom or 99,)):
-            writer.write_tile(row[0],row[1],row[2],row[3])
+            flipped = (1 << row[0]) - 1 - row[2]
+            writer.write_tile(row[0],row[1],flipped,row[3])
 
         metadata = {}
         for row in cursor.execute('SELECT name,value FROM metadata'):

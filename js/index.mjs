@@ -12,7 +12,9 @@ const getUint48 = (dataview, pos) => {
 
 const parseHeader = dataview => {
     var magic = dataview.getUint16(0,true)
-    // assert that the magic number (2 bytes) matches 19792
+    if (magic !== 19792) {
+      throw new Error('File header does not begin with "PM"')
+    }
     var version = dataview.getUint16(2,true)
     var json_size = dataview.getUint32(4,true)
     var root_entries = dataview.getUint16(8,true)

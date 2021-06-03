@@ -12,7 +12,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild index.mjs --outfile=index.js --target=es2015 --global-name=pmtiles --format=iife"
+    "build-iife": "esbuild index.src.mjs --outfile=index.js --target=es2015 --global-name=pmtiles --format=iife",
+    "build-esm": "esbuild index.src.mjs --outfile=index.mjs --target=es6 --global-name=pmtiles --format=esm",
+    "build":"npm run build-iife && npm run build-esm"
   },
   "homepage": "https://github.com/protomaps/pmtiles",
   "author": "Brandon Liu",

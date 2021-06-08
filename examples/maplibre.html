@@ -4,9 +4,9 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.protomaps.com/maplibre-gl-js/1.13.0pm1/mapbox-gl.css" crossorigin="anonymous">
-        <script src="https://cdn.protomaps.com/maplibre-gl-js/1.13.0pm1/mapbox-gl.js" crossorigin="anonymous"></script>
-        <script src="../js/pmtiles.js"></script>
+        <link rel="stylesheet" href="http://localhost:9600/dist/maplibre-gl.css" crossorigin="anonymous">
+        <script src="http://localhost:9600/dist/maplibre-gl-dev.js" crossorigin="anonymous"></script>
+        <script src="../js/index.js"></script>
         <style>
             body, #map {
                 height:100vh;
@@ -15,8 +15,54 @@
         </style>
     </head>
     <body>
-       <div id="map"></div> 
-       <script>
-       </script>
+        <div id="map"></div>
+        <script>
+            pmtiles.addProtocol(maplibregl)
+            var style = {
+                "version": 8,
+                "sources": {
+                    "tpe_sample": {
+                        "type": "vector",
+                        "tiles": ["pmtiles://tpe_sample.pmtiles/{z}/{x}/{y}"],
+                        "maxzoom":14
+                    }
+                },
+                "layers": [
+                    {
+                        "id": "buildings",
+                        "type": "fill",
+                        "source":"tpe_sample",
+                        "source-layer":"buildings",
+                        "paint": {
+                            "fill-color":"black"
+                        }
+                    },
+                    {
+                        "id": "roads",
+                        "type": "line",
+                        "source":"tpe_sample",
+                        "source-layer":"roads",
+                        "paint": {
+                            "line-color":"red"
+                        }
+                    },
+                    {
+                        "id": "mask",
+                        "type": "fill",
+                        "source":"tpe_sample",
+                        "source-layer":"mask",
+                        "paint": {
+                            "fill-color":"white"
+                        }
+                    }
+                ]
+            }
+            var map = new maplibregl.Map({
+                container: 'map',
+                center: [121.5177,25.0412],
+                zoom: 14,
+                style: style
+            });
+        </script>
     </body>
 </html>

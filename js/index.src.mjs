@@ -128,20 +128,7 @@ export class PMTiles {
         }) 
     }
 
-    transformRequest = (u,t,tile,done) => {
-        if (u.endsWith('.pmtiles') && done) {
-            var tid = tile.tileID.canonical
-            var strid = tid.z + '_' + tid.x + '_' + tid.y
-            this.getZxy(tid.z,tid.x,tid.y).then(val => {
-                if (val) {
-                    done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
-                }
-            })
-        }
-        return {url: u}
-    }
-
-    // take URL here
+    // leaflet adapter
     leafletLayer = options => {
         const self = this
         var cls = L.GridLayer.extend({
@@ -189,4 +176,48 @@ export class PMTiles {
         })
         return new cls(options)
     }
+
+    // for mapboxgl fork at 1.13
+    // will be deprecated soon
+    transformRequest = (u,t,tile,done) => {
+        if (u.endsWith('.pmtiles') && done) {
+            var tid = tile.tileID.canonical
+            var strid = tid.z + '_' + tid.x + '_' + tid.y
+            this.getZxy(tid.z,tid.x,tid.y).then(val => {
+                if (val) {
+                    done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
+                }
+            })
+        }
+        return {url: u}
+    }
+}
+
+export const addProtocol = maplibre_instance => {
+    let re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/)
+    let pmtiles_instances = new Map()
+    maplibregl.addProtocol('pmtiles', (params, callback) => {
+        let result = params.url.match(re)
+        let pmtiles_url = result[1]
+        if (!pmtiles_instances.has(pmtiles_url)) {
+            pmtiles_instances.set(pmtiles_url,new pmtiles.PMTiles(pmtiles_url))
+        }
+        let instance = pmtiles_instances.get(pmtiles_url)
+        let z = result[2]
+        let x = result[3]
+        let y = result[4]
+        instance.getZxy(+z,+x,+y).then(val => {
+            if (val) {
+                let headers = {'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}
+                fetch(pmtiles_url,{headers:headers}).then(resp => {
+                    return resp.arrayBuffer()
+                }).then(arr => {
+                    callback(null,arr,null,null)
+                })
+            } else {
+                callback(null,new Uint8Array(),null,null)
+            }
+        })
+         return { cancel: () => { console.log("Cancel not implemented") } }
+     })
 }

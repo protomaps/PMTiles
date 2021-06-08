@@ -147,17 +147,24 @@ export class PMTiles {
         var cls = L.GridLayer.extend({
             createTile: function(coord, done){
                 var tile = document.createElement('img')
-                var error
 
                 self.getZxy(coord.z,coord.x,coord.y).then(result => {
                     if (result === null) return
-                    fetch(self.url,{headers:{Range:'bytes=' + result[0] + '-' + (result[0]+result[1]-1)}}).then(resp => {
+
+                    const controller = new AbortController()
+                    const signal = controller.signal
+                    tile.cancel = () => { controller.abort() }
+                    fetch(self.url,{signal:signal,headers:{Range:'bytes=' + result[0] + '-' + (result[0]+result[1]-1)}}).then(resp => {
                         return resp.arrayBuffer()
                     }).then(buf => {
                         var blob = new Blob( [buf], { type: "image/png" } )
                         var imageUrl = window.URL.createObjectURL(blob)
                         tile.src = imageUrl
-                        done(error,tile)
+                        tile.cancel = null
+                        done(null,tile)
+                    }).catch(error => {
+                        if (error.name !== "AbortError") throw error
+
                     })
                 })
                 return tile
@@ -166,6 +173,9 @@ export class PMTiles {
             _removeTile: function (key) {
                 var tile = this._tiles[key]
                 if (!tile) { return }
+
+                if (tile.el.cancel) tile.el.cancel()
+
                 tile.el.width = 0
                 tile.el.height = 0
                 tile.el.deleted = true

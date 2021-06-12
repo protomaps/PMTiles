@@ -1,9 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import re
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+import http.server
+from socketserver import ThreadingMixIn
 from pmtiles.reader import read
+
+class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
+    pass
 
 if len(sys.argv) <= 1:
     print("Usage: pmtiles-serve PMTILES_FILE")
@@ -12,11 +17,17 @@ if len(sys.argv) <= 1:
 with read(sys.argv[1]) as reader:
     fmt = reader.metadata['format']
 
-    class Handler(BaseHTTPRequestHandler):
+    class Handler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
+            if self.path == "/metadata":
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(json.dumps(reader.metadata).encode('utf-8'))
+                return
             match = re.match("/(\d+)/(\d+)/(\d+)." + fmt, self.path)
             if not match:
                 self.send_response(400)
+                self.end_headers()
                 self.wfile.write("bad request".encode('utf-8'))
                 return
             z = int(match.group(1))
@@ -25,13 +36,15 @@ with read(sys.argv[1]) as reader:
             data = reader.get(z,x,y)
             if not data:
                 self.send_response(404)
+                self.end_headers()
                 self.wfile.write("tile not found".encode('utf-8'))
                 return
             self.send_response(200)
+            self.end_headers()
             self.send_header('Content-Type','image/png')
             self.end_headers()
             self.wfile.write(data)
 
     print('serving localhost:8000/{z}/{x}/{y}.' + fmt)
-    httpd = HTTPServer(('', 8000), Handler)
+    httpd = ThreadingSimpleServer(('', 8000), Handler)
     httpd.serve_forever()

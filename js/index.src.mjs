@@ -176,21 +176,6 @@ export class PMTiles {
         })
         return new cls(options)
     }
-
-    // for mapboxgl fork at 1.13
-    // will be deprecated soon
-    transformRequest = (u,t,tile,done) => {
-        if (u.endsWith('.pmtiles') && done) {
-            var tid = tile.tileID.canonical
-            var strid = tid.z + '_' + tid.x + '_' + tid.y
-            this.getZxy(tid.z,tid.x,tid.y).then(val => {
-                if (val) {
-                    done({url: this.url, headers:{'Range':'bytes=' + val[0] + '-' + (val[0]+val[1]-1)}})
-                }
-            })
-        }
-        return {url: u}
-    }
 }
 
 export const addProtocol = maplibre_instance => {

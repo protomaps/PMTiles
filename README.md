@@ -4,7 +4,9 @@ PMTiles is a single-file archive format for tiled data. A PMTiles archive can be
 
 [Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
 
-[Demo](https://protomaps.github.io/PMTiles/examples/leaflet.html) - watch your network request log
+[Leaflet + Raster Tiles Demo](https://protomaps.github.io/PMTiles/examples/leaflet.html) - watch your network request log
+
+[MapLibre GL + Vector Tiles Demo](https://protomaps.github.io/PMTiles/examples/maplibre.html) - requires MapLibre GL JS v1.14.1-rc.2 or later
 
 See also:
 * [Cloud Optimized GeoTIFFs](https://www.cogeo.org)

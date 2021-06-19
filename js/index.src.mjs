@@ -48,10 +48,14 @@ export class PMTiles {
             }
             return resp.arrayBuffer()
         }).then(buf => {
-            const header = parseHeader(new DataView(buf,0,10))
-            var dec = new TextDecoder("utf-8")
+            let header = parseHeader(new DataView(buf,0,10))
+            let dec = new TextDecoder("utf-8")
+            let metadata = JSON.parse(dec.decode(new DataView(buf,10,header.json_size)))
+            if (metadata.compress) {
+                console.error(`Archive has compression type: ${metadata.compress} and is not readable directly by browsers.`)
+            }
             return {
-                metadata: JSON.parse(dec.decode(new DataView(buf,10,header.json_size))),
+                metadata: metadata,
                 dir:bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
             }
         })

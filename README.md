@@ -2,11 +2,15 @@
 
 PMTiles is a single-file archive format for tiled data. A PMTiles archive can be hosted on a commodity storage platform such as S3, and enables low-cost, zero-maintenance map applications that are "serverless" - free of a custom tile backend or third party provider.
 
-[Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
+* [Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
 
-[Leaflet + Raster Tiles Demo](https://protomaps.github.io/PMTiles/examples/leaflet.html) - watch your network request log
+* [Leaflet + Raster Tiles Demo](https://protomaps.github.io/PMTiles/examples/leaflet.html) - watch your network request log
 
-[MapLibre GL + Vector Tiles Demo](https://protomaps.github.io/PMTiles/examples/maplibre.html) - requires MapLibre GL JS v1.14.1-rc.2 or later
+* [MapLibre GL + Vector Tiles - US Zip Codes](pmtiles://https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_nolimit.pmtiles)
+
+* [MapLibre GL + Vector Tiles - Basemap](https://protomaps.github.io/PMTiles/examples/maplibre.html)
+
+Demos require MapLibre GL JS v1.14.1-rc.2 or later
 
 See also:
 * [Cloud Optimized GeoTIFFs](https://www.cogeo.org)

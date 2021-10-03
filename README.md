@@ -6,7 +6,7 @@ PMTiles is a single-file archive format for tiled data. A PMTiles archive can be
 
 * [Leaflet + Raster Tiles Demo](https://protomaps.github.io/PMTiles/examples/leaflet.html) - watch your network request log
 
-* [MapLibre GL + Vector Tiles - US Zip Codes](pmtiles://https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_nolimit.pmtiles)
+* [MapLibre GL + Vector Tiles - US Zip Codes](https://protomaps.github.io/PMTiles/examples/maplibre_zipcodes.html)
 
 * [MapLibre GL + Vector Tiles - Basemap](https://protomaps.github.io/PMTiles/examples/maplibre.html)
 

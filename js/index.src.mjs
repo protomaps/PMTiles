@@ -39,6 +39,21 @@ const bytesToMap = dataview => {
 export class PMTiles {
     constructor(url) {
         this.url = url
+        this.step = 0
+        this.leaves = new Map()
+        this.outstanding_requests = new Map()
+    }
+
+    metadata = func => {
+        return new Promise((resolve,reject) => {
+            this.getRoot().then(root => {
+                resolve(root.metadata)
+            })
+        })
+    }
+
+    getRoot = () => {
+        if (this.root) return this.root
         const controller = new AbortController()
         const signal = controller.signal
         this.root = fetch(this.url,{signal:signal, headers:{Range:'bytes=0-511999'}}).then(resp => {
@@ -59,18 +74,7 @@ export class PMTiles {
                 dir:bytesToMap(new DataView(buf,10+header.json_size,17*header.root_entries))
             }
         })
-
-        this.step = 0
-        this.leaves = new Map()
-        this.outstanding_requests = new Map()
-    }
-
-    metadata = func => {
-        return new Promise((resolve,reject) => {
-            this.root.then(root => {
-                resolve(root.metadata)
-            })
-        })
+        return this.root
     }
 
     getLeaf = (offset, len) => {
@@ -109,7 +113,7 @@ export class PMTiles {
 
     getZxy = (z,x,y) => {
         var strid = z + '_' + x + '_' + y
-        return this.root.then(root => {
+        return this.getRoot().then(root => {
             if (root.dir.has(strid) && root.dir.get(strid)[2] == 0) {
                 return root.dir.get(strid)
             } else {

@@ -46,7 +46,8 @@ def pmtiles_to_mbtiles(input, output, gzip):
         for k,v in reader.metadata.items():
             cursor.execute('INSERT INTO metadata VALUES(?,?)',(k,v))
         for tile, data in reader.tiles():
-            cursor.execute('INSERT INTO tiles VALUES(?,?,?,?)',(tile[0],tile[1],tile[2],may_compress(data,gzip)))
+            flipped = (1 << tile[0]) - 1 - tile[2]
+            cursor.execute('INSERT INTO tiles VALUES(?,?,?,?)',(tile[0],tile[1],flipped,may_compress(data,gzip)))
 
     cursor.execute('CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);')
     conn.commit()

@@ -2,13 +2,10 @@
 
 #pmtiles to files
 import argparse
-import gzip
-import json
 import os
-import sqlite3
 import shutil
-from pmtiles.reader import read
-from pmtiles.writer import write
+
+from pmtiles.convert import mbtiles_to_pmtiles, pmtiles_to_mbtiles, pmtiles_to_dir
 
 parser = argparse.ArgumentParser(description='Convert between PMTiles and other archive formats.')
 parser.add_argument('input',help='Input .mbtiles or .pmtiles')
@@ -17,11 +14,6 @@ parser.add_argument('--maxzoom', help='the maximum zoom level to include in the 
 parser.add_argument('--gzip', help='Add gzip encoding to the output if it is not already gzipped.',action='store_true')
 parser.add_argument('--overwrite', help='Overwrite the existing output.',action='store_true')
 args = parser.parse_args()
-
-def may_compress(data,compress):
-    if compress and data[0:2] !=  b'\x1f\x8b':
-        return gzip.compress(data)
-    return data
 
 if os.path.exists(args.output) and not args.overwrite:
     print("Output exists, use --overwrite to overwrite the output.")
@@ -33,55 +25,13 @@ if args.overwrite:
         shutil.rmtree(args.output)
 
 if args.input.endswith('.mbtiles') and args.output.endswith('.pmtiles'):
-    conn = sqlite3.connect(args.input)
-    cursor = conn.cursor()
+    mbtiles_to_pmtiles(args.input, args.output, args.maxzoom)
 
-    with write(args.output) as writer:
-        for row in cursor.execute('SELECT zoom_level,tile_column,tile_row,tile_data FROM tiles WHERE zoom_level <= ? ORDER BY zoom_level,tile_column,tile_row ASC',(args.maxzoom or 99,)):
-            flipped = (1 << row[0]) - 1 - row[2]
-            writer.write_tile(row[0],row[1],flipped,row[3])
-
-        metadata = {}
-        for row in cursor.execute('SELECT name,value FROM metadata'):
-            metadata[row[0]] = row[1]
-        if args.maxzoom:
-            metadata['maxzoom'] = str(args.maxzoom)
-        result = writer.finalize(metadata)
-        print("Num tiles:",result['num_tiles'])
-        print("Num unique tiles:",result['num_unique_tiles'])
-        print("Num leaves:",result['num_leaves'])
-
-    conn.close()
 elif args.input.endswith('.pmtiles') and args.output.endswith('.mbtiles'):
-    conn = sqlite3.connect(args.output)
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE metadata (name text, value text);')
-    cursor.execute('CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);')
+    pmtiles_to_mbtiles(args.input, args.output, args.gzip)
 
-    with read(args.input) as reader:
-        for k,v in reader.metadata.items():
-            cursor.execute('INSERT INTO metadata VALUES(?,?)',(k,v))
-        for tile, data in reader.tiles():
-            cursor.execute('INSERT INTO tiles VALUES(?,?,?,?)',(tile[0],tile[1],tile[2],may_compress(data,args.gzip)))
-
-    cursor.execute('CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);')
-    conn.commit()
-    conn.close()
 elif args.input.endswith(".pmtiles"):
-    os.makedirs(args.output)
-
-    with read(args.input) as reader:
-        metadata = reader.metadata
-        metadata['format']
-        with open(os.path.join(args.output,'metadata.json'),'w') as f:
-            f.write(json.dumps(metadata))
-
-        for tile, data in reader.tiles():
-            directory = os.path.join(args.output,str(tile[0]),str(tile[1]))
-            path = os.path.join(directory,str(tile[2]) + '.' + metadata['format'])
-            os.makedirs(directory,exist_ok=True)
-            with open(path,'wb') as f:
-                f.write(may_compress(data,args.gzip))
+    pmtiles_to_dir(args.input, args.output, args.gzip)
 
 else:
     print("Conversion not implemented")

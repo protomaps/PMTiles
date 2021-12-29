@@ -10,6 +10,8 @@ PMTiles is a single-file archive format for tiled data. A PMTiles archive can be
 
 * [MapLibre GL + Vector Tiles - Basemap](https://protomaps.github.io/PMTiles/examples/maplibre.html)
 
+* [PMTiles inspector for local archives](https://protomaps.github.io/PMTiles/examples/inspector.html)
+
 Demos require MapLibre GL JS v1.14.1-rc.2 or later
 
 See also:

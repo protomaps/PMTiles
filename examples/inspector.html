@@ -5,26 +5,58 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="https://d3js.org/d3.v7.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
         <script src="https://unpkg.com/pmtiles@latest/index.js"></script>
         <!-- <script src="../js/index.js"></script> -->
         <title>PMTiles inspector</title>
-        <style>
-            #drop_zone {
-                border: 5px solid blue;
-                width:  200px;
-                height: 100px;
-            }
-        </style>
     </head>
-    <body>
-        <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
-          <p>Drag a PMTiles file into this Drop Zone...</p>
+    <body class="sans-serif v-scroll bg-dark-gray flex">
+        <div class="w-50 vh-100 bg-light-gray pa4 flex flex-column">
+            <div class="f4 w-100" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+                <div class=" f4 fw5 dark-gray b--dark-gray ba4 b--dotted bw1 pa3">Drag and drop a local PMTiles file here...</div>
+                <div class="pv3">
+                    <div class="flex">
+                        <input placeholder="PMTiles file url (not yet implemented)" class="flex-grow-1"/>
+                        <button class="ml3 link bg-white dim ba pointer">Inspect</button>
+                    </div>
+                </div>
+            </div>
+            <div class="fw5 f6 mt2">spec version: <span id="spec_version">?</span></div>
+            <div class="fw5 f6 mt2">metadata length: <span id="metadata_length">?</span></div>
+            <div id="metadata" class="f6"></div>
+            <div class="overflow-y-scroll flex-grow-1 f6 mt2">
+                <table class="w-100">
+                    <thead class="tl">
+                        <tr>
+                            <th>z</th>
+                            <th>x</th>
+                            <th>y</th>
+                            <th>offset</th>
+                            <th>length</th>
+                            <th>dir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="root_entries">
+                    </tbody>
+                </table>
+            </div>
+            <div class="f6 mt2"><span id="root_entries_count">?</span> root entries</div>
         </div>
-        <div id="header"></div>
-        <div id="metadata"></div>
-        <div id="root_entries"></div>
+        <div class="w-50 flex items-center justify-center">
+            <div>
+                <div id="preview_label" class="white mb2"></div>
+                <img id="preview"></img>
+            </div>
+        </div>
     </body>
     <script>
+        function loadEntry(file,row) {
+            var blob = file.slice(row[3],row[3]+row[4]);
+            var imageUrl = window.URL.createObjectURL(blob);
+            d3.select("#preview_label").text(`${row[0]} ${row[1]} ${row[2]}`);
+            let preview = d3.select("#preview").attr("src",imageUrl);
+        }
+
         function dropHandler(ev) {
             ev.preventDefault();
             var data = ev.dataTransfer.items;
@@ -33,17 +65,21 @@
             blob.arrayBuffer().then(a => {
                 var header = pmtiles.parseHeader(new DataView(a,0,10));
                 let dec = new TextDecoder("utf-8")
-                let metadata = dec.decode(new DataView(a,10,header.json_size));
-                d3.select("#header").text(`pmtiles spec version: ${header.version} metadata len: ${header.json_size} root entries: ${header.root_entries}`)
-                d3.select("#metadata").text(metadata)
+                let metadata = JSON.parse(dec.decode(new DataView(a,10,header.json_size)));
+                d3.select("#spec_version").text(header.version);
+                d3.select("#metadata_length").text(header.json_size);
+                d3.select("#root_entries_count").text(header.root_entries);
+                d3.select("#metadata").selectAll("div")
+                    .data(Object.entries(metadata).map(a => `${a[0]}: ${a[1]}`))
+                    .enter().append("div").text(d => d);
                 var entries_view = new DataView(a,10+header.json_size,17*header.root_entries);
                 let entries = []
                 for (var i = 0; i < entries_view.byteLength; i+=17) {
-                    var [z,x,y,offset,length,is_dir]  = pmtiles.parseEntry(entries_view,i);
-                    entries.push({z:z,x:x,y:y,offset:offset,length:length,is_dir:is_dir})
+                    entries.push(pmtiles.parseEntry(entries_view,i));
                 }
-                let row = d3.select("#root_entries").selectAll("div").data(entries).enter().append("div")
-                row.text(d => { return `${d.z} ${d.x} ${d.y}` })
+                let row = d3.select("#root_entries").selectAll("tr").data(entries).enter().append("tr")
+                    .attr("class","f6 pv1 dim pointer").on("click", (ev,d) => { loadEntry(file, d); });
+                row.selectAll("td").data(d => d).enter().append("td").text(d => d);
             })
         }
         function dragOverHandler(ev) {

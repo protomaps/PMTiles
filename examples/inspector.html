@@ -16,7 +16,7 @@
                 <div class=" f4 fw5 dark-gray b--dark-gray ba4 b--dotted bw1 pa3">Drag and drop a local PMTiles file here...</div>
                 <div class="pv3">
                     <div class="flex">
-                        <input placeholder="PMTiles file url (not yet implemented)" class="flex-grow-1"/>
+                        <input placeholder="PMTiles file url (not yet implemented)" class="flex-grow-1 f6"/>
                         <button class="ml3 link bg-white dim ba pointer">Inspect</button>
                     </div>
                 </div>
@@ -85,5 +85,12 @@
         function dragOverHandler(ev) {
           ev.preventDefault();
         }
+
+        // const queryString = window.location.search;
+        // const urlParams = new URLSearchParams(queryString);
+        // const loadUrl = urlParams.get("url");
+        // if (loadUrl) {
+        //     console.log("load url", loadUrl);
+        // }
     </script>
 </html>

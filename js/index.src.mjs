@@ -10,7 +10,7 @@ const getUint48 = (dataview, pos) => {
     return shift(dataview.getUint32(pos+2,true),16) + dataview.getUint16(pos,true)
 }
 
-const parseHeader = dataview => {
+export const parseHeader = dataview => {
     var magic = dataview.getUint16(0,true)
     if (magic !== 19792) {
       throw new Error('File header does not begin with "PM"')
@@ -21,7 +21,18 @@ const parseHeader = dataview => {
     return {version:version,json_size:json_size,root_entries:root_entries}
 }
 
-const bytesToMap = dataview => {
+export const parseEntry = (dataview,i) => {
+    var z_raw = dataview.getUint8(i,true)
+    var z = z_raw & 127
+    var is_dir = z_raw >> 7
+    var x = getUint24(dataview,i+1)
+    var y = getUint24(dataview,i+4)
+    var offset = getUint48(dataview,i+7)
+    var length = dataview.getUint32(i+13,true)
+    return [z,x,y,offset,length,is_dir]
+}
+
+export const bytesToMap = dataview => {
     let m = new Map() 
     for (var i = 0; i < dataview.byteLength; i+=17) {
         var z_raw = dataview.getUint8(i,true)

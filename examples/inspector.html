@@ -1,0 +1,53 @@
+<html>
+    <head>
+    </head>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://unpkg.com/pmtiles@latest/index.js"></script>
+        <!-- <script src="../js/index.js"></script> -->
+        <title>PMTiles inspector</title>
+        <style>
+            #drop_zone {
+                border: 5px solid blue;
+                width:  200px;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+          <p>Drag a PMTiles file into this Drop Zone...</p>
+        </div>
+        <div id="header"></div>
+        <div id="metadata"></div>
+        <div id="root_entries"></div>
+    </body>
+    <script>
+        function dropHandler(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.items;
+            var file = data[0].getAsFile();
+            var blob = file.slice(0,512000);
+            blob.arrayBuffer().then(a => {
+                var header = pmtiles.parseHeader(new DataView(a,0,10));
+                let dec = new TextDecoder("utf-8")
+                let metadata = dec.decode(new DataView(a,10,header.json_size));
+                d3.select("#header").text(`pmtiles spec version: ${header.version} metadata len: ${header.json_size} root entries: ${header.root_entries}`)
+                d3.select("#metadata").text(metadata)
+                var entries_view = new DataView(a,10+header.json_size,17*header.root_entries);
+                let entries = []
+                for (var i = 0; i < entries_view.byteLength; i+=17) {
+                    var [z,x,y,offset,length,is_dir]  = pmtiles.parseEntry(entries_view,i);
+                    entries.push({z:z,x:x,y:y,offset:offset,length:length,is_dir:is_dir})
+                }
+                let row = d3.select("#root_entries").selectAll("div").data(entries).enter().append("div")
+                row.text(d => { return `${d.z} ${d.x} ${d.y}` })
+            })
+        }
+        function dragOverHandler(ev) {
+          ev.preventDefault();
+        }
+    </script>
+</html>

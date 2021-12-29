@@ -14,13 +14,13 @@
         <div class="w-50 vh-100 bg-light-gray pa4 flex flex-column">
             <div class="f4 w-100 dn" id="inputPanel" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
                 <div class=" f4 fw5 dark-gray b--dark-gray ba4 b--dotted bw1 pa3">Drag and drop a local PMTiles file here...</div>
-                <div class="pv3">
+<!--                 <div class="pv3">
                     <div class="flex">
                         <input placeholder="PMTiles file url (not yet implemented)" class="flex-grow-1 f6"/>
                         <button class="ml3 link bg-white dim ba pointer">Inspect</button>
                     </div>
                 </div>
-            </div>
+ -->            </div>
             <div class="fw5 f6 mt2">spec version: <span id="spec_version">?</span></div>
             <div class="fw5 f6 mt2">metadata length: <span id="metadata_length">?</span></div>
             <div id="metadata" class="f6"></div>
@@ -61,7 +61,9 @@
             if (a.name === "water") return -3
             if (a.name === "natural") return -2
             if (a.name === "landuse") return -1
+            if (a.name === "places") return 1
             return 0
+
         }
 
         import {VectorTile} from "https://cdn.skypack.dev/@mapbox/vector-tile";
@@ -84,12 +86,21 @@
                             let feature = layer.feature(i);
                             let path = d3.path();
                             let geom = feature.loadGeometry();
-                            for (let ring of geom) {
+
+                            if (feature.type === 1) {
+                                for (let ring of geom) {
+                                    for (let pt of ring) {
+                                        path.arc(pt.x,pt.y,20,0, 2*Math.PI);
+                                    }
+                                }
+                            } else {
+                                for (let ring of geom) {
                                     path.moveTo(ring[0].x,ring[0].y);
                                     for (var j = 1; j < ring.length; j++) {
                                         path.lineTo(ring[j].x,ring[j].y);
                                     }
                                     path.closePath();
+                                }
                             }
                             features.push({path:path.toString(),type:feature.type,properties:feature.properties,id:feature.id})
                         }
@@ -105,8 +116,9 @@
                     features.attr("d",d => d.path)
                         .attr("stroke",d => { return d.type === 2 ? "currentColor" : "" })
                         .attr("stroke-width",d => { return d.type === 2 ? 10 : undefined })
-                        .attr("fill",d => { return d.type === 3 ? "currentColor" : "none" })
-                        .attr("opacity",0.3);
+                        .attr("fill",d => { return d.type === 2 ? "none" : "currentColor" })
+                        .attr("fill-opacity",d => { d.type === 3 ? 1 : 0.5 })
+                        .attr("stroke-opacity",0.5);
 
                     features.on("mouseover", function(ev,d) {
                         d3.select(this).attr("color","white");

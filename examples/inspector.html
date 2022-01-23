@@ -69,79 +69,82 @@
         import {VectorTile} from "https://cdn.skypack.dev/@mapbox/vector-tile";
         import Protobuf from "https://cdn.skypack.dev/pbf";
         import {schemeSet3} from "https://cdn.skypack.dev/d3-scale-chromatic@3";
+        import pako from "https://cdn.skypack.dev/pako";
         d3.select("#inputPanel").classed("dn",false);
 
-        let loadEntry = (file,format,row) => {
+        let loadEntry = async (file,format,compression,row) => {
             var blob = file.slice(row[3],row[3]+row[4]);
             var imageUrl = window.URL.createObjectURL(blob);
             d3.select("#preview_label").text(`${row[0]} ${row[1]} ${row[2]}`);
             d3.select("#preview").selectAll("*").remove();
             if (format === "pbf") {
-                blob.arrayBuffer().then(a => {
-                    let tile = new VectorTile(new Protobuf(a));
-                    let data = [];
-                    for (let [name,layer] of Object.entries(tile.layers)) {
-                        let features = [] 
-                        for (var i = 0; i < layer.length; i++) {
-                            let feature = layer.feature(i);
-                            let path = d3.path();
-                            let geom = feature.loadGeometry();
+                var a = await blob.arrayBuffer();
+                if (compression === "gzip") {
+                    a = pako.inflate(a);
+                }
+                let tile = new VectorTile(new Protobuf(a));
+                let data = [];
+                for (let [name,layer] of Object.entries(tile.layers)) {
+                    let features = [];
+                    for (var i = 0; i < layer.length; i++) {
+                        let feature = layer.feature(i);
+                        let path = d3.path();
+                        let geom = feature.loadGeometry();
 
-                            if (feature.type === 1) {
-                                for (let ring of geom) {
-                                    for (let pt of ring) {
-                                        path.arc(pt.x,pt.y,20,0, 2*Math.PI);
-                                    }
-                                }
-                            } else {
-                                for (let ring of geom) {
-                                    path.moveTo(ring[0].x,ring[0].y);
-                                    for (var j = 1; j < ring.length; j++) {
-                                        path.lineTo(ring[j].x,ring[j].y);
-                                    }
-                                    path.closePath();
+                        if (feature.type === 1) {
+                            for (let ring of geom) {
+                                for (let pt of ring) {
+                                    path.arc(pt.x,pt.y,20,0, 2*Math.PI);
                                 }
                             }
-                            features.push({path:path.toString(),type:feature.type,properties:feature.properties,id:feature.id})
+                        } else {
+                            for (let ring of geom) {
+                                path.moveTo(ring[0].x,ring[0].y);
+                                for (var j = 1; j < ring.length; j++) {
+                                    path.lineTo(ring[j].x,ring[j].y);
+                                }
+                                path.closePath();
+                            }
                         }
-                        data.push({name:name,features:features})
+                        features.push({path:path.toString(),type:feature.type,properties:feature.properties,id:feature.id})
                     }
+                    data.push({name:name,features:features})
+                }
 
-                    data.sort(smartCompare);
+                data.sort(smartCompare);
 
-                    let svg = d3.select("#preview").append("svg").attr("viewBox","0 0 4096 4096").attr("width",600).attr("height",600);
-                    let layers = svg.selectAll("g").data(data).enter().append("g").attr("color",(d,i) => { return schemeSet3[i % 12]});
-                    let features = layers.selectAll("path").data(d => d.features).enter().append("path")
+                let svg = d3.select("#preview").append("svg").attr("viewBox","0 0 4096 4096").attr("width",600).attr("height",600);
+                let layers = svg.selectAll("g").data(data).enter().append("g").attr("color",(d,i) => { return schemeSet3[i % 12]});
+                let features = layers.selectAll("path").data(d => d.features).enter().append("path")
 
-                    features.attr("d",d => d.path)
-                        .attr("stroke",d => { return d.type === 2 ? "currentColor" : "" })
-                        .attr("stroke-width",d => { return d.type === 2 ? 10 : undefined })
-                        .attr("fill",d => { return d.type === 2 ? "none" : "currentColor" })
-                        .attr("fill-opacity",d => { d.type === 3 ? 1 : 0.5 })
-                        .attr("stroke-opacity",0.5);
+                features.attr("d",d => d.path)
+                    .attr("stroke",d => { return d.type === 2 ? "currentColor" : "" })
+                    .attr("stroke-width",d => { return d.type === 2 ? 10 : undefined })
+                    .attr("fill",d => { return d.type === 2 ? "none" : "currentColor" })
+                    .attr("fill-opacity",d => { d.type === 3 ? 1 : 0.5 })
+                    .attr("stroke-opacity",0.5);
 
-                    features.on("mouseover", function(ev,d) {
-                        d3.select(this).attr("color","white");
-                        let tooltip = d3.select("#tooltip")
-                        let rows = Object.entries(d.properties).map(a => `${a[0]}: ${a[1]}`);
-                        rows.unshift(d3.select(this.parentNode).datum().name);
-                        tooltip.classed("dn",false).selectAll("div")
-                            .data(rows).enter().append("div")
-                            .text(d => d);
-                    })
-                    features.on("mousemove", function(ev) {
-                        let tooltip = d3.select("#tooltip")
-                        .style("top",(ev.pageY+5) +"px")
-                        .style("left",(ev.pageX+5) +"px")
-                    })
+                features.on("mouseover", function(ev,d) {
+                    d3.select(this).attr("color","white");
+                    let tooltip = d3.select("#tooltip")
+                    let rows = Object.entries(d.properties).map(a => `${a[0]}: ${a[1]}`);
+                    rows.unshift(d3.select(this.parentNode).datum().name);
+                    tooltip.classed("dn",false).selectAll("div")
+                        .data(rows).enter().append("div")
+                        .text(d => d);
+                })
+                features.on("mousemove", function(ev) {
+                    let tooltip = d3.select("#tooltip")
+                    .style("top",(ev.pageY+5) +"px")
+                    .style("left",(ev.pageX+5) +"px")
+                })
 
-                    features.on("mouseout", function(ev,d,i) {
-                        d3.select(this).attr("color","currentColor");
-                        let tooltip = d3.select("#tooltip")
-                        tooltip.classed("dn",true)
-                            .selectAll("div").remove();
-                    })
-                });
+                features.on("mouseout", function(ev,d,i) {
+                    d3.select(this).attr("color","currentColor");
+                    let tooltip = d3.select("#tooltip")
+                    tooltip.classed("dn",true)
+                        .selectAll("div").remove();
+                })
             } else {
                 d3.select("#preview").append("img").attr("src",imageUrl);
             }
@@ -168,7 +171,7 @@
                     entries.push(pmtiles.parseEntry(entries_view,i));
                 }
                 let row = d3.select("#root_entries").selectAll("tr").data(entries).enter().append("tr")
-                    .attr("class","f6 pv1 dim pointer").on("click", (ev,d) => { loadEntry(file, metadata.format, d); });
+                    .attr("class","f6 pv1 dim pointer").on("click", (ev,d) => { loadEntry(file, metadata.format, metadata.compression, d); });
                 row.selectAll("td").data(d => d).enter().append("td").text(d => d);
             })
         }

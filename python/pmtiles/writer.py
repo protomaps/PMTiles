@@ -21,10 +21,6 @@ class Writer:
         self.leaves = []
 
     def write_tile(self,z,x,y,data):
-        # if the tile is GZIP-encoded, it won't work with range queries
-        # until transfer-encoding: gzip is well supported.
-        if data[0:2] == b'\x1f\x8b':
-            data = gzip.decompress(data)
         hsh = hash(data)
         if hsh in self.hash_to_offset:
             self.tiles.append((z,x,y,self.hash_to_offset[hsh],len(data)))

@@ -11,15 +11,19 @@
     "index.js"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build-iife": "esbuild index.src.mjs --outfile=index.js --target=es2015 --global-name=pmtiles --format=iife",
     "build-esm": "esbuild index.src.mjs --outfile=index.mjs --target=es6 --global-name=pmtiles --format=esm",
-    "build": "npm run build-iife && npm run build-esm"
+    "build": "npm run build-iife && npm run build-esm",
+    "test": "node -r esbuild-runner/register pmtiles.test.ts",
+    "tsc": "tsc --noEmit --watch"
   },
   "homepage": "https://github.com/protomaps/pmtiles",
   "author": "Brandon Liu",
   "license": "BSD-3-Clause",
   "devDependencies": {
-    "esbuild": "^0.11.14"
+    "esbuild": "^0.11.14",
+    "esbuild-runner": "^2.2.1",
+    "typescript": "^4.5.5",
+    "zora": "^5.0.2"
   }
 }

@@ -42,10 +42,11 @@ class Writer:
         self.f.write(entry[4].to_bytes(4,byteorder='little'))
 
     def write_leafdir(self,tiles,total_len):
-        tiles.sort(key=tilesort)
         for t in tiles:
             self.leaves.append((t[0][0],t[0][1],t[0][2],self.offset,17*total_len))
-            for entry in t[1]:
+            entries = t[1]
+            entries.sort(key=tilesort)
+            for entry in entries:
                 self.write_entry(entry)
 
     def write_header(self,metadata,root_entries_len):

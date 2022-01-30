@@ -3,6 +3,9 @@ import itertools
 import json
 from contextlib import contextmanager
 
+def tilesort(t):
+    return (t[0],t[1],t[2])
+
 @contextmanager
 def write(fname):
     w = Writer(fname)
@@ -39,6 +42,7 @@ class Writer:
         self.f.write(entry[4].to_bytes(4,byteorder='little'))
 
     def write_leafdir(self,tiles,total_len):
+        tiles.sort(key=tilesort)
         for t in tiles:
             self.leaves.append((t[0][0],t[0][1],t[0][2],self.offset,17*total_len))
             for entry in t[1]:
@@ -59,6 +63,7 @@ class Writer:
         if len(self.tiles) < 21845:
             self.f.seek(0)
             self.write_header(metadata,len(self.tiles))
+            self.tiles.sort(key=tilesort)
             for entry in self.tiles:
                 self.write_entry(entry)
         else:
@@ -97,8 +102,12 @@ class Writer:
                 root_tiles = root[0][1]
             self.f.seek(0)
             self.write_header(metadata,len(root_tiles) + len(self.leaves))
+            root_tiles.sort(key=tilesort)
             for entry in root_tiles:
                 self.write_entry(entry)
+
+            # the leaf level > the root tile entries
+            self.leaves.sort(key=tilesort)
             for entry in self.leaves:
                 z_dir = (0b10000000 | entry[0])
                 self.write_entry((z_dir,entry[1],entry[2],entry[3],entry[4]))

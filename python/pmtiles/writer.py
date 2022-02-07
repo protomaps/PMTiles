@@ -2,6 +2,7 @@ import gzip
 import itertools
 import json
 from contextlib import contextmanager
+from collections import defaultdict
 
 def tilesort(t):
     return (t[0],t[1],t[2])
@@ -22,6 +23,7 @@ class Writer:
         self.tiles = []
         self.hash_to_offset = {}
         self.leaves = []
+        self.zoom_counts = defaultdict(int)
 
     def write_tile(self,z,x,y,data):
         hsh = hash(data)
@@ -33,6 +35,7 @@ class Writer:
             self.tiles.append((z,x,y,self.offset,len(data)))
             self.hash_to_offset[hsh] = self.offset
             self.offset = self.offset + len(data)
+            self.zoom_counts[z] += 1
 
     def write_entry(self,entry):
         self.f.write(entry[0].to_bytes(1,byteorder='little'))
@@ -71,17 +74,24 @@ class Writer:
             leafdir_tiles = []
             leafdir_len = 0
 
+            # Find best base zoom to avoid extra indirection for as many tiles as we can
+            base_zoom = 7
+            n_so_far = sum(self.zoom_counts[z] for z in range(0,8))
+            while n_so_far + self.zoom_counts[base_zoom+1] < 21845:
+                n_so_far += self.zoom_counts[base_zoom+1]
+                base_zoom += 1
+
             def by_parent(t):
-                if t[0] >= 7:
-                    level_diff = t[0] - 7
-                    return (7,t[1]//(1 << level_diff),t[2]//(1 << level_diff))
+                if t[0] >= base_zoom:
+                    level_diff = t[0] - base_zoom
+                    return (base_zoom,t[1]//(1 << level_diff),t[2]//(1 << level_diff))
                 else:
                     return (0,t[1]//(1 << t[0]),t[2]//(1 << t[0]))
 
             # TODO optimize order
             self.tiles.sort(key=by_parent)
             for group in itertools.groupby(self.tiles,key=by_parent):
-                if group[0][0] != 7:
+                if group[0][0] != base_zoom:
                     continue
                 entries = list(group[1])
                 if leafdir_len + len(entries) <= 21845:

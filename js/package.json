@@ -16,7 +16,7 @@
     "build": "npm run build-iife && npm run build-esm && npm run build-tsc",
     "test": "node -r esbuild-runner/register pmtiles.test.ts",
     "tsc": "tsc --noEmit --watch",
-    "prettier": "prettier --write pmtiles.ts"
+    "prettier": "prettier --write *.ts"
   },
   "homepage": "https://github.com/protomaps/pmtiles",
   "author": "Brandon Liu",

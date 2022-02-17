@@ -1,19 +1,19 @@
 {
   "name": "pmtiles",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "PMTiles archive decoder for browsers",
-  "main": "index",
-  "module": "index.mjs",
-  "unpkg": "index.js",
-  "jsdelivr": "index.js",
+  "main": "dist/pmtiles.js",
+  "module": "dist/pmtiles.mjs",
+  "source": "pmtiles.ts",
   "files": [
-    "index.mjs",
-    "index.js"
+    "dist",
+    "pmtiles.ts"
   ],
   "scripts": {
-    "build-iife": "esbuild index.src.mjs --outfile=index.js --target=es2015 --global-name=pmtiles --format=iife",
-    "build-esm": "esbuild index.src.mjs --outfile=index.mjs --target=es6 --global-name=pmtiles --format=esm",
-    "build": "npm run build-iife && npm run build-esm",
+    "build-iife": "esbuild pmtiles.ts --outfile=dist/index.js --target=es6 --global-name=pmtiles --format=iife",
+    "build-esm": "esbuild pmtiles.ts --outfile=dist/index.mjs --target=es6 --global-name=pmtiles --format=esm",
+    "build-tsc": "tsc --declaration --outdir dist",
+    "build": "npm run build-iife && npm run build-esm && npm run build-tsc",
     "test": "node -r esbuild-runner/register pmtiles.test.ts",
     "tsc": "tsc --noEmit --watch"
   },

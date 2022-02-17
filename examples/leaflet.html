@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
         <script src="https://unpkg.com/pmtiles@latest/index.js"></script>
-        <!-- <script src="../js/index.js"></script> -->
+        <!-- <script src="../js/dist/index.js"></script> -->
         <style>
             body, #map {
                 height:100vh;
@@ -20,7 +20,7 @@
        <script>
         const map = L.map('map',{maxZoom:4}).setView([0,0],0)
         const p = new pmtiles.PMTiles('osm_carto.pmtiles')
-        p.leafletLayer({attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
+        pmtiles.leafletLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
        </script>
     </body>
 </html>

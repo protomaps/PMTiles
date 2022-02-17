@@ -263,7 +263,7 @@ export class PMTiles {
       17 * header.root_entries
     );
     if (header.version === 1) {
-      console.log("Sorting pmtiles v1 directory");
+      console.warn("Sorting pmtiles v1 directory");
       root_dir = new DataView(sortDir(root_dir));
     }
 
@@ -287,8 +287,23 @@ export class PMTiles {
       dec.decode(new DataView(root.buffer, 10, root.header.json_size))
     );
     if (result.compression) {
-      console.error(
+      console.warn(
         `Archive has compression type: ${result.compression} and may not be readable directly by browsers.`
+      );
+    }
+    if (!result.bounds) {
+      console.warn(
+        `Archive is missing 'bounds' in metadata, required in v2 and above.`
+      );
+    }
+    if (!result.minzoom) {
+      console.warn(
+        `Archive is missing 'minzoom' in metadata, required in v2 and above.`
+      );
+    }
+    if (!result.maxzoom) {
+      console.warn(
+        `Archive is missing 'maxzoom' in metadata, required in v2 and above.`
       );
     }
     return result;
@@ -304,7 +319,7 @@ export class PMTiles {
     var buf = await resp.arrayBuffer();
 
     if (version === 1) {
-      console.log("Sorting pmtiles v1 directory");
+      console.warn("Sorting pmtiles v1 directory.");
       buf = sortDir(new DataView(buf));
     }
 

@@ -55,14 +55,14 @@ A PMTiles archive is composed of:
 
 ### Header
 * The header begins with a 2-byte magic number, "PM"
-* Followed by 2 bytes, the PMTiles specification version (currently 1)
+* Followed by 2 bytes, the PMTiles specification version (currently 2).
 * Followed by 4 bytes, the length of metadata (M bytes)
 * Followed by 2 bytes, the number of entries in the *root directory* (N entries)
-* Followed by M bytes of metadata, by convention a JSON object
+* Followed by M bytes of metadata, which **must be a JSON string with bounds, minzoom and maxzoom properties (new in v2)**
 * Followed by N * 17 bytes, the root directory.
 
 ### Directory structure
-A directory is a contiguous sequence of 17 byte entries. A directory can have at most 21,845 entries. 
+A directory is a contiguous sequence of 17 byte entries. A directory can have at most 21,845 entries. **A directory must be sorted by Z, X and then Y order (new in v2).**
 
 An entry consists of:
 * 1 byte: the zoom level (Z) of the entry, with the top bit set to 1 instead of 0 to indicate the offset/length points to a leaf directory and not a tile.
@@ -70,6 +70,8 @@ An entry consists of:
 * 3 bytes: the Y (row) of the entry.
 * 6 bytes: the offset of where the tile begins in the archive.
 * 4 bytes: the length of the tile, in bytes.
+
+**All leaf directory entries follow non-leaf entries. All leaf directories in a single directory must have the same Z value. (new in v2).**
 
 ### Notes
 * A full directory of 21,845 entries holds exactly a complete pyramid with 8 levels, or 1+4+16+64+256+1024+4096+16384.

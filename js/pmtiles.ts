@@ -120,6 +120,14 @@ export const parseEntry = (dataview: DataView, i: number): Entry => {
 	};
 };
 
+export const sortDir = (dataview: DataView): ArrayBuffer => {
+	let entries: Entry[] = [];
+	for (var i = 0; i < dataview.byteLength / 17; i++) {
+		entries.push(parseEntry(dataview, i));
+	}
+	return createDirectory(entries);
+};
+
 export const createDirectory = (entries: Entry[]): ArrayBuffer => {
 	entries.sort(entrySort);
 
@@ -240,14 +248,21 @@ export class PMTiles {
 
 		let a = await resp.arrayBuffer();
 		let header = parseHeader(new DataView(a, 0, 10));
+
+		var root_dir = new DataView(
+			a,
+			10 + header.json_size,
+			17 * header.root_entries
+		);
+		if (header.version === 1) {
+			console.log("Sorting pmtiles v1 directory");
+			root_dir = new DataView(sortDir(root_dir));
+		}
+
 		return {
 			buffer: a,
 			header: header,
-			dir: new DataView(
-				a,
-				10 + header.json_size,
-				17 * header.root_entries
-			),
+			dir: root_dir,
 		};
 	};
 
@@ -271,7 +286,10 @@ export class PMTiles {
 		return result;
 	};
 
-	fetchLeafdir = async (entry: Entry): Promise<ArrayBuffer> => {
+	fetchLeafdir = async (
+		version: number,
+		entry: Entry
+	): Promise<ArrayBuffer> => {
 		let resp = await fetch(this.url, {
 			headers: {
 				Range:
@@ -281,14 +299,25 @@ export class PMTiles {
 					(entry.offset + entry.length - 1),
 			},
 		});
-		return await resp.arrayBuffer();
+		var buf = await resp.arrayBuffer();
+
+		if (version === 1) {
+			console.log("Sorting pmtiles v1 directory");
+			buf = sortDir(new DataView(buf));
+		}
+
+		return buf;
 	};
 
-	getLeafdir = async (entry: Entry): Promise<ArrayBuffer> => {
+	getLeafdir = async (
+		version: number,
+		entry: Entry
+	): Promise<ArrayBuffer> => {
 		let leaf = this.leaves.get(entry.offset);
 		if (leaf) return await leaf.buffer;
 
-		let buf = this.fetchLeafdir(entry);
+		var buf = this.fetchLeafdir(version, entry);
+
 		this.leaves.set(entry.offset, {
 			lastUsed: performance.now(),
 			buffer: buf,
@@ -321,7 +350,10 @@ export class PMTiles {
 		);
 
 		if (leafdir_entry) {
-			let leafdir = await this.getLeafdir(leafdir_entry);
+			let leafdir = await this.getLeafdir(
+				root.header.version,
+				leafdir_entry
+			);
 			return queryTile(new DataView(leafdir), z, x, y);
 		}
 		return null;

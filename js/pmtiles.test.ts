@@ -4,6 +4,7 @@ import {
   getUint24,
   getUint48,
   queryLeafdir,
+  queryLeafLevel,
   queryTile,
   parseEntry,
   Entry,
@@ -77,6 +78,35 @@ test("get leafdir", (assertion) => {
   assertion.ok(entry!.length === 999);
   assertion.ok(entry!.is_dir === true);
   assertion.ok(queryTile(view, 14, 16383, 16383) === null);
+});
+
+test("derive the leaf level", (assertion) => {
+  let data = createDirectory([
+    {
+      z: 6,
+      x: 3,
+      y: 3,
+      offset: 0,
+      length: 0,
+      is_dir: true,
+    },
+  ]);
+  let view = new DataView(data);
+  let level = queryLeafLevel(view);
+  assertion.ok(level === 6);
+  data = createDirectory([
+    {
+      z: 6,
+      x: 3,
+      y: 3,
+      offset: 0,
+      length: 0,
+      is_dir: false,
+    },
+  ]);
+  view = new DataView(data);
+  level = queryLeafLevel(view);
+  assertion.ok(level === null);
 });
 
 test("convert spec v1 directory to spec v2 directory", (assertion) => {

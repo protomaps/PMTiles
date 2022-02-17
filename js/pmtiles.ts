@@ -16,6 +16,39 @@ export const getUint48 = (view: DataView, pos: number) => {
   return shift(view.getUint32(pos + 2, true), 16) + view.getUint16(pos, true);
 };
 
+interface Zxy {
+  z: number;
+  x: number;
+  y: number;
+}
+
+interface Header {
+  version: number;
+  json_size: number;
+  root_entries: number;
+}
+
+interface Root {
+  header: Header;
+  buffer: ArrayBuffer;
+  dir: DataView;
+  // etag: string | null;
+}
+
+export interface Entry {
+  z: number;
+  x: number;
+  y: number;
+  offset: number;
+  length: number;
+  is_dir: boolean;
+}
+
+interface CachedLeaf {
+  lastUsed: number;
+  buffer: Promise<ArrayBuffer>;
+}
+
 const compare = (
   tz: number,
   tx: number,
@@ -85,6 +118,14 @@ const queryView = (
       return [getUint48(view, k * 17 + 7), view.getUint32(k * 17 + 13, true)];
     }
   }
+  return null;
+};
+
+export const queryLeafLevel = (view: DataView): number | null => {
+  if (view.byteLength < 17) return null;
+  let numEntries = view.byteLength / 17;
+  let entry = parseEntry(view, numEntries - 1);
+  if (entry.is_dir) return entry.z;
   return null;
 };
 
@@ -159,46 +200,16 @@ export const createDirectory = (entries: Entry[]): ArrayBuffer => {
   return buffer;
 };
 
-interface Zxy {
-  z: number;
-  x: number;
-  y: number;
-}
-
-// TODO: handle different leaf levels
-export const deriveLeaf = (tile: Zxy): Zxy => {
-  let z7_tile_diff = tile.z - 7;
-  let z7_x = Math.trunc(tile.x / (1 << z7_tile_diff));
-  let z7_y = Math.trunc(tile.y / (1 << z7_tile_diff));
-  return { z: 7, x: z7_x, y: z7_y };
+export const deriveLeaf = (root: Root, tile: Zxy): Zxy | null => {
+  const leaf_level = queryLeafLevel(root.dir);
+  if (leaf_level) {
+    let level_diff = tile.z - leaf_level;
+    let leaf_x = Math.trunc(tile.x / (1 << level_diff));
+    let leaf_y = Math.trunc(tile.y / (1 << level_diff));
+    return { z: leaf_level, x: leaf_x, y: leaf_y };
+  }
+  return null;
 };
-
-interface Header {
-  version: number;
-  json_size: number;
-  root_entries: number;
-}
-
-interface Root {
-  header: Header;
-  buffer: ArrayBuffer;
-  dir: DataView;
-  // etag: string | null;
-}
-
-export interface Entry {
-  z: number;
-  x: number;
-  y: number;
-  offset: number;
-  length: number;
-  is_dir: boolean;
-}
-
-interface CachedLeaf {
-  lastUsed: number;
-  buffer: Promise<ArrayBuffer>;
-}
 
 export const parseHeader = (dataview: DataView): Header => {
   var magic = dataview.getUint16(0, true);
@@ -329,17 +340,18 @@ export class PMTiles {
     let entry = queryTile(root.dir, z, x, y);
     if (entry) return entry;
 
-    let leafcoords = deriveLeaf({ z: z, x: x, y: y });
-    let leafdir_entry = queryLeafdir(
-      root.dir,
-      leafcoords.z,
-      leafcoords.x,
-      leafcoords.y
-    );
-
-    if (leafdir_entry) {
-      let leafdir = await this.getLeafdir(root.header.version, leafdir_entry);
-      return queryTile(new DataView(leafdir), z, x, y);
+    let leafcoords = deriveLeaf(root, { z: z, x: x, y: y });
+    if (leafcoords) {
+      let leafdir_entry = queryLeafdir(
+        root.dir,
+        leafcoords.z,
+        leafcoords.x,
+        leafcoords.y
+      );
+      if (leafdir_entry) {
+        let leafdir = await this.getLeafdir(root.header.version, leafdir_entry);
+        return queryTile(new DataView(leafdir), z, x, y);
+      }
     }
     return null;
   }

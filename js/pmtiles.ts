@@ -228,7 +228,7 @@ export class PMTiles {
     this.maxLeaves = maxLeaves;
   }
 
-  fetchRoot = async (url: string): Promise<Root> => {
+  async fetchRoot(url: string): Promise<Root> {
     const controller = new AbortController();
     const signal = controller.signal;
     let resp = await fetch(url, {
@@ -261,15 +261,15 @@ export class PMTiles {
       header: header,
       dir: root_dir,
     };
-  };
+  }
 
-  getRoot = async (): Promise<Root> => {
+  async getRoot(): Promise<Root> {
     if (this.root) return this.root;
     this.root = this.fetchRoot(this.url);
     return this.root;
-  };
+  }
 
-  metadata = async (): Promise<any> => {
+  async metadata(): Promise<any> {
     let root = await this.getRoot();
     let dec = new TextDecoder("utf-8");
     let result = JSON.parse(
@@ -281,12 +281,9 @@ export class PMTiles {
       );
     }
     return result;
-  };
+  }
 
-  fetchLeafdir = async (
-    version: number,
-    entry: Entry
-  ): Promise<ArrayBuffer> => {
+  async fetchLeafdir(version: number, entry: Entry): Promise<ArrayBuffer> {
     let resp = await fetch(this.url, {
       headers: {
         Range:
@@ -301,9 +298,9 @@ export class PMTiles {
     }
 
     return buf;
-  };
+  }
 
-  getLeafdir = async (version: number, entry: Entry): Promise<ArrayBuffer> => {
+  async getLeafdir(version: number, entry: Entry): Promise<ArrayBuffer> {
     let leaf = this.leaves.get(entry.offset);
     if (leaf) return await leaf.buffer;
 
@@ -325,9 +322,9 @@ export class PMTiles {
       if (minKey) this.leaves.delete(minKey);
     }
     return await buf;
-  };
+  }
 
-  getZxy = async (z: number, x: number, y: number): Promise<Entry | null> => {
+  async getZxy(z: number, x: number, y: number): Promise<Entry | null> {
     let root = await this.getRoot();
     let entry = queryTile(root.dir, z, x, y);
     if (entry) return entry;
@@ -345,7 +342,7 @@ export class PMTiles {
       return queryTile(new DataView(leafdir), z, x, y);
     }
     return null;
-  };
+  }
 }
 
 export const leafletLayer = (source: PMTiles, options: any) => {

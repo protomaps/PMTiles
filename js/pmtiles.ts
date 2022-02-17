@@ -1,3 +1,5 @@
+declare var L: any;
+
 export const shift = (n: number, shift: number) => {
 	return n * Math.pow(2, shift);
 };
@@ -325,6 +327,67 @@ export class PMTiles {
 		return null;
 	};
 }
+
+export const leafletLayer = (source: PMTiles, options: any) => {
+	var cls = L.GridLayer.extend({
+		createTile: function (coord: any, done: any) {
+			var tile: any = document.createElement("img");
+			source.getZxy(coord.z, coord.x, coord.y).then((result) => {
+				if (result === null) return;
+
+				const controller = new AbortController();
+				const signal = controller.signal;
+				tile.cancel = () => {
+					controller.abort();
+				};
+				fetch(source.url, {
+					signal: signal,
+					headers: {
+						Range:
+							"bytes=" +
+							result.offset +
+							"-" +
+							(result.offset + result.length - 1),
+					},
+				})
+					.then((resp) => {
+						return resp.arrayBuffer();
+					})
+					.then((buf) => {
+						var blob = new Blob([buf], { type: "image/png" });
+						var imageUrl = window.URL.createObjectURL(blob);
+						tile.src = imageUrl;
+						tile.cancel = null;
+						done(null, tile);
+					})
+					.catch((error) => {
+						if (error.name !== "AbortError") throw error;
+					});
+			});
+			return tile;
+		},
+
+		_removeTile: function (key: string) {
+			var tile = this._tiles[key];
+			if (!tile) {
+				return;
+			}
+
+			if (tile.el.cancel) tile.el.cancel();
+
+			tile.el.width = 0;
+			tile.el.height = 0;
+			tile.el.deleted = true;
+			L.DomUtil.remove(tile.el);
+			delete this._tiles[key];
+			this.fire("tileunload", {
+				tile: tile.el,
+				coords: this._keyToTileCoords(key),
+			});
+		},
+	});
+	return new cls(options);
+};
 
 export const addProtocol = (maplibregl: any) => {
 	let re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);

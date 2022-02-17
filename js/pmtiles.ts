@@ -105,6 +105,19 @@ const entrySort = (a: Entry, b: Entry): number => {
 	return a.y - b.y;
 };
 
+export const parseEntry = (dataview: DataView, i: number): Entry => {
+	var z_raw = dataview.getUint8(i * 17);
+	var z = z_raw & 127;
+	return {
+		z: z,
+		x: getUint24(dataview, i * 17 + 1),
+		y: getUint24(dataview, i * 17 + 4),
+		offset: getUint48(dataview, i * 17 + 7),
+		length: dataview.getUint32(i * 17 + 13, true),
+		is_dir: z_raw >> 7 === 1,
+	};
+};
+
 export const createDirectory = (entries: Entry[]): ArrayBuffer => {
 	entries.sort(entrySort);
 
@@ -145,17 +158,12 @@ interface Zxy {
 	y: number;
 }
 
-// handle different leaf levels
+// TODO: handle different leaf levels
 export const deriveLeaf = (tile: Zxy): Zxy => {
 	let z7_tile_diff = tile.z - 7;
 	let z7_x = Math.trunc(tile.x / (1 << z7_tile_diff));
 	let z7_y = Math.trunc(tile.y / (1 << z7_tile_diff));
 	return { z: 7, x: z7_x, y: z7_y };
-};
-
-// needed to convert a spec v1 to a spec v2
-const sortEntries = (dataview: DataView): ArrayBuffer => {
-	return new ArrayBuffer(0);
 };
 
 interface Header {

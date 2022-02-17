@@ -5,6 +5,7 @@ import {
 	getUint48,
 	queryLeafdir,
 	queryTile,
+	parseEntry,
 	Entry,
 	createDirectory,
 } from "./pmtiles";
@@ -112,4 +113,11 @@ test("convert spec v1 directory to spec v2 directory", (assertion) => {
 	assertion.ok(entry!.offset === 2);
 	entry = queryTile(view, 6, 2, 1);
 	assertion.ok(entry!.offset === 1);
+
+	entry = parseEntry(view, 0);
+	assertion.ok(entry!.offset === 1);
+	entry = parseEntry(view, 1);
+	assertion.ok(entry!.offset === 2);
+	entry = parseEntry(view, 2);
+	assertion.ok(entry!.offset === 3);
 });

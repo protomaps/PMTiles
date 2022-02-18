@@ -7,7 +7,7 @@
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
         <script src="https://unpkg.com/pmtiles@latest/index.js"></script>
-        <!-- <script src="../js/index.js"></script> -->
+        <!-- <script src="../js/dist/index.js"></script> -->
         <title>PMTiles inspector</title>
     </head>
     <body class="sans-serif v-scroll bg-dark-gray flex">
@@ -73,9 +73,9 @@
         d3.select("#inputPanel").classed("dn",false);
 
         let loadEntry = async (file,format,compression,row) => {
-            var blob = file.slice(row[3],row[3]+row[4]);
+            var blob = file.slice(row.offset,row.offset+row.length);
             var imageUrl = window.URL.createObjectURL(blob);
-            d3.select("#preview_label").text(`${row[0]} ${row[1]} ${row[2]}`);
+            d3.select("#preview_label").text(`${row.z} ${row.x} ${row.y}`);
             d3.select("#preview").selectAll("*").remove();
             if (format === "pbf") {
                 var a = await blob.arrayBuffer();
@@ -166,13 +166,13 @@
                     .data(Object.entries(metadata).map(a => `${a[0]}: ${a[1]}`))
                     .enter().append("div").text(d => d);
                 var entries_view = new DataView(a,10+header.json_size,17*header.root_entries);
-                let entries = []
-                for (var i = 0; i < entries_view.byteLength; i+=17) {
+                let entries = [];
+                for (var i = 0; i < entries_view.byteLength/17; i++) {
                     entries.push(pmtiles.parseEntry(entries_view,i));
                 }
                 let row = d3.select("#root_entries").selectAll("tr").data(entries).enter().append("tr")
                     .attr("class","f6 pv1 dim pointer").on("click", (ev,d) => { loadEntry(file, metadata.format, metadata.compression, d); });
-                row.selectAll("td").data(d => d).enter().append("td").text(d => d);
+                row.selectAll("td").data(d => [d.z,d.x,d.y,d.offset,d.length,d.is_dir]).enter().append("td").text(d => { return d } );
             })
         }
 

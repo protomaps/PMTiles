@@ -1,4 +1,4 @@
-declare var L: any;
+declare const L: any;
 
 export const shift = (n: number, shift: number) => {
   return n * Math.pow(2, shift);
@@ -57,9 +57,9 @@ const compare = (
   i: number
 ) => {
   if (tz != view.getUint8(i)) return tz - view.getUint8(i);
-  var x = getUint24(view, i + 1);
+  const x = getUint24(view, i + 1);
   if (tx != x) return tx - x;
-  var y = getUint24(view, i + 4);
+  const y = getUint24(view, i + 4);
   if (ty != y) return ty - y;
   return 0;
 };
@@ -70,7 +70,7 @@ export const queryLeafdir = (
   x: number,
   y: number
 ): Entry | null => {
-  let offset_len = queryView(view, z | 0x80, x, y);
+  const offset_len = queryView(view, z | 0x80, x, y);
   if (offset_len) {
     return {
       z: z,
@@ -85,7 +85,7 @@ export const queryLeafdir = (
 };
 
 export const queryTile = (view: DataView, z: number, x: number, y: number) => {
-  let offset_len = queryView(view, z, x, y);
+  const offset_len = queryView(view, z, x, y);
   if (offset_len) {
     return {
       z: z,
@@ -105,11 +105,11 @@ const queryView = (
   x: number,
   y: number
 ): [number, number] | null => {
-  var m = 0;
-  var n = view.byteLength / 17 - 1;
+  let m = 0;
+  let n = view.byteLength / 17 - 1;
   while (m <= n) {
-    var k = (n + m) >> 1;
-    var cmp = compare(z, x, y, view, k * 17);
+    const k = (n + m) >> 1;
+    const cmp = compare(z, x, y, view, k * 17);
     if (cmp > 0) {
       m = k + 1;
     } else if (cmp < 0) {
@@ -123,8 +123,8 @@ const queryView = (
 
 export const queryLeafLevel = (view: DataView): number | null => {
   if (view.byteLength < 17) return null;
-  let numEntries = view.byteLength / 17;
-  let entry = parseEntry(view, numEntries - 1);
+  const numEntries = view.byteLength / 17;
+  const entry = parseEntry(view, numEntries - 1);
   if (entry.is_dir) return entry.z;
   return null;
 };
@@ -146,8 +146,8 @@ const entrySort = (a: Entry, b: Entry): number => {
 };
 
 export const parseEntry = (dataview: DataView, i: number): Entry => {
-  var z_raw = dataview.getUint8(i * 17);
-  var z = z_raw & 127;
+  const z_raw = dataview.getUint8(i * 17);
+  const z = z_raw & 127;
   return {
     z: z,
     x: getUint24(dataview, i * 17 + 1),
@@ -159,8 +159,8 @@ export const parseEntry = (dataview: DataView, i: number): Entry => {
 };
 
 export const sortDir = (dataview: DataView): ArrayBuffer => {
-  let entries: Entry[] = [];
-  for (var i = 0; i < dataview.byteLength / 17; i++) {
+  const entries: Entry[] = [];
+  for (let i = 0; i < dataview.byteLength / 17; i++) {
     entries.push(parseEntry(dataview, i));
   }
   return createDirectory(entries);
@@ -169,11 +169,11 @@ export const sortDir = (dataview: DataView): ArrayBuffer => {
 export const createDirectory = (entries: Entry[]): ArrayBuffer => {
   entries.sort(entrySort);
 
-  let buffer = new ArrayBuffer(17 * entries.length);
-  let arr = new Uint8Array(buffer);
-  for (var i = 0; i < entries.length; i++) {
-    var entry = entries[i];
-    var z = entry.z;
+  const buffer = new ArrayBuffer(17 * entries.length);
+  const arr = new Uint8Array(buffer);
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    let z = entry.z;
     if (entry.is_dir) z = z | 0x80;
     arr[i * 17] = z;
 
@@ -203,22 +203,22 @@ export const createDirectory = (entries: Entry[]): ArrayBuffer => {
 export const deriveLeaf = (root: Root, tile: Zxy): Zxy | null => {
   const leaf_level = queryLeafLevel(root.dir);
   if (leaf_level) {
-    let level_diff = tile.z - leaf_level;
-    let leaf_x = Math.trunc(tile.x / (1 << level_diff));
-    let leaf_y = Math.trunc(tile.y / (1 << level_diff));
+    const level_diff = tile.z - leaf_level;
+    const leaf_x = Math.trunc(tile.x / (1 << level_diff));
+    const leaf_y = Math.trunc(tile.y / (1 << level_diff));
     return { z: leaf_level, x: leaf_x, y: leaf_y };
   }
   return null;
 };
 
 export const parseHeader = (dataview: DataView): Header => {
-  var magic = dataview.getUint16(0, true);
+  const magic = dataview.getUint16(0, true);
   if (magic !== 19792) {
     throw new Error('File header does not begin with "PM"');
   }
-  var version = dataview.getUint16(2, true);
-  var json_size = dataview.getUint32(4, true);
-  var root_entries = dataview.getUint16(8, true);
+  const version = dataview.getUint16(2, true);
+  const json_size = dataview.getUint32(4, true);
+  const root_entries = dataview.getUint16(8, true);
   return {
     version: version,
     json_size: json_size,
@@ -232,7 +232,7 @@ export class PMTiles {
   leaves: Map<number, CachedLeaf>;
   maxLeaves: number;
 
-  constructor(url: string, maxLeaves: number = 64) {
+  constructor(url: string, maxLeaves = 64) {
     this.root = null;
     this.url = url;
     this.leaves = new Map<number, CachedLeaf>();
@@ -242,11 +242,11 @@ export class PMTiles {
   async fetchRoot(url: string): Promise<Root> {
     const controller = new AbortController();
     const signal = controller.signal;
-    let resp = await fetch(url, {
+    const resp = await fetch(url, {
       signal: signal,
       headers: { Range: "bytes=0-511999" },
     });
-    let contentLength = resp.headers.get("Content-Length");
+    const contentLength = resp.headers.get("Content-Length");
     if (!contentLength || +contentLength !== 512000) {
       console.error(
         "Content-Length mismatch indicates byte serving not supported; aborting."
@@ -254,10 +254,10 @@ export class PMTiles {
       controller.abort();
     }
 
-    let a = await resp.arrayBuffer();
-    let header = parseHeader(new DataView(a, 0, 10));
+    const a = await resp.arrayBuffer();
+    const header = parseHeader(new DataView(a, 0, 10));
 
-    var root_dir = new DataView(
+    let root_dir = new DataView(
       a,
       10 + header.json_size,
       17 * header.root_entries
@@ -281,9 +281,9 @@ export class PMTiles {
   }
 
   async metadata(): Promise<any> {
-    let root = await this.getRoot();
-    let dec = new TextDecoder("utf-8");
-    let result = JSON.parse(
+    const root = await this.getRoot();
+    const dec = new TextDecoder("utf-8");
+    const result = JSON.parse(
       dec.decode(new DataView(root.buffer, 10, root.header.json_size))
     );
     if (result.compression) {
@@ -310,13 +310,13 @@ export class PMTiles {
   }
 
   async fetchLeafdir(version: number, entry: Entry): Promise<ArrayBuffer> {
-    let resp = await fetch(this.url, {
+    const resp = await fetch(this.url, {
       headers: {
         Range:
           "bytes=" + entry.offset + "-" + (entry.offset + entry.length - 1),
       },
     });
-    var buf = await resp.arrayBuffer();
+    let buf = await resp.arrayBuffer();
 
     if (version === 1) {
       console.warn("Sorting pmtiles v1 directory.");
@@ -327,18 +327,18 @@ export class PMTiles {
   }
 
   async getLeafdir(version: number, entry: Entry): Promise<ArrayBuffer> {
-    let leaf = this.leaves.get(entry.offset);
+    const leaf = this.leaves.get(entry.offset);
     if (leaf) return await leaf.buffer;
 
-    var buf = this.fetchLeafdir(version, entry);
+    const buf = this.fetchLeafdir(version, entry);
 
     this.leaves.set(entry.offset, {
       lastUsed: performance.now(),
       buffer: buf,
     });
     if (this.leaves.size > this.maxLeaves) {
-      var minUsed = Infinity;
-      var minKey = undefined;
+      let minUsed = Infinity;
+      let minKey = undefined;
       this.leaves.forEach((val, key) => {
         if (val.lastUsed < minUsed) {
           minUsed = val.lastUsed;
@@ -351,20 +351,23 @@ export class PMTiles {
   }
 
   async getZxy(z: number, x: number, y: number): Promise<Entry | null> {
-    let root = await this.getRoot();
-    let entry = queryTile(root.dir, z, x, y);
+    const root = await this.getRoot();
+    const entry = queryTile(root.dir, z, x, y);
     if (entry) return entry;
 
-    let leafcoords = deriveLeaf(root, { z: z, x: x, y: y });
+    const leafcoords = deriveLeaf(root, { z: z, x: x, y: y });
     if (leafcoords) {
-      let leafdir_entry = queryLeafdir(
+      const leafdir_entry = queryLeafdir(
         root.dir,
         leafcoords.z,
         leafcoords.x,
         leafcoords.y
       );
       if (leafdir_entry) {
-        let leafdir = await this.getLeafdir(root.header.version, leafdir_entry);
+        const leafdir = await this.getLeafdir(
+          root.header.version,
+          leafdir_entry
+        );
         return queryTile(new DataView(leafdir), z, x, y);
       }
     }
@@ -373,9 +376,9 @@ export class PMTiles {
 }
 
 export const leafletLayer = (source: PMTiles, options: any) => {
-  var cls = L.GridLayer.extend({
+  const cls = L.GridLayer.extend({
     createTile: function (coord: any, done: any) {
-      var tile: any = document.createElement("img");
+      const tile: any = document.createElement("img");
       source.getZxy(coord.z, coord.x, coord.y).then((result) => {
         if (result === null) return;
 
@@ -398,8 +401,8 @@ export const leafletLayer = (source: PMTiles, options: any) => {
             return resp.arrayBuffer();
           })
           .then((buf) => {
-            var blob = new Blob([buf], { type: "image/png" });
-            var imageUrl = window.URL.createObjectURL(blob);
+            const blob = new Blob([buf], { type: "image/png" });
+            const imageUrl = window.URL.createObjectURL(blob);
             tile.src = imageUrl;
             tile.cancel = null;
             done(null, tile);
@@ -412,7 +415,7 @@ export const leafletLayer = (source: PMTiles, options: any) => {
     },
 
     _removeTile: function (key: string) {
-      var tile = this._tiles[key];
+      const tile = this._tiles[key];
       if (!tile) {
         return;
       }

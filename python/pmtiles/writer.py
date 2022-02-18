@@ -54,7 +54,7 @@ class Writer:
 
     def write_header(self,metadata,root_entries_len):
         self.f.write((0x4D50).to_bytes(2,byteorder='little'))
-        self.f.write((1).to_bytes(2,byteorder='little'))
+        self.f.write((2).to_bytes(2,byteorder='little'))
         metadata_serialized = json.dumps(metadata)
         # 512000 - (17 * 21845) - 2 (magic) - 2 (version) - 4 (jsonlen) - 2 (dictentries) = 140625
         assert len(metadata_serialized) < 140625

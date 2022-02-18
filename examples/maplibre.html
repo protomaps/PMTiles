@@ -18,7 +18,8 @@
     <body>
         <div id="map"></div>
         <script>
-            pmtiles.addProtocol(maplibregl)
+            let cache = new pmtiles.ProtocolCache();
+            maplibregl.addProtocol("pmtiles",cache.protocol);
             var style = {
                 "version": 8,
                 "sources": {

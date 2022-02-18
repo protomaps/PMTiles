@@ -31,7 +31,8 @@ tippecanoe -zg --projection=EPSG:4326 --no-tile-compression --no-feature-limit -
 pmtiles-convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k_nolimit.pmtiles</pre>
         </div>
         <script>
-            pmtiles.addProtocol(maplibregl)
+            let cache = new pmtiles.ProtocolCache();
+            maplibregl.addProtocol("pmtiles",cache.protocol);
             var style = {
                 "version": 8,
                 "sources": {

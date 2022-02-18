@@ -451,7 +451,7 @@ export class ProtocolCache {
     return this.tiles.get(url);
   }
 
-  protocol(params: any, callback: any) {
+  protocol = (params: any, callback: any) => {
     const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
     const result = params.url.match(re);
     const pmtiles_url = result[1];
@@ -495,5 +495,5 @@ export class ProtocolCache {
         cancel();
       },
     };
-  }
+  };
 }

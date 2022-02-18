@@ -436,26 +436,39 @@ export const leafletLayer = (source: PMTiles, options: any) => {
   return new cls(options);
 };
 
-export const addProtocol = (maplibregl: any) => {
-  let re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
-  let pmtiles_instances = new Map<string, PMTiles>();
-  maplibregl.addProtocol("pmtiles", (params: any, callback: any) => {
-    let result = params.url.match(re);
-    let pmtiles_url = result[1];
+export class ProtocolCache {
+  tiles: Map<string, PMTiles>;
 
-    var instance = pmtiles_instances.get(pmtiles_url);
+  constructor() {
+    this.tiles = new Map<string, PMTiles>();
+  }
+
+  add(p: PMTiles) {
+    this.tiles.set(p.url, p);
+  }
+
+  get(url: string) {
+    return this.tiles.get(url);
+  }
+
+  protocol(params: any, callback: any) {
+    const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
+    const result = params.url.match(re);
+    const pmtiles_url = result[1];
+
+    let instance = this.tiles.get(pmtiles_url);
     if (!instance) {
       instance = new PMTiles(pmtiles_url);
-      pmtiles_instances.set(pmtiles_url, instance);
+      this.tiles.set(pmtiles_url, instance);
     }
-    let z = result[2];
-    let x = result[3];
-    let y = result[4];
-    var cancel = () => {};
+    const z = result[2];
+    const x = result[3];
+    const y = result[4];
+    let cancel = () => {};
 
     instance.getZxy(+z, +x, +y).then((val) => {
       if (val) {
-        let headers = {
+        const headers = {
           Range: "bytes=" + val.offset + "-" + (val.offset + val.length - 1),
         };
         const controller = new AbortController();
@@ -482,6 +495,5 @@ export const addProtocol = (maplibregl: any) => {
         cancel();
       },
     };
-  });
-  return pmtiles_instances;
-};
+  }
+}

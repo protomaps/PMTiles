@@ -4,17 +4,17 @@
   "description": "PMTiles archive decoder for browsers",
   "main": "dist/pmtiles.js",
   "module": "dist/pmtiles.mjs",
-  "source": "pmtiles.ts",
+  "source": "index.ts",
   "files": [
     "dist",
     "pmtiles.ts"
   ],
   "scripts": {
-    "build-iife": "esbuild pmtiles.ts --outfile=dist/index.js --target=es6 --global-name=pmtiles --format=iife",
-    "build-esm": "esbuild pmtiles.ts --outfile=dist/index.mjs --target=es6 --global-name=pmtiles --format=esm",
+    "build-iife": "esbuild index.ts --outfile=dist/index.js --target=es6 --global-name=pmtiles --format=iife",
+    "build-esm": "esbuild index.ts --outfile=dist/index.mjs --target=es6 --global-name=pmtiles --format=esm",
     "build-tsc": "tsc --declaration --outdir dist",
     "build": "npm run build-iife && npm run build-esm && npm run build-tsc",
-    "test": "node -r esbuild-runner/register pmtiles.test.ts",
+    "test": "node -r esbuild-runner/register index.test.ts",
     "tsc": "tsc --noEmit --watch",
     "prettier": "prettier --write *.ts"
   },

@@ -9,7 +9,7 @@ import {
   parseEntry,
   Entry,
   createDirectory,
-} from "./pmtiles";
+} from "./index";
 
 test("stub data", (assertion) => {
   let data = createDirectory([

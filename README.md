@@ -19,6 +19,10 @@ See also:
 
 ## How To Use
 
+### JavaScript
+
+See [js/README.md](js/README.md) for usage in Leaflet or MapLibre GL JS.
+
 ### Go
 
 See https://github.com/protomaps/go-pmtiles
@@ -33,28 +37,6 @@ See https://github.com/protomaps/go-pmtiles
 
 See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usage
 
-### JavaScript
-
-    <script src="https://unpkg.com/pmtiles@1.0.0/dist/index.js"></script>
-
-Example of a raster PMTiles archive displayed in Leaflet:
-
-    const p = new pmtiles.PMTiles('example.pmtiles')
-    pmtiles.leafletLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
-
-Example of a vector PMTiles archive displayed in MapLibre GL JS:
-
-    let cache = new pmtiles.ProtocolCache();
-    maplibregl.addProtocol("pmtiles",cache.protocol);
-    var style = {
-    "version": 8,
-    "sources": {
-        "example_source": {
-            "type": "vector",
-            "tiles": ["pmtiles://example.pmtiles/{z}/{x}/{y}"],
-        ...
-
-    
 ## Specification
 
 ![layout](layout.png)

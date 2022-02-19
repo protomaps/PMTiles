@@ -1,13 +1,13 @@
 {
   "name": "pmtiles",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "PMTiles archive decoder for browsers",
   "main": "dist/pmtiles.js",
   "module": "dist/pmtiles.mjs",
   "source": "index.ts",
   "files": [
     "dist",
-    "pmtiles.ts"
+    "index.ts"
   ],
   "scripts": {
     "build-iife": "esbuild index.ts --outfile=dist/index.js --target=es6 --global-name=pmtiles --format=iife",

@@ -73,6 +73,7 @@ An entry consists of:
 * A PMTiles archive with less than 21,845 tiles should have a root directory and no leaf directories.
 * Multiple tile entries can point to the same offset; this is useful for de-duplicating certain tiles, such as an empty "ocean" tile.
 * Analogously, multiple leaf directory entries can point to the same offset; this can avoid inefficiently-packed small leaf directories.
+* The tentative media type for PMTiles archives is `application/vnd.pmtiles`.
 
 ### Implementation suggestions
 * PMTiles is designed to make implementing a writer simple. Reserve 512KB, then write all tiles, recording their entry information; then write all leaf directories; finally, rewind to 0 and write the header.

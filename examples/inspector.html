@@ -155,6 +155,12 @@
             var data = ev.dataTransfer.items;
             var file = data[0].getAsFile();
             var blob = file.slice(0,512000);
+
+            let truncated = (str) => {
+                if (str.length < 80) return str;
+                return str.slice(0,80) + "..."
+            }
+
             blob.arrayBuffer().then(a => {
                 var header = pmtiles.parseHeader(new DataView(a,0,10));
                 let dec = new TextDecoder("utf-8")
@@ -164,7 +170,7 @@
                 d3.select("#root_entries_count").text(header.root_entries);
                 d3.select("#metadata").selectAll("div")
                     .data(Object.entries(metadata).map(a => `${a[0]}: ${a[1]}`))
-                    .enter().append("div").text(d => d);
+                    .enter().append("div").text(d => truncated(d));
                 var entries_view = new DataView(a,10+header.json_size,17*header.root_entries);
                 let entries = [];
                 for (var i = 0; i < entries_view.byteLength/17; i++) {

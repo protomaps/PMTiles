@@ -1,11 +1,74 @@
-import gzip
 import itertools
 import json
 from contextlib import contextmanager
-from collections import defaultdict
+from pmtiles import Entry
 
-def tilesort(t):
-    return (t[0],t[1],t[2])
+def entrysort(t):
+    return (t.z,t.x,t.y)
+
+# Find best base zoom to avoid extra indirection for as many tiles as we can
+# precondition: entries is sorted, only tile entries, len(entries) > max_dir_size
+def find_leaf_level(entries,max_dir_size):
+  return entries[max_dir_size].z - 1
+
+def make_pyramid(tile_entries,start_leaf_offset,max_dir_size=21845):
+  sorted_entries = sorted(tile_entries,key=entrysort)
+  if len(sorted_entries) <= max_dir_size:
+    return (sorted_entries,[])
+
+  leaf_dirs = []
+
+  # determine root leaf level
+  leaf_level = find_leaf_level(sorted_entries,max_dir_size)
+
+  def by_parent(e):
+    level_diff = e.z - leaf_level
+    return (leaf_level,e.x//(1 << level_diff),e.y//(1 << level_diff))
+
+  root_entries = [e for e in sorted_entries if e.z < leaf_level]
+  # get all entries greater than or equal to the leaf level
+  entries_in_leaves = [e for e in sorted_entries if e.z >= leaf_level]
+
+  # group the entries by their parent (stable)
+  entries_in_leaves.sort(key=by_parent)
+
+  current_offset = start_leaf_offset
+  # pack entries into groups
+  packed_entries = []
+  packed_roots = []
+
+  for group in itertools.groupby(entries_in_leaves,key=by_parent):
+    subpyramid_entries = list(group[1])
+    if len(packed_entries) + len(subpyramid_entries) <= max_dir_size:
+      # the first item MUST be the root of the pyramid (sorted) - but it may have multiple roots
+      root = subpyramid_entries[0]
+      packed_entries.extend(subpyramid_entries)
+      packed_roots.append((root.z,root.x,root.y))
+    else:
+      # flush the current packed entries
+      root = packed_entries[0]
+
+      for p in packed_roots:
+        root_entries.append(Entry(p[0],p[1],p[2],current_offset,17 * len(packed_entries),True))
+      # re-sort the packed_entries by ZXY order
+      packed_entries.sort(key=entrysort)
+      leaf_dirs.append(packed_entries)
+
+      current_offset += 17 * len(packed_entries)
+      packed_entries = subpyramid_entries
+      packed_roots = [(root.z,root.x,root.y)]
+
+  # finalize the last set
+  if len(packed_entries):
+
+    for p in packed_roots:
+      root_entries.append(Entry(p[0],p[1],p[2],current_offset,17 * len(packed_entries),True))
+    # re-sort the packed_entries by ZXY order
+    packed_entries.sort(key=entrysort)
+    leaf_dirs.append(packed_entries)
+
+  # sort root entries again?
+  return (root_entries,leaf_dirs)
 
 @contextmanager
 def write(fname):
@@ -20,40 +83,29 @@ class Writer:
         self.f = open(fname,'wb')
         self.offset = 512000
         self.f.write(b'\0' * self.offset)
-        self.tiles = []
+        self.tile_entries = []
         self.hash_to_offset = {}
-        self.leaves = []
-        self.zoom_counts = defaultdict(int)
 
     def write_tile(self,z,x,y,data):
         hsh = hash(data)
         if hsh in self.hash_to_offset:
-            self.tiles.append((z,x,y,self.hash_to_offset[hsh],len(data)))
+            self.tile_entries.append(Entry(z,x,y,self.hash_to_offset[hsh],len(data),False))
         else:
             self.f.write(data)
-            # TODO optimize order
-            self.tiles.append((z,x,y,self.offset,len(data)))
+            self.tile_entries.append(Entry(z,x,y,self.offset,len(data),False))
             self.hash_to_offset[hsh] = self.offset
             self.offset = self.offset + len(data)
-            self.zoom_counts[z] += 1
 
     def write_entry(self,entry):
-        self.f.write(entry[0].to_bytes(1,byteorder='little'))
-        self.f.write(entry[1].to_bytes(3,byteorder='little'))
-        self.f.write(entry[2].to_bytes(3,byteorder='little'))
-        self.f.write(entry[3].to_bytes(6,byteorder='little'))
-        self.f.write(entry[4].to_bytes(4,byteorder='little'))
-
-    def write_leafdir(self,tiles,total_len):
-        entries_to_sort = []
-        for t in tiles:
-            self.leaves.append((t[0][0],t[0][1],t[0][2],self.offset,17*total_len))
-            entries = t[1]
-            for entry in entries:
-                entries_to_sort.append(entry)
-        entries_to_sort.sort(key=tilesort)
-        for entry in entries_to_sort:
-                self.write_entry(entry)
+        if entry.is_dir:
+          z_bytes = 0b10000000 | entry.z
+        else:
+          z_bytes = entry.z
+        self.f.write(z_bytes.to_bytes(1,byteorder='little'))
+        self.f.write(entry.x.to_bytes(3,byteorder='little'))
+        self.f.write(entry.y.to_bytes(3,byteorder='little'))
+        self.f.write(entry.offset.to_bytes(6,byteorder='little'))
+        self.f.write(entry.length.to_bytes(4,byteorder='little'))
 
     def write_header(self,metadata,root_entries_len):
         self.f.write((0x4D50).to_bytes(2,byteorder='little'))
@@ -65,68 +117,21 @@ class Writer:
         self.f.write(root_entries_len.to_bytes(2,byteorder='little'))
         self.f.write(metadata_serialized.encode('utf-8'))
 
-
     def finalize(self,metadata = {}):
-        if len(self.tiles) < 21845:
-            self.f.seek(0)
-            self.write_header(metadata,len(self.tiles))
-            self.tiles.sort(key=tilesort)
-            for entry in self.tiles:
-                self.write_entry(entry)
-        else:
-            leafdir_tiles = []
-            leafdir_len = 0
+        root_dir, leaf_dirs = make_pyramid(self.tile_entries,self.offset)
 
-            # Find best base zoom to avoid extra indirection for as many tiles as we can
-            base_zoom = 7
-            n_so_far = sum(self.zoom_counts[z] for z in range(0,8))
-            while n_so_far + self.zoom_counts[base_zoom+1] < 21845:
-                n_so_far += self.zoom_counts[base_zoom+1]
-                base_zoom += 1
+        if len(leaf_dirs) > 0:
+          for leaf_dir in leaf_dirs:
+            for entry in leaf_dir:
+              self.write_entry(entry)
 
-            def by_parent(t):
-                if t[0] >= base_zoom:
-                    level_diff = t[0] - base_zoom
-                    return (base_zoom,t[1]//(1 << level_diff),t[2]//(1 << level_diff))
-                else:
-                    return (0,t[1]//(1 << t[0]),t[2]//(1 << t[0]))
+        self.f.seek(0)
+        self.write_header(metadata,len(root_dir))
 
-            # TODO optimize order
-            self.tiles.sort(key=by_parent)
-            for group in itertools.groupby(self.tiles,key=by_parent):
-                if group[0][0] != base_zoom:
-                    continue
-                entries = list(group[1])
-                if leafdir_len + len(entries) <= 21845:
-                    leafdir_tiles.append((group[0],entries))
-                    leafdir_len = leafdir_len + len(entries)
-                else:
-                    self.write_leafdir(leafdir_tiles,leafdir_len)
-                    self.offset += 17 * leafdir_len
-                    leafdir_tiles = [(group[0],entries)]
-                    leafdir_len = len(entries)
+        for entry in root_dir:
+            self.write_entry(entry)
 
-            # finalize
-            if len(leafdir_tiles):
-                self.write_leafdir(leafdir_tiles,leafdir_len)
-
-            root_tiles = []
-            root = [(group[0],list(group[1])) for group in itertools.groupby(self.tiles,key=by_parent) if group[0][0] == 0]
-            if root:
-                root_tiles = root[0][1]
-            self.f.seek(0)
-            self.write_header(metadata,len(root_tiles) + len(self.leaves))
-            root_tiles.sort(key=tilesort)
-            for entry in root_tiles:
-                self.write_entry(entry)
-
-            # the leaf level > the root tile entries
-            self.leaves.sort(key=tilesort)
-            for entry in self.leaves:
-                z_dir = (0b10000000 | entry[0])
-                self.write_entry((z_dir,entry[1],entry[2],entry[3],entry[4]))
-
-        return {'num_tiles':len(self.tiles),'num_unique_tiles':len(self.hash_to_offset),'num_leaves':len(self.leaves)}
+        return {'num_tiles':len(self.tile_entries),'num_unique_tiles':len(self.hash_to_offset),'num_leaves':len(leaf_dirs)}
 
     def close(self):
         self.f.close()

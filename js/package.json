@@ -1,6 +1,6 @@
 {
   "name": "pmtiles",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "PMTiles archive decoder for browsers",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",

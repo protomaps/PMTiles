@@ -18,7 +18,12 @@ with read(sys.argv[1]) as reader:
         print('root entries:', reader.root_entries)
         print('leaf directories:', len(set(reader.leaves.values())))
     elif len(sys.argv) == 3:
-        print("list")
+        for k,v in reader.root_dir.items():
+            print(f"{k[0]} {k[1]} {k[2]} {v[0]} {v[1]}")
+        for val in set(reader.leaves.values()):
+            leaf_dir, _ = reader.load_directory(val[0],val[1]//17)
+            for k,v in leaf_dir.items():
+                print(f"{k[0]} {k[1]} {k[2]} {v[0]} {v[1]}")
     else:
         z = int(sys.argv[2])
         x = int(sys.argv[3])

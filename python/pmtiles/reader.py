@@ -53,19 +53,24 @@ class Reader:
     def root_entries(self):
         return int.from_bytes(self.mmap[8:10],byteorder='little')
 
+    @property
+    def leaf_level(self):
+        return next(iter(self.leaves))[0]
+
     def get(self,z,x,y):
         val = self.root_dir.get((z,x,y))
         if val:
             return self.mmap[val[0]:val[0]+val[1]]
         else:
-            z7_tile_diff = z - 7
-            z7_tile = (7,x // (1 << z7_tile_diff),y // (1 << z7_tile_diff))
-            val = self.leaves.get(z7_tile)
-            if val:
-                directory, _ = self.load_directory(val[0],val[1]//17)
-                val = directory.get((z,x,y))
+            if len(self.leaves) > 0:
+                level_diff = z - self.leaf_level
+                leaf = (self.leaf_level,x // (1 << level_diff),y // (1 << level_diff))
+                val = self.leaves.get(leaf)
                 if val:
-                    return self.mmap[val[0]:val[0]+val[1]]
+                    directory, _ = self.load_directory(val[0],val[1]//17)
+                    val = directory.get((z,x,y))
+                    if val:
+                        return self.mmap[val[0]:val[0]+val[1]]
 
     def tiles(self):
         for k,v in self.root_dir.items():

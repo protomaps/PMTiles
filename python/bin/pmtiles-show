@@ -5,6 +5,8 @@ from pmtiles.reader import read
 
 if len(sys.argv) <= 1:
     print("Usage: pmtiles-show PMTILES_FILE")
+    print("Usage: pmtiles-show PMTILES_FILE Z X Y")
+    print("Usage: pmtiles-show PMTILES_FILE list")
     exit(1)
 
 with read(sys.argv[1]) as reader:
@@ -14,6 +16,9 @@ with read(sys.argv[1]) as reader:
         for k, v in reader.metadata.items():
             print(k,'=',v)
         print('root entries:', reader.root_entries)
+        print('leaf directories:', len(set(reader.leaves.values())))
+    elif len(sys.argv) == 3:
+        print("list")
     else:
         z = int(sys.argv[2])
         x = int(sys.argv[3])

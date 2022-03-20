@@ -31,12 +31,39 @@ class TestTilePyramid(unittest.TestCase):
       ]
       root_entries, leaf_dirs = make_pyramid(entries,0,7)
       self.assertEqual(len(root_entries),7)
+      self.assertEqual(root_entries[5].y,0)
+      self.assertEqual(root_entries[6].y,1)
       self.assertEqual(len(leaf_dirs),1)
       self.assertEqual(len(leaf_dirs[0]),4)
       self.assertEqual(leaf_dirs[0][0].z,2)
       self.assertEqual(leaf_dirs[0][1].z,2)
       self.assertEqual(leaf_dirs[0][2].z,3)
       self.assertEqual(leaf_dirs[0][3].z,3)
+
+
+    def test_leafdir_overflow(self):
+      entries = [
+        Entry(0,0,0,0,1,False),
+        Entry(1,0,0,1,1,False),
+        Entry(1,0,1,2,1,False),
+        Entry(1,1,0,3,1,False),
+        Entry(1,1,1,4,1,False),
+        Entry(2,0,0,5,1,False),
+        Entry(3,0,0,6,1,False),
+        Entry(3,0,1,7,1,False),
+        Entry(3,1,0,8,1,False),
+        Entry(3,1,1,9,1,False),
+        Entry(2,0,1,10,1,False),
+        Entry(3,0,2,11,1,False),
+        Entry(3,0,3,12,1,False),
+        Entry(3,1,2,13,1,False),
+        Entry(3,1,3,14,1,False)
+      ]
+      root_entries, leaf_dirs = make_pyramid(entries,0,7)
+      print(root_entries)
+      self.assertEqual(len(root_entries),7)
+      self.assertEqual(root_entries[5].y,0)
+      self.assertEqual(root_entries[6].y,1)
 
     def test_full_z7_pyramid(self):
       entries = []

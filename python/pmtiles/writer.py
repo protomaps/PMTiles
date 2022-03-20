@@ -39,14 +39,13 @@ def make_pyramid(tile_entries,start_leaf_offset,max_dir_size=21845):
 
   for group in itertools.groupby(entries_in_leaves,key=by_parent):
     subpyramid_entries = list(group[1])
+    root = subpyramid_entries[0]
     if len(packed_entries) + len(subpyramid_entries) <= max_dir_size:
       # the first item MUST be the root of the pyramid (sorted) - but it may have multiple roots
-      root = subpyramid_entries[0]
       packed_entries.extend(subpyramid_entries)
       packed_roots.append((root.z,root.x,root.y))
     else:
       # flush the current packed entries
-      root = packed_entries[0]
 
       for p in packed_roots:
         root_entries.append(Entry(p[0],p[1],p[2],current_offset,17 * len(packed_entries),True))

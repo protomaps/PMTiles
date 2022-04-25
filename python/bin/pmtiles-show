@@ -10,20 +10,31 @@ if len(sys.argv) <= 1:
     exit(1)
 
 with read(sys.argv[1]) as reader:
+    spec_version = reader.version
     if len(sys.argv) == 2:
-        print("spec version: ", reader.version)
+        print("spec version: ", spec_version)
         print("metadata:")
         for k, v in reader.metadata.items():
             print(k, "=", v)
         print("root entries:", reader.root_entries)
         print("leaf directories:", len(set(reader.leaves.values())))
     elif len(sys.argv) == 3:
+
+        last_val = None
         for k, v in reader.root_dir.items():
             print(f"{k[0]} {k[1]} {k[2]} {v[0]} {v[1]}")
+            if last_val and k <= last_val:
+                raise Exception("Error: directory entries not sorted")
+            last_val = k
+
         for val in set(reader.leaves.values()):
             leaf_dir, _ = reader.load_directory(val[0], val[1] // 17)
+            last_val = None
             for k, v in leaf_dir.items():
                 print(f"{k[0]} {k[1]} {k[2]} {v[0]} {v[1]}")
+                if last_val and k <= last_val:
+                    raise Exception("Error: irectory entries not sorted")
+                last_val = k
     else:
         z = int(sys.argv[2])
         x = int(sys.argv[3])

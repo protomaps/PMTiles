@@ -80,20 +80,22 @@ def make_pyramid(tile_entries, start_leaf_offset, max_dir_size=21845):
 
 @contextmanager
 def write(fname):
-    w = Writer(fname)
+    f = open(fname, "wb")
+    w = Writer(f)
     try:
         yield w
     finally:
-        w.close()
+        f.close()
 
 
 class Writer:
-    def __init__(self, fname):
-        self.f = open(fname, "wb")
+    def __init__(self, f, max_dir_size):
         self.offset = 512000
+        self.f = f
         self.f.write(b"\0" * self.offset)
         self.tile_entries = []
         self.hash_to_offset = {}
+        self.max_dir_size = max_dir_size
 
     def write_tile(self, z, x, y, data):
         hsh = hash(data)
@@ -107,7 +109,7 @@ class Writer:
             self.hash_to_offset[hsh] = self.offset
             self.offset = self.offset + len(data)
 
-    def write_entry(self, entry):
+    def _write_entry(self, entry):
         if entry.is_dir:
             z_bytes = 0b10000000 | entry.z
         else:
@@ -118,7 +120,7 @@ class Writer:
         self.f.write(entry.offset.to_bytes(6, byteorder="little"))
         self.f.write(entry.length.to_bytes(4, byteorder="little"))
 
-    def write_header(self, metadata, root_entries_len):
+    def _write_header(self, metadata, root_entries_len):
         self.f.write((0x4D50).to_bytes(2, byteorder="little"))
         self.f.write((2).to_bytes(2, byteorder="little"))
         metadata_serialized = json.dumps(metadata)
@@ -129,24 +131,23 @@ class Writer:
         self.f.write(metadata_serialized.encode("utf-8"))
 
     def finalize(self, metadata={}):
-        root_dir, leaf_dirs = make_pyramid(self.tile_entries, self.offset)
+        root_dir, leaf_dirs = make_pyramid(
+            self.tile_entries, self.offset, self.max_dir_size
+        )
 
         if len(leaf_dirs) > 0:
             for leaf_dir in leaf_dirs:
                 for entry in leaf_dir:
-                    self.write_entry(entry)
+                    self._write_entry(entry)
 
         self.f.seek(0)
-        self.write_header(metadata, len(root_dir))
+        self._write_header(metadata, len(root_dir))
 
         for entry in root_dir:
-            self.write_entry(entry)
+            self._write_entry(entry)
 
         return {
             "num_tiles": len(self.tile_entries),
             "num_unique_tiles": len(self.hash_to_offset),
             "num_leaves": len(leaf_dirs),
         }
-
-    def close(self):
-        self.f.close()

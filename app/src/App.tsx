@@ -10,6 +10,8 @@ const Header = styled("div", {
   height: "$4",
 });
 
+const GIT_SHA = import.meta.env.VITE_GIT_SHA.substr(0,8)
+
 function App() {
   globalStyles();
 
@@ -27,7 +29,7 @@ function App() {
 
   return (
     <div>
-      <Header>pmtiles viewer | github | toggle</Header>
+      <Header>pmtiles viewer | github | toggle | {GIT_SHA}</Header>
       {file ? <MaplibreMap file={file} /> : <Start setFile={setFile} />}
     </div>
   );

@@ -19,7 +19,8 @@ jobs:
         with:
           node-version: 16.x
       - run: cd js && npm install && npm run build
-      - run: cd app && npm install && npm run build
+      - run: echo "VITE_GIT_SHA=$(git rev-parse --short HEAD)" >> app/.env
+      - run: cd app && npm install && ./node_modules/.bin/tsc && ./node_modules/.bin/vite build --base=/PMTiles/
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}

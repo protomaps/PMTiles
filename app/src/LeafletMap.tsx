@@ -8,7 +8,7 @@ const MapContainer = styled("div", {
   height: "calc(100vh - $4)",
 });
 
-function LeafletMap(props:{file:string}) {
+function LeafletMap(props:{file:string, tileType: string | null}) {
   const p = new PMTiles(
     "https://protomaps-static.sfo3.digitaloceanspaces.com/osm_carto.pmtiles"
   );

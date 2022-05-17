@@ -14,7 +14,7 @@
     "build-iife": "esbuild index.ts --outfile=dist/index.js --target=es6 --global-name=pmtiles --format=iife",
     "build-esm": "esbuild index.ts --outfile=dist/index.mjs --target=es6 --global-name=pmtiles --format=esm",
     "build-cjs": "esbuild index.ts --outfile=dist/index.cjs --target=es6 --global-name=pmtiles --format=cjs",
-    "build-tsc": "tsc --declaration --outdir dist",
+    "build-tsc": "tsc --declaration --emitDeclarationOnly --outdir dist",
     "build": "npm run build-iife && npm run build-esm && npm run build-cjs && npm run build-tsc",
     "test": "node -r esbuild-runner/register index.test.ts",
     "tsc": "tsc --noEmit --watch",

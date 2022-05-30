@@ -12,7 +12,7 @@ import {
 } from "./index";
 
 test("stub data", (assertion) => {
-  let data = createDirectory([
+  let dataview = createDirectory([
     { z: 5, x: 1000, y: 2000, offset: 1000, length: 2000, is_dir: false },
     {
       z: 14,
@@ -23,7 +23,6 @@ test("stub data", (assertion) => {
       is_dir: false,
     },
   ]);
-  let dataview = new DataView(data);
 
   var z_raw = dataview.getUint8(17 + 0);
   var x = getUint24(dataview, 17 + 1);
@@ -36,7 +35,7 @@ test("stub data", (assertion) => {
 });
 
 test("get entry", (assertion) => {
-  let data = createDirectory([
+  let view = createDirectory([
     { z: 5, x: 1000, y: 2000, offset: 1000, length: 2000, is_dir: false },
     {
       z: 14,
@@ -47,7 +46,6 @@ test("get entry", (assertion) => {
       is_dir: false,
     },
   ]);
-  let view = new DataView(data);
   let entry = queryTile(view, 14, 16383, 16383);
   assertion.ok(entry!.z === 14);
   assertion.ok(entry!.x === 16383);
@@ -59,7 +57,7 @@ test("get entry", (assertion) => {
 });
 
 test("get leafdir", (assertion) => {
-  let data = createDirectory([
+  let view = createDirectory([
     {
       z: 14,
       x: 16383,
@@ -69,7 +67,6 @@ test("get leafdir", (assertion) => {
       is_dir: true,
     },
   ]);
-  let view = new DataView(data);
   let entry = queryLeafdir(view, 14, 16383, 16383);
   assertion.ok(entry!.z === 14);
   assertion.ok(entry!.x === 16383);
@@ -81,7 +78,7 @@ test("get leafdir", (assertion) => {
 });
 
 test("derive the leaf level", (assertion) => {
-  let data = createDirectory([
+  let view = createDirectory([
     {
       z: 6,
       x: 3,
@@ -91,10 +88,9 @@ test("derive the leaf level", (assertion) => {
       is_dir: true,
     },
   ]);
-  let view = new DataView(data);
   let level = queryLeafLevel(view);
   assertion.ok(level === 6);
-  data = createDirectory([
+  view = createDirectory([
     {
       z: 6,
       x: 3,
@@ -104,13 +100,12 @@ test("derive the leaf level", (assertion) => {
       is_dir: false,
     },
   ]);
-  view = new DataView(data);
   level = queryLeafLevel(view);
   assertion.ok(level === null);
 });
 
 test("convert spec v1 directory to spec v2 directory", (assertion) => {
-  let data = createDirectory([
+  let view = createDirectory([
     {
       z: 7,
       x: 3,
@@ -136,7 +131,6 @@ test("convert spec v1 directory to spec v2 directory", (assertion) => {
       is_dir: false,
     },
   ]);
-  let view = new DataView(data);
   let entry = queryLeafdir(view, 7, 3, 3);
   assertion.ok(entry!.offset === 3);
   entry = queryTile(view, 6, 2, 2);

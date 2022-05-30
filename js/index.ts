@@ -30,9 +30,8 @@ interface Header {
 
 interface Root {
   header: Header;
-  buffer: ArrayBuffer;
   dir: DataView;
-  // etag: string | null;
+  view: DataView;
 }
 
 export interface Entry {
@@ -42,11 +41,6 @@ export interface Entry {
   offset: number;
   length: number;
   is_dir: boolean;
-}
-
-interface CachedLeaf {
-  lastUsed: number;
-  buffer: Promise<ArrayBuffer>;
 }
 
 const compare = (
@@ -158,7 +152,7 @@ export const parseEntry = (dataview: DataView, i: number): Entry => {
   };
 };
 
-export const sortDir = (dataview: DataView): ArrayBuffer => {
+export const sortDir = (dataview: DataView): DataView => {
   const entries: Entry[] = [];
   for (let i = 0; i < dataview.byteLength / 17; i++) {
     entries.push(parseEntry(dataview, i));
@@ -166,7 +160,7 @@ export const sortDir = (dataview: DataView): ArrayBuffer => {
   return createDirectory(entries);
 };
 
-export const createDirectory = (entries: Entry[]): ArrayBuffer => {
+export const createDirectory = (entries: Entry[]): DataView => {
   entries.sort(entrySort);
 
   const buffer = new ArrayBuffer(17 * entries.length);
@@ -197,7 +191,7 @@ export const createDirectory = (entries: Entry[]): ArrayBuffer => {
     arr[i * 17 + 15] = (entry.length >> 16) & 0xff;
     arr[i * 17 + 16] = (entry.length >> 24) & 0xff;
   }
-  return buffer;
+  return new DataView(arr.buffer, arr.byteOffset, arr.length);
 };
 
 export const deriveLeaf = (root: Root, tile: Zxy): Zxy | null => {
@@ -226,28 +220,49 @@ export const parseHeader = (dataview: DataView): Header => {
   };
 };
 
-export class PMTiles {
-  root: Promise<Root> | null;
-  url: string;
-  leaves: Map<number, CachedLeaf>;
-  maxLeaves: number;
+export interface Source {
+  getBytes: (offset: number, length: number) => Promise<DataView>;
+  getKey: () => string;
+}
 
-  constructor(url: string, maxLeaves = 64) {
-    this.root = null;
-    this.url = url;
-    this.leaves = new Map<number, CachedLeaf>();
-    this.maxLeaves = maxLeaves;
+class FileSource implements Source {
+  file: File;
+
+  constructor(file: File) {
+    this.file = file;
   }
 
-  async fetchRoot(url: string): Promise<Root> {
+  getKey() {
+    return this.file.name;
+  }
+
+  async getBytes(offset: number, length: number) {
+    let blob = this.file.slice(offset, offset + length);
+    let a = await blob.arrayBuffer();
+    return new DataView(a);
+  }
+}
+
+class FetchSource implements Source {
+  url: string;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  getKey() {
+    return this.url;
+  }
+
+  async getBytes(offset: number, length: number) {
     const controller = new AbortController();
     const signal = controller.signal;
-    const resp = await fetch(url, {
+    const resp = await fetch(this.url, {
       signal: signal,
-      headers: { Range: "bytes=0-511999" },
+      headers: { Range: "bytes=" + offset + "-" + (offset + length - 1) },
     });
     const contentLength = resp.headers.get("Content-Length");
-    if (!contentLength || +contentLength !== 512000) {
+    if (!contentLength || +contentLength !== length) {
       console.error(
         "Content-Length mismatch indicates byte serving not supported; aborting."
       );
@@ -255,36 +270,103 @@ export class PMTiles {
     }
 
     const a = await resp.arrayBuffer();
-    const header = parseHeader(new DataView(a, 0, 10));
+    return new DataView(a);
+  }
+}
+
+interface CacheEntry {
+  lastUsed: number;
+  buffer: Promise<DataView>;
+}
+
+class LRUCacheSource implements Source {
+  entries: Map<number, CacheEntry>;
+  maxEntries: number;
+  source: Source;
+
+  constructor(source: Source, maxEntries: number) {
+    this.source = source;
+    this.entries = new Map<number, CacheEntry>();
+    this.maxEntries = maxEntries;
+  }
+
+  getKey = () => {
+    return this.source.getKey();
+  };
+
+  async getBytes(offset: number, length: number) {
+    let val = this.entries.get(offset);
+    if (val) {
+      val.lastUsed = performance.now();
+      return val.buffer;
+    }
+
+    let promise = this.source.getBytes(offset, length);
+
+    this.entries.set(offset, {
+      lastUsed: performance.now(),
+      buffer: promise,
+    });
+
+    if (this.entries.size > this.maxEntries) {
+      let minUsed = Infinity;
+      let minKey = undefined;
+      this.entries.forEach((val, key) => {
+        if (val.lastUsed < minUsed) {
+          minUsed = val.lastUsed;
+          minKey = key;
+        }
+      });
+      if (minKey) this.entries.delete(minKey);
+    }
+
+    return promise;
+  }
+}
+
+export class PMTiles {
+  source: Source;
+
+  constructor(source: any, maxLeaves = 64) {
+    if (typeof source === "string") {
+      this.source = new LRUCacheSource(new FetchSource(source), maxLeaves);
+    } else {
+      this.source = source;
+    }
+  }
+
+  async fetchRoot(): Promise<Root> {
+    const v = await this.source.getBytes(0, 512000);
+    const header = parseHeader(new DataView(v.buffer, v.byteOffset, 10));
 
     let root_dir = new DataView(
-      a,
+      v.buffer,
       10 + header.json_size,
       17 * header.root_entries
     );
     if (header.version === 1) {
       console.warn("Sorting pmtiles v1 directory");
-      root_dir = new DataView(sortDir(root_dir));
+      root_dir = sortDir(root_dir);
     }
 
     return {
-      buffer: a,
       header: header,
+      view: v,
       dir: root_dir,
     };
   }
 
-  async getRoot(): Promise<Root> {
-    if (this.root) return this.root;
-    this.root = this.fetchRoot(this.url);
-    return this.root;
-  }
-
   async metadata(): Promise<any> {
-    const root = await this.getRoot();
+    const root = await this.fetchRoot();
     const dec = new TextDecoder("utf-8");
     const result = JSON.parse(
-      dec.decode(new DataView(root.buffer, 10, root.header.json_size))
+      dec.decode(
+        new DataView(
+          root.view.buffer,
+          root.view.byteOffset + 10,
+          root.header.json_size
+        )
+      )
     );
     if (result.compression) {
       console.warn(
@@ -309,56 +391,35 @@ export class PMTiles {
     return result;
   }
 
-  async fetchLeafdir(version: number, entry: Entry): Promise<ArrayBuffer> {
-    const resp = await fetch(this.url, {
-      headers: {
-        Range:
-          "bytes=" + entry.offset + "-" + (entry.offset + entry.length - 1),
-      },
-    });
-    let buf = await resp.arrayBuffer();
+  async fetchLeafdir(version: number, entry: Entry): Promise<DataView> {
+    let buf = await this.source.getBytes(entry.offset, entry.length);
 
     if (version === 1) {
       console.warn("Sorting pmtiles v1 directory.");
-      buf = sortDir(new DataView(buf));
+      buf = sortDir(buf);
     }
 
     return buf;
   }
 
-  async getLeafdir(version: number, entry: Entry): Promise<ArrayBuffer> {
-    const leaf = this.leaves.get(entry.offset);
-    if (leaf) return await leaf.buffer;
-
-    const buf = this.fetchLeafdir(version, entry);
-
-    this.leaves.set(entry.offset, {
-      lastUsed: performance.now(),
-      buffer: buf,
-    });
-    if (this.leaves.size > this.maxLeaves) {
-      let minUsed = Infinity;
-      let minKey = undefined;
-      this.leaves.forEach((val, key) => {
-        if (val.lastUsed < minUsed) {
-          minUsed = val.lastUsed;
-          minKey = key;
-        }
-      });
-      if (minKey) this.leaves.delete(minKey);
-    }
-    return await buf;
+  async getLeafdir(version: number, entry: Entry): Promise<DataView> {
+    return this.fetchLeafdir(version, entry);
   }
 
   async getZxy(z: number, x: number, y: number): Promise<Entry | null> {
-    const root = await this.getRoot();
-    const entry = queryTile(root.dir, z, x, y);
+    const root = await this.fetchRoot();
+    const entry = queryTile(
+      new DataView(root.dir.buffer, root.dir.byteOffset, root.dir.byteLength),
+      z,
+      x,
+      y
+    );
     if (entry) return entry;
 
     const leafcoords = deriveLeaf(root, { z: z, x: x, y: y });
     if (leafcoords) {
       const leafdir_entry = queryLeafdir(
-        root.dir,
+        new DataView(root.dir.buffer, root.dir.byteOffset, root.dir.byteLength),
         leafcoords.z,
         leafcoords.x,
         leafcoords.y
@@ -368,7 +429,12 @@ export class PMTiles {
           root.header.version,
           leafdir_entry
         );
-        return queryTile(new DataView(leafdir), z, x, y);
+        return queryTile(
+          new DataView(leafdir.buffer, leafdir.byteOffset, leafdir.byteLength),
+          z,
+          x,
+          y
+        );
       }
     }
     return null;
@@ -387,19 +453,9 @@ export const leafletLayer = (source: PMTiles, options: any) => {
         tile.cancel = () => {
           controller.abort();
         };
-        fetch(source.url, {
-          signal: signal,
-          headers: {
-            Range:
-              "bytes=" +
-              result.offset +
-              "-" +
-              (result.offset + result.length - 1),
-          },
-        })
-          .then((resp) => {
-            return resp.arrayBuffer();
-          })
+
+        source.source
+          .getBytes(result.offset, result.length)
           .then((buf) => {
             const blob = new Blob([buf], { type: "image/png" });
             const imageUrl = window.URL.createObjectURL(blob);
@@ -444,7 +500,7 @@ export class ProtocolCache {
   }
 
   add(p: PMTiles) {
-    this.tiles.set(p.url, p);
+    this.tiles.set(p.source.getKey(), p);
   }
 
   get(url: string) {
@@ -468,18 +524,8 @@ export class ProtocolCache {
 
     instance.getZxy(+z, +x, +y).then((val) => {
       if (val) {
-        const headers = {
-          Range: "bytes=" + val.offset + "-" + (val.offset + val.length - 1),
-        };
-        const controller = new AbortController();
-        const signal = controller.signal;
-        cancel = () => {
-          controller.abort();
-        };
-        fetch(pmtiles_url, { signal: signal, headers: headers })
-          .then((resp) => {
-            return resp.arrayBuffer();
-          })
+        instance!.source
+          .getBytes(val.offset, val.length)
           .then((arr) => {
             callback(null, arr, null, null);
           })

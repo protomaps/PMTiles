@@ -8,33 +8,33 @@ const MapContainer = styled("div", {
   height: "calc(100vh - $4)",
 });
 
-const rasterStyle = (file:string) => {
+const rasterStyle = (file: PMTiles) => {
   return {
     version: 8,
     sources: {
       source: {
         type: "raster",
-        tiles: ["pmtiles://" + file + "/{z}/{x}/{y}"],
-        maxzoom:4
+        tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
+        maxzoom: 4,
       },
     },
     layers: [
       {
         id: "raster",
         type: "raster",
-        source: "source"
+        source: "source",
       },
     ],
   };
 };
 
-const vectorStyle = (file:string) => {
+const vectorStyle = (file: PMTiles) => {
   return {
     version: 8,
     sources: {
       source: {
         type: "vector",
-        tiles: ["pmtiles://" + file + "/{z}/{x}/{y}"],
+        tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
         maxzoom: 7,
       },
     },
@@ -62,11 +62,12 @@ const vectorStyle = (file:string) => {
   };
 };
 
-function MaplibreMap(props: { file: string, tileType: string | null }) {
+function MaplibreMap(props: { file: PMTiles; tileType: string | null }) {
   let mapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let cache = new ProtocolCache();
     maplibregl.addProtocol("pmtiles", cache.protocol);
+    cache.add(props.file);
 
     const map = new maplibregl.Map({
       container: "map",
@@ -74,6 +75,7 @@ function MaplibreMap(props: { file: string, tileType: string | null }) {
       center: [0, 0],
       style: rasterStyle(props.file) as any,
     }); // TODO maplibre types (not any)
+    map.addControl(new maplibregl.NavigationControl({}));
     map.on("load", map.resize);
 
     return () => {

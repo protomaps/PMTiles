@@ -8,14 +8,10 @@ const MapContainer = styled("div", {
   height: "calc(100vh - $4)",
 });
 
-function LeafletMap(props:{file:string, tileType: string | null}) {
-  const p = new PMTiles(
-    "https://protomaps-static.sfo3.digitaloceanspaces.com/osm_carto.pmtiles"
-  );
-
+function LeafletMap(props: { file: PMTiles; tileType: string | null }) {
   useEffect(() => {
     const map = L.map("map").setView([0, 0], 0);
-    leafletLayer(p, {
+    leafletLayer(props.file, {
       attribution:
         '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
     }).addTo(map);

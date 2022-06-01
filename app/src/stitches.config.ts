@@ -5,6 +5,8 @@ export const { styled } = createStitches({
 		colors: {
 			black: "rgba(0, 0, 0)",
 			white: "rgba(236, 237, 238)",
+			hover: "#666",
+			selected: "#444",
 		},
 		fonts: {
 			sans: "Inter, sans-serif",
@@ -48,7 +50,13 @@ export const { styled } = createStitches({
 });
 
 export const globalStyles = globalCss({
-	"*": { margin: 0, padding: 0, border: 0, fontFamily: "Inter, sans-serif", xborder: "1px solid gold" },
+	"*": {
+		margin: 0,
+		padding: 0,
+		border: 0,
+		fontFamily: "Inter, sans-serif",
+		xborder: "1px solid gold",
+	},
 	body: { backgroundColor: "$black", color: "$white" },
 	"@import": ["url('https://rsms.me/inter/inter.css')"],
 });

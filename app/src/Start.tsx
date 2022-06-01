@@ -1,7 +1,7 @@
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import L from "leaflet";
-import { PMTiles } from "../../js";
+import { PMTiles, FileSource } from "../../js";
 import { styled } from "./stitches.config";
 import { useDropzone } from "react-dropzone";
 
@@ -84,10 +84,10 @@ const Example = styled("div", {
   variants: {
     selected: {
       true: {
-        backgroundColor:"red"
-      }
-    }
-  }
+        backgroundColor: "red",
+      },
+    },
+  },
 });
 
 const ExampleList = styled("div", {
@@ -97,29 +97,40 @@ const ExampleList = styled("div", {
 });
 
 const EXAMPLE_FILES = [
-  "https://protomaps-static.sfo3.digitaloceanspaces.com/osm_carto.pmtiles"
-]
+  "https://protomaps-static.sfo3.digitaloceanspaces.com/osm_carto.pmtiles",
+  "https://protomaps-static.sfo3.digitaloceanspaces.com/mantle-trial.pmtiles",
+  "https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_nolimit.pmtiles",
+];
 
-function Start(props:{setFile:Dispatch<SetStateAction<string>>}) {
+function Start(props: {
+  setFile: Dispatch<SetStateAction<PMTiles | undefined>>;
+}) {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    props.setFile(new PMTiles(new FileSource(acceptedFiles[0])));
+  }, []);
 
-  const { acceptedFiles, getRootProps, getInputProps } = useDropzone();
+  const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
+    onDrop,
+  });
 
   let [remoteUrl, setRemoteUrl] = useState<string>("");
   let [selectedExample, setSelectedExample] = useState<number | null>(1);
 
-  const onRemoteUrlChangeHandler = (event:React.ChangeEvent<HTMLInputElement>) => {
+  const onRemoteUrlChangeHandler = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRemoteUrl(event.target.value);
-  }
+  };
 
-  const loadExample = (i:number) => {
+  const loadExample = (i: number) => {
     return () => {
-      props.setFile(EXAMPLE_FILES[i]);
-    }
-  }
+      props.setFile(new PMTiles(EXAMPLE_FILES[i]));
+    };
+  };
 
   const onSubmit = () => {
-    props.setFile("abcd");
-  }
+    // props.setFile(new PMTiles("abcd"));
+  };
 
   return (
     <Container>
@@ -130,7 +141,9 @@ function Start(props:{setFile:Dispatch<SetStateAction<string>>}) {
         placeholder="https://example.com/my_archive.pmtiles"
         onChange={onRemoteUrlChangeHandler}
       ></Input>
-      <Button color="gray" onClick={onSubmit}>Load</Button>
+      <Button color="gray" onClick={onSubmit}>
+        Load
+      </Button>
       <Label htmlFor="localFile">Select a local file</Label>
       <Dropzone {...getRootProps()}>
         <input {...getInputProps()} />
@@ -138,7 +151,11 @@ function Start(props:{setFile:Dispatch<SetStateAction<string>>}) {
       </Dropzone>
       <Label>Load an example</Label>
       <ExampleList>
-        {EXAMPLE_FILES.map((e,i) => <Example key={i} onClick={loadExample(i)}>{e}</Example>)}
+        {EXAMPLE_FILES.map((e, i) => (
+          <Example key={i} onClick={loadExample(i)}>
+            {e}
+          </Example>
+        ))}
       </ExampleList>
     </Container>
   );

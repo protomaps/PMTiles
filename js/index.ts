@@ -280,13 +280,13 @@ interface CacheEntry {
 }
 
 export class LRUCacheSource implements Source {
-  entries: Map<number, CacheEntry>;
+  entries: Map<string, CacheEntry>;
   maxEntries: number;
   source: Source;
 
   constructor(source: Source, maxEntries: number) {
     this.source = source;
-    this.entries = new Map<number, CacheEntry>();
+    this.entries = new Map<string, CacheEntry>();
     this.maxEntries = maxEntries;
   }
 
@@ -295,7 +295,7 @@ export class LRUCacheSource implements Source {
   };
 
   async getBytes(offset: number, length: number) {
-    let val = this.entries.get(offset);
+    let val = this.entries.get(offset + "-" + length);
     if (val) {
       val.lastUsed = performance.now();
       return val.buffer;
@@ -303,7 +303,7 @@ export class LRUCacheSource implements Source {
 
     let promise = this.source.getBytes(offset, length);
 
-    this.entries.set(offset, {
+    this.entries.set(offset + "-" + length, {
       lastUsed: performance.now(),
       buffer: promise,
     });
@@ -360,7 +360,7 @@ export class PMTiles {
     const root = await this.fetchRoot();
     let entries = [];
     for (var i = 0; i < root.header.root_entries; i++) {
-      entries.push(parseEntry(root.dir,i));
+      entries.push(parseEntry(root.dir, i));
     }
     return entries;
   }

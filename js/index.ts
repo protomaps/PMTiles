@@ -225,7 +225,7 @@ export interface Source {
   getKey: () => string;
 }
 
-class FileSource implements Source {
+export class FileSource implements Source {
   file: File;
 
   constructor(file: File) {
@@ -243,7 +243,7 @@ class FileSource implements Source {
   }
 }
 
-class FetchSource implements Source {
+export class FetchSource implements Source {
   url: string;
 
   constructor(url: string) {
@@ -279,7 +279,7 @@ interface CacheEntry {
   buffer: Promise<DataView>;
 }
 
-class LRUCacheSource implements Source {
+export class LRUCacheSource implements Source {
   entries: Map<number, CacheEntry>;
   maxEntries: number;
   source: Source;
@@ -327,7 +327,7 @@ class LRUCacheSource implements Source {
 export class PMTiles {
   source: Source;
 
-  constructor(source: any, maxLeaves = 64) {
+  constructor(source: string | Source, maxLeaves = 64) {
     if (typeof source === "string") {
       this.source = new LRUCacheSource(new FetchSource(source), maxLeaves);
     } else {
@@ -354,6 +354,15 @@ export class PMTiles {
       view: v,
       dir: root_dir,
     };
+  }
+
+  async root_entries(): Promise<Entry[]> {
+    const root = await this.fetchRoot();
+    let entries = [];
+    for (var i = 0; i < root.header.root_entries; i++) {
+      entries.push(parseEntry(root.dir,i));
+    }
+    return entries;
   }
 
   async metadata(): Promise<any> {

@@ -1,8 +1,6 @@
 # PMTiles
 
-```js
-<script src="https://unpkg.com/pmtiles@1.0.2/dist/index.js"></script>
- ```
+ the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module.
 
  ## Leaflet
 
@@ -21,7 +19,7 @@ pmtiles.leafletLayer(p,{attribution:'© <a href="https://openstreetmap.org">Open
 
  ## MapLibre GL JS
 
-Example of a vector PMTiles archive displayed in MapLibre GL JS:
+Example of a PMTiles archive displayed in MapLibre GL JS:
 
 ```js
 let cache = new pmtiles.ProtocolCache();

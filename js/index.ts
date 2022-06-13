@@ -536,7 +536,7 @@ export class ProtocolCache {
         instance!.source
           .getBytes(val.offset, val.length)
           .then((arr) => {
-            callback(null, arr, null, null);
+            callback(null, new Uint8Array(arr.buffer), null, null);
           })
           .catch((e) => {
             callback(new Error("Canceled"), null, null, null);

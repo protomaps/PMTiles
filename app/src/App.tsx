@@ -1,12 +1,31 @@
 import { useState, useEffect } from "react";
 import { styled, globalStyles } from "./stitches.config";
 import { PMTiles } from "../../js";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
 
 import Start from "./Start";
 import Loader from "./Loader";
 
 const Header = styled("div", {
   height: "$4",
+  display: "flex",
+  alignItems: "center",
+  padding: "0 $2 0 $2",
+});
+
+const Title = styled("span", {
+  fontWeight: 500,
+  cursor: "pointer",
+});
+
+const GithubA = styled("a", {
+  color: "white",
+  textDecoration: "none",
+  fontSize: "$1",
+});
+
+const GithubLink = styled("span", {
+  marginLeft: "auto",
 });
 
 const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "").substr(0, 8);
@@ -37,8 +56,12 @@ function App() {
   return (
     <div>
       <Header>
-        <span onClick={clear}>pmtiles viewer</span> | github | toggle |{" "}
-        {GIT_SHA}
+        <Title onClick={clear}>PMTiles Viewer</Title>
+        <GithubLink>
+          <GithubA href="https://github.com/protomaps/PMTiles" target="_blank">
+            <GitHubLogoIcon /> {GIT_SHA}
+          </GithubA>
+        </GithubLink>
       </Header>
       {file ? <Loader file={file} /> : <Start setFile={setFile} />}
     </div>

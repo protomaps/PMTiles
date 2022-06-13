@@ -129,7 +129,7 @@ function Start(props: {
   };
 
   const onSubmit = () => {
-    // props.setFile(new PMTiles("abcd"));
+    props.setFile(new PMTiles(remoteUrl));
   };
 
   return (

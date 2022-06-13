@@ -8,16 +8,24 @@ import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";
 import { path } from "d3-path";
 import { schemeSet3 } from "d3-scale-chromatic";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { introspectTileType, TileType } from "./Loader";
 
 const TableContainer = styled("div", {
-  height: "calc(100vh - $4)",
+  height: "calc(100vh - $4 - $4)",
   overflowY: "scroll",
   width: "50%",
+  padding: "$2",
 });
 
 const Pane = styled("div", {
   width: "50%",
   backgroundColor: "black",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundSize: "20px 20px",
+  backgroundImage:
+    "linear-gradient(to right, #222 1px, transparent 1px),linear-gradient(to bottom, #222 1px, transparent 1px);",
 });
 
 const TableRow = styled(
@@ -58,6 +66,7 @@ interface Layer {
 }
 
 interface Feature {
+  layerName: string;
   path: string;
   type: number;
   id: number;
@@ -148,7 +157,14 @@ const FeatureProperties = (props: { feature: Feature }) => {
     </tr>
   ));
 
-  return <StyledFeatureProperties>{rows}</StyledFeatureProperties>;
+  return (
+    <StyledFeatureProperties>
+      {props.feature.layerName}
+      <table>
+        <tbody>{rows}</tbody>
+      </table>
+    </StyledFeatureProperties>
+  );
 };
 
 const VectorPreview = (props: { file: PMTiles; entry: Entry }) => {
@@ -193,6 +209,7 @@ const VectorPreview = (props: { file: PMTiles; entry: Entry }) => {
             type: feature.type,
             id: feature.id,
             properties: feature.properties,
+            layerName: name,
           });
         }
         newLayers.push({ features: features, name: name });
@@ -248,11 +265,14 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
 function Inspector(props: { file: PMTiles }) {
   let [entryRows, setEntryRows] = useState<Entry[]>([]);
   let [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  let [tileType, setTileType] = useState<TileType>(TileType.UNKNOWN);
 
   useEffect(() => {
     let fn = async () => {
       let entries = await props.file.root_entries();
+      let tileType = await introspectTileType(props.file);
       setEntryRows(entries);
+      setTileType(tileType);
     };
 
     fn();
@@ -263,9 +283,12 @@ function Inspector(props: { file: PMTiles }) {
   ));
 
   let tilePreview = <div></div>;
-  if (selectedEntry) {
-    tilePreview = <VectorPreview file={props.file} entry={selectedEntry} />;
-  } else {
+  if (selectedEntry && tileType) {
+    if (tileType === TileType.MVT) {
+      tilePreview = <VectorPreview file={props.file} entry={selectedEntry} />;
+    } else {
+      tilePreview = <RasterPreview file={props.file} entry={selectedEntry} />;
+    }
   }
 
   return (

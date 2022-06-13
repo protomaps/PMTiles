@@ -10,13 +10,20 @@ import { MagnifyingGlassIcon, ImageIcon } from "@radix-ui/react-icons";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
+export enum TileType {
+  UNKNOWN = 1,
+  PNG,
+  JPG,
+  MVT,
+  MVT_GZ,
+}
+
 const StyledToolbar = styled(ToolbarPrimitive.Root, {
   display: "flex",
-  padding: 10,
+  height: "$4",
   width: "100%",
   boxSizing: "border-box",
   minWidth: "max-content",
-  borderRadius: 6,
   backgroundColor: "white",
   boxShadow: `0 2px 10px "black"`,
 });
@@ -24,30 +31,14 @@ const StyledToolbar = styled(ToolbarPrimitive.Root, {
 const itemStyles = {
   all: "unset",
   flex: "0 0 auto",
-  color: "black",
-  height: 25,
-  padding: "0 5px",
-  borderRadius: 4,
+  color: "$black",
   display: "inline-flex",
-  fontSize: 13,
-  lineHeight: 1,
+  padding: "0 $1 0 $1",
+  fontSize: "$2",
   alignItems: "center",
-  justifyContent: "center",
-  "&:hover": { backgroundColor: "$hover", color: "blue" },
+  "&:hover": { backgroundColor: "$hover", color: "$white" },
   "&:focus": { position: "relative", boxShadow: `0 0 0 2px blue` },
 };
-
-const StyledButton = styled(
-  ToolbarPrimitive.Button,
-  {
-    ...itemStyles,
-    paddingLeft: 10,
-    paddingRight: 10,
-    color: "white",
-    backgroundColor: "blue",
-  },
-  { "&:hover": { color: "white", backgroundColor: "red" } }
-);
 
 const StyledLink = styled(
   ToolbarPrimitive.Link,
@@ -62,12 +53,6 @@ const StyledLink = styled(
   { "&:hover": { backgroundColor: "transparent", cursor: "pointer" } }
 );
 
-const StyledSeparator = styled(ToolbarPrimitive.Separator, {
-  width: 1,
-  backgroundColor: "black",
-  margin: "0 10px",
-});
-
 const StyledToggleGroup = styled(ToolbarPrimitive.ToggleGroup, {
   display: "inline-flex",
   borderRadius: 4,
@@ -79,7 +64,7 @@ const StyledToggleItem = styled(ToolbarPrimitive.ToggleItem, {
   backgroundColor: "white",
   marginLeft: 2,
   "&:first-child": { marginLeft: 0 },
-  "&[data-state=on]": { backgroundColor: "red", color: "blue" },
+  "&[data-state=on]": { backgroundColor: "$primary", color: "white" },
 });
 
 const StyledOverlay = styled(DialogPrimitive.Overlay, {
@@ -91,40 +76,52 @@ const StyledOverlay = styled(DialogPrimitive.Overlay, {
 });
 
 const StyledContent = styled(DialogPrimitive.Content, {
-  backgroundColor: "white",
+  backgroundColor: "$black",
   borderRadius: 6,
-  boxShadow:
-    "hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px",
   position: "fixed",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: "90vw",
-  maxWidth: "450px",
-  maxHeight: "85vh",
-  padding: 25,
+  maxWidth: "80vh",
   zIndex: 4,
   "&:focus": { outline: "none" },
 });
 
+export const introspectTileType = async (file: PMTiles): Promise<TileType> => {
+  let magic = await file.source.getBytes(512000, 4);
+  let b0 = magic.getUint8(0);
+  let b1 = magic.getUint8(1);
+  let b2 = magic.getUint8(2);
+  let b3 = magic.getUint8(3);
+
+  if (b0 == 0x89 && b1 == 0x50 && b2 == 0x4e && b3 == 0x47) {
+    return TileType.PNG;
+  } else if (b0 == 0xff && b1 == 0xd8 && b2 == 0xff && b3 == 0xe0) {
+    return TileType.JPG;
+  } else if (b0 == 0x1f && b1 == 0x8b) {
+    return TileType.MVT_GZ;
+  } else {
+    return TileType.MVT;
+  }
+};
+
 const Toolbar = StyledToolbar;
-const ToolbarButton = StyledButton;
-const ToolbarSeparator = StyledSeparator;
 const ToolbarLink = StyledLink;
 const ToolbarToggleGroup = StyledToggleGroup;
 const ToolbarToggleItem = StyledToggleItem;
 
 function Loader(props: { file: PMTiles }) {
   let [tab, setTab] = useState("inspector");
-  let [tileType, setTileType] = useState<string | null>(null);
+  let [tileType, setTileType] = useState<TileType>(TileType.UNKNOWN);
   let [metadata, setMetadata] = useState<[string, string][]>([]);
   let [modalOpen, setModalOpen] = useState<boolean>(false);
 
   let view;
   if (tab === "leaflet") {
-    view = <LeafletMap file={props.file} tileType={tileType} />;
+    view = <LeafletMap file={props.file} />;
   } else if (tab === "maplibre") {
-    view = <MaplibreMap file={props.file} tileType={tileType} />;
+    view = <MaplibreMap file={props.file} />;
   } else {
     view = <Inspector file={props.file} />;
   }
@@ -138,22 +135,6 @@ function Loader(props: { file: PMTiles }) {
         tmp.push([key, m[key]]);
       }
       setMetadata(tmp);
-
-      let magic = await props.file.source.getBytes(512000, 4);
-      let b0 = magic.getUint8(0);
-      let b1 = magic.getUint8(1);
-      let b2 = magic.getUint8(2);
-      let b3 = magic.getUint8(3);
-
-      if (b0 == 0x89 && b1 == 0x50 && b2 == 0x4e && b3 == 0x47) {
-        setTileType("png");
-      } else if (b0 == 0xff && b1 == 0xd8 && b2 == 0xff && b3 == 0xe0) {
-        setTileType("jpg");
-      } else if (b0 == 0x1f && b1 == 0x8b) {
-        setTileType("mvt.gz");
-      } else {
-        setTileType("mvt");
-      }
     };
     fetchData();
   }, [props.file]);
@@ -189,41 +170,36 @@ function Loader(props: { file: PMTiles }) {
             MapLibre
           </ToolbarToggleItem>
         </ToolbarToggleGroup>
-        <ToolbarSeparator />
         <ToolbarLink href="#" target="_blank" css={{ marginRight: 10 }}>
           {props.file.source.getKey()}
         </ToolbarLink>
-        <ToolbarButton
-          css={{ marginLeft: "auto" }}
-          onClick={() => setModalOpen(true)}
-        >
-          Metadata
-        </ToolbarButton>
+        <DialogPrimitive.Root open={modalOpen}>
+          <DialogPrimitive.Trigger onClick={() => setModalOpen(true)}>
+            Metadata
+          </DialogPrimitive.Trigger>
+          <DialogPrimitive.Portal>
+            <StyledOverlay />
+            <StyledContent
+              onEscapeKeyDown={closeModal}
+              onPointerDownOutside={closeModal}
+            >
+              <DialogPrimitive.Title />
+              <DialogPrimitive.Description />
+              <table>
+                <thead>
+                  <tr>
+                    <th>key</th>
+                    <th>value</th>
+                  </tr>
+                </thead>
+                <tbody>{metadataRows}</tbody>
+              </table>
+              <DialogPrimitive.Close />
+            </StyledContent>
+          </DialogPrimitive.Portal>
+        </DialogPrimitive.Root>
       </Toolbar>
 
-      <DialogPrimitive.Root open={modalOpen}>
-        <DialogPrimitive.Trigger />
-        <DialogPrimitive.Portal>
-          <StyledOverlay />
-          <StyledContent
-            onEscapeKeyDown={closeModal}
-            onPointerDownOutside={closeModal}
-          >
-            <DialogPrimitive.Title />
-            <DialogPrimitive.Description />
-            <table>
-              <thead>
-                <tr>
-                  <th>key</th>
-                  <th>value</th>
-                </tr>
-              </thead>
-              <tbody>{metadataRows}</tbody>
-            </table>
-            <DialogPrimitive.Close />
-          </StyledContent>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
       {view}
     </>
   );

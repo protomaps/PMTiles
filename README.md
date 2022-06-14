@@ -4,13 +4,12 @@ PMTiles is a single-file archive format for tiled data. A PMTiles archive can be
 
 * [Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
 
-* [Leaflet + Raster Tiles Demo](https://protomaps.github.io/PMTiles/examples/leaflet.html) - watch your network request log
+* [PMTiles Inspector](https://protomaps.github.io/PMTiles/) - inspect and preview PMTiles local or remote PMTiles archives. Archives on cloud storage may require CORS for the origin https://protomaps.github.io.
 
-* [MapLibre GL + Vector Tiles - US Zip Codes](https://protomaps.github.io/PMTiles/examples/maplibre_zipcodes.html)
+* [Raster Tiles Demo (OSM Carto)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fprotomaps-static.sfo3.digitaloceanspaces.com%2Fosm_carto.pmtiles)
 
-* [MapLibre GL + Vector Tiles - Basemap](https://protomaps.github.io/PMTiles/examples/maplibre.html)
+* [Vector Tiles Example (US Zip Codes)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fprotomaps-static.sfo3.digitaloceanspaces.com%2Fcb_2018_us_zcta510_500k_nolimit.pmtiles)
 
-* [PMTiles inspector for local archives](https://protomaps.github.io/PMTiles/examples/inspector.html)
 
 Demos require MapLibre GL JS v1.14.1-rc.2 or later
 
@@ -79,6 +78,18 @@ An entry consists of:
 * PMTiles is designed to make implementing a writer simple. Reserve 512KB, then write all tiles, recording their entry information; then write all leaf directories; finally, rewind to 0 and write the header.
 * The order of tile data in the archive is unspecified; an optimized implementation should arrange tiles on a 2D space-filling curve.
 * PMTiles readers should cache directory entries by byte offset, not by Z/X/Y. This means that deduplicated leaf directories result in cache hits.
+
+## Recipes
+
+Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](http://github.com/protomaps/tippecanoe) and the `pmtiles-convert` python program:
+
+```sh
+    # use GDAL/OGR to convert SHP to GeoJSON
+    ogr2ogr -t_srs EPSG:4326 cb_2018_us_zcta510_500k.json cb_2018_us_zcta510_500k.shp
+    # Creates a layer in the vector tiles named "zcta"
+    tippecanoe -zg --projection=EPSG:4326 --no-tile-compression --no-feature-limit --no-tile-size-limit -o cb_2018_us_zcta510_500k_nolimit.mbtiles -l zcta cb_2018_us_zcta510_500k.json
+    pmtiles-convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k_nolimit.pmtiles
+```
 
 ## License
 

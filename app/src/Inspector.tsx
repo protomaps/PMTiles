@@ -25,7 +25,7 @@ const Pane = styled("div", {
   justifyContent: "center",
   backgroundSize: "20px 20px",
   backgroundImage:
-    "linear-gradient(to right, #222 1px, transparent 1px),linear-gradient(to bottom, #222 1px, transparent 1px);",
+    "linear-gradient(to right, #111 1px, transparent 1px),linear-gradient(to bottom, #111 1px, transparent 1px);",
 });
 
 const TableRow = styled(
@@ -141,7 +141,8 @@ const StyledFeatureProperties = styled("div", {
   position: "absolute",
   right: 0,
   bottom: 0,
-  backgroundColor: "red",
+  backgroundColor: "$black",
+  padding: "$1"
 });
 
 const FeatureProperties = (props: { feature: Feature }) => {
@@ -302,6 +303,7 @@ function Inspector(props: { file: PMTiles }) {
               <th>y</th>
               <th>offset</th>
               <th>length</th>
+              <th>is directory</th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

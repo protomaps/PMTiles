@@ -7,6 +7,7 @@ export const { styled } = createStitches({
 			white: "rgba(236, 237, 238)",
 			hover: "#7180B9",
 			primary: "#3423A6",
+			primaryText: "white"
 		},
 		fonts: {
 			sans: "Inter, sans-serif",

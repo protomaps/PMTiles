@@ -115,6 +115,12 @@ function MaplibreMap(props: { file: PMTiles }) {
   useEffect(() => {
     let initStyle = async () => {
       if (map) {
+        let metadata = await props.file.metadata();
+        let bounds = metadata.bounds.split(',');
+        map.fitBounds([
+          [+bounds[0], +bounds[1]],
+          [+bounds[2], +bounds[3]],
+        ]);
         let tileType = await introspectTileType(props.file);
         let style: any; // TODO maplibre types (not any)
         if (tileType === TileType.PNG || tileType == TileType.JPG) {

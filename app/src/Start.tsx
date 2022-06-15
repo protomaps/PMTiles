@@ -45,6 +45,7 @@ const Container = styled("div", {
 
 const Button = styled("button", {
   padding: "$1 $2",
+  marginBottom:"$1",
   borderRadius: "$2",
   cursor: "pointer",
   variants: {
@@ -79,7 +80,7 @@ const Example = styled("div", {
     borderBottom: "1px solid $white",
   },
   "&:hover": {
-    backgroundColor: "$white",
+    backgroundColor: "$hover",
   },
   variants: {
     selected: {
@@ -142,7 +143,7 @@ function Start(props: {
         onChange={onRemoteUrlChangeHandler}
       ></Input>
       <Button color="gray" onClick={onSubmit}>
-        Load
+        Load URL
       </Button>
       <Label htmlFor="localFile">Select a local file</Label>
       <Dropzone {...getRootProps()}>

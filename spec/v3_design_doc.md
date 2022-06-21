@@ -53,8 +53,8 @@
 * the center lon
 * the center lat
 
-The archive ass a whole contains this 83 byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data.
+The archive as a whole contains this 83 byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data.
 
 ## Clustered archives
 
-If the `clustered` header is True, this means that the tile data in the data section are generally ordered by TileID (hilbert order). This enables certain optimized read access patterns, but is not necessary. (it is impossible for this to 100% ordered without also supporting tile deduplication)
+If the `clustered` header is `True`, this means that the tile data in the data section are generally ordered by TileID (Hilbert order). This enables certain optimized read access patterns, but is not a requirement. (it is impossible for data to 100% ordered while also supporting tile deduplication)

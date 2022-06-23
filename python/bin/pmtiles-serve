@@ -15,7 +15,7 @@ class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
 
 
 parser = argparse.ArgumentParser(
-    description="Convert between PMTiles and other archive formats."
+    description="HTTP server for PMTiles archives."
 )
 parser.add_argument("pmtiles_file", help="PMTiles archive to serve")
 parser.add_argument("port", help="Port to bind to")

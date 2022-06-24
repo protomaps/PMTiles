@@ -1,13 +1,17 @@
 {
   "devDependencies": {
     "esbuild": "^0.14.47",
-    "typescript": "^4.7.4"
+    "esbuild-runner": "^2.2.1",
+    "typescript": "^4.7.4",
+    "zora": "^5.0.3"
   },
   "dependencies": {
     "fflate": "^0.7.3"
   },
-  "scripts":{
+  "scripts": {
     "build-iife": "esbuild index.ts --outfile=dist/index.js --target=es6 --global-name=pmtiles --format=iife --bundle --watch",
+    "build-esm": "esbuild index.ts --outfile=dist/worker.js --target=es6 --format=esm --bundle --watch",
+    "test": "node -r esbuild-runner/register index.test.ts",
     "tsc": "tsc --noEmit --watch"
   }
 }

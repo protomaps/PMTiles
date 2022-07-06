@@ -142,7 +142,7 @@ const StyledFeatureProperties = styled("div", {
   right: 0,
   bottom: 0,
   backgroundColor: "$black",
-  padding: "$1"
+  padding: "$1",
 });
 
 const FeatureProperties = (props: { feature: Feature }) => {
@@ -168,13 +168,21 @@ const FeatureProperties = (props: { feature: Feature }) => {
   );
 };
 
-const VectorPreview = (props: { file: PMTiles; entry: Entry }) => {
+const VectorPreview = (props: {
+  file: PMTiles;
+  entry: Entry;
+  tileType: TileType;
+}) => {
   let [layers, setLayers] = useState<Layer[]>([]);
   let [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
 
   useEffect(() => {
     let fn = async (entry: Entry) => {
       let view = await props.file.source.getBytes(entry.offset, entry.length);
+      if (props.tileType == TileType.MVT_GZ) {
+        view = new DataView(inflate(new Uint8Array(view.buffer)).buffer);
+      }
+
       let tile = new VectorTile(
         new Protobuf(
           new Uint8Array(view.buffer, view.byteOffset, view.byteLength)
@@ -285,8 +293,14 @@ function Inspector(props: { file: PMTiles }) {
 
   let tilePreview = <div></div>;
   if (selectedEntry && tileType) {
-    if (tileType === TileType.MVT) {
-      tilePreview = <VectorPreview file={props.file} entry={selectedEntry} />;
+    if (tileType === TileType.MVT || tileType === TileType.MVT_GZ) {
+      tilePreview = (
+        <VectorPreview
+          file={props.file}
+          entry={selectedEntry}
+          tileType={tileType}
+        />
+      );
     } else {
       tilePreview = <RasterPreview file={props.file} entry={selectedEntry} />;
     }

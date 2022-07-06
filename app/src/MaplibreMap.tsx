@@ -116,7 +116,7 @@ function MaplibreMap(props: { file: PMTiles }) {
     let initStyle = async () => {
       if (map) {
         let metadata = await props.file.metadata();
-        let bounds = metadata.bounds.split(',');
+        let bounds = metadata.bounds.split(",");
         map.fitBounds([
           [+bounds[0], +bounds[1]],
           [+bounds[2], +bounds[3]],

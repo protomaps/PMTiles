@@ -2,7 +2,7 @@ import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { createPortal } from "react-dom";
 import { PMTiles, Entry } from "../../js";
 import { styled } from "./stitches.config";
-import { inflate } from "pako";
+import { decompressSync } from "fflate";
 import Protobuf from "pbf";
 import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";
 import { path } from "d3-path";
@@ -180,7 +180,7 @@ const VectorPreview = (props: {
     let fn = async (entry: Entry) => {
       let view = await props.file.source.getBytes(entry.offset, entry.length);
       if (props.tileType == TileType.MVT_GZ) {
-        view = new DataView(inflate(new Uint8Array(view.buffer)).buffer);
+        view = new DataView(decompressSync(new Uint8Array(view.buffer)).buffer);
       }
 
       let tile = new VectorTile(

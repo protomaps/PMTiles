@@ -42,9 +42,12 @@ function App() {
   let [file, setFile] = useState<PMTiles | undefined>(initialValue);
 
   useEffect(() => {
-    if (file) {
-      const url = new URL(window.location.href);
+    const url = new URL(window.location.href);
+    if (file && file.source.getKey().startsWith("http")) {
       url.searchParams.set("url", file.source.getKey());
+      history.pushState(null, "", url.toString());
+    } else {
+      url.searchParams.delete("url");
       history.pushState(null, "", url.toString());
     }
   }, [file]);

@@ -81,7 +81,7 @@ def make_pyramid(tile_entries, start_leaf_offset, max_dir_size=21845):
 @contextmanager
 def write(fname):
     f = open(fname, "wb")
-    w = Writer(f)
+    w = Writer(f, 21845)
     try:
         yield w
     finally:

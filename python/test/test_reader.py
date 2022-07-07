@@ -19,9 +19,8 @@ class TestReader(unittest.TestCase):
         writer.finalize({"key": "value"})
 
         reader = Reader(MemorySource(buf.getvalue()))
-        self.assertEqual(reader.version, 2)
-        self.assertEqual(reader.root_entries, 6)
-        self.assertEqual(reader.metadata["key"], "value")
+        self.assertEqual(reader.header().version, 2)
+        self.assertEqual(reader.header().metadata["key"], "value")
         self.assertEqual(reader.get(1, 0, 0), b"0")
         self.assertEqual(reader.get(1, 0, 1), b"1")
         self.assertEqual(reader.get(1, 1, 0), b"2")

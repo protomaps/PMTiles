@@ -3,8 +3,8 @@ import gzip
 import json
 import os
 import sqlite3
-from pmtiles.reader import read
 from pmtiles.writer import write
+from pmtiles.reader import Reader, MmapSource
 
 # if the tile is GZIP-encoded, it won't work with range queries
 # until transfer-encoding: gzip is well supported.
@@ -61,8 +61,10 @@ def pmtiles_to_mbtiles(input, output, gzip):
         "CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);"
     )
 
-    with read(input) as reader:
-        metadata = reader.metadata
+    with open(input, "r+b") as f:
+        source = MmapSource(f)
+        reader = Reader(source)
+        metadata = reader.header().metadata
         metadata = set_metadata_compression(metadata, gzip)
         for k, v in metadata.items():
             cursor.execute("INSERT INTO metadata VALUES(?,?)", (k, v))

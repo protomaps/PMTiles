@@ -6,7 +6,7 @@ import json
 import re
 from socketserver import ThreadingMixIn
 import sys
-from pmtiles.reader import read
+from pmtiles.reader import Reader, MmapSource
 
 
 # https://docs.python.org/3/library/http.server.html
@@ -14,9 +14,7 @@ class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
     pass
 
 
-parser = argparse.ArgumentParser(
-    description="HTTP server for PMTiles archives."
-)
+parser = argparse.ArgumentParser(description="HTTP server for PMTiles archives.")
 parser.add_argument("pmtiles_file", help="PMTiles archive to serve")
 parser.add_argument("port", help="Port to bind to")
 parser.add_argument("--bind", help="Address to bind server to: default localhost")
@@ -27,8 +25,11 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-with read(args.pmtiles_file) as reader:
-    fmt = reader.metadata["format"]
+with open(args.pmtiles_file, "r+b") as f:
+    source = MmapSource(f)
+    reader = Reader(source)
+
+    fmt = reader.header().metadata["format"]
 
     class Handler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
@@ -37,7 +38,7 @@ with read(args.pmtiles_file) as reader:
                 if args.cors_allow_all:
                     self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
-                self.wfile.write(json.dumps(reader.metadata).encode("utf-8"))
+                self.wfile.write(json.dumps(reader.header().metadata).encode("utf-8"))
                 return
             match = re.match("/(\d+)/(\d+)/(\d+)." + fmt, self.path)
             if not match:

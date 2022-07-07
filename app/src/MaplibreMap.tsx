@@ -93,6 +93,7 @@ function MaplibreMap(props: { file: PMTiles }) {
   useEffect(() => {
     let cache = new ProtocolCache();
     maplibregl.addProtocol("pmtiles", cache.protocol);
+    cache.add(props.file); // this is necessary for non-HTTP sources
 
     map = new maplibregl.Map({
       container: mapContainerRef.current!,

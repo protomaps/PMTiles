@@ -18,7 +18,6 @@ def MemorySource(buf):
 
     return get_bytes
 
-
 class Reader:
     def __init__(self, get_bytes):
         self.get_bytes = get_bytes

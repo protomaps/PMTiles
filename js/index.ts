@@ -1,5 +1,7 @@
 declare const L: any;
 
+import { decompressSync } from "fflate";
+
 export const shift = (n: number, shift: number) => {
   return n * Math.pow(2, shift);
 };
@@ -536,7 +538,11 @@ export class ProtocolCache {
         instance!.source
           .getBytes(val.offset, val.length)
           .then((arr) => {
-            callback(null, new Uint8Array(arr.buffer), null, null);
+            let data = new Uint8Array(arr.buffer);
+            if (data[0] == 0x1f && data[1] == 0x8b) {
+              data = decompressSync(data);
+            }
+            callback(null, data, null, null);
           })
           .catch((e) => {
             callback(new Error("Canceled"), null, null, null);

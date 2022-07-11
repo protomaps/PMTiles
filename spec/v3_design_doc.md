@@ -58,4 +58,4 @@ The archive as a whole contains this 83 byte header, then the header directory, 
 
 ## Clustered archives
 
-If the `clustered` header is `True`, this means that the tile data in the data section are generally ordered by TileID (Hilbert order). This enables certain optimized read access patterns, but is not a requirement. (it is impossible for data to 100% ordered while also supporting tile deduplication)
+If the `clustered` header is `True`, this means that the tile data in the data section are generally ordered by TileID (Hilbert order). More concretely, this means that: when traversing all entries in TileID order, the offsets are either contiguous with the immediately previous entry, or refer to a lesser offset (a deduplicated tile).

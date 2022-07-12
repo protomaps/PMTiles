@@ -26,7 +26,7 @@
 
 # Directory Hierarchy
 * The number of entries in the root directory and leaf directories is up to the implementation.
-* However, the compressed size of the root directory cannot exceed 200 kb. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete.
+* However, the compressed size of the root directory cannot exceed (200? 50?) kb. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. (A sophisticated writer needs to determine the optimal root size via numerical method ?)
 * Root vs directory sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
 
 # Header Design

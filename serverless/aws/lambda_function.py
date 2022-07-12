@@ -29,7 +29,7 @@ def cloudfrontResponse(status_code, body, body_b64=False, headers={}):
 
 
 def apiGatewayResponse(status_code, body, body_b64=False, headers={}):
-    resp = {"status": status_code, "body": body, "headers": headers}
+    resp = {"statusCode": status_code, "body": body, "headers": headers}
     if body_b64:
         resp["isBase64Encoded"] = True
     return resp

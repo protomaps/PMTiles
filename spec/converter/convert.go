@@ -262,6 +262,7 @@ func main() {
 		root, leaves = build_tree(entries, 4096)
 		root, leaves = build_tree(entries, 8192)
 		root, leaves = build_tree(entries, 16384)
+		root, leaves = build_tree(entries, 32768)
 	}
 	total_index_size := len(root) + len(leaves)
 

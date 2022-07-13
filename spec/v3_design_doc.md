@@ -26,7 +26,7 @@
 
 # Directory Hierarchy
 * The number of entries in the root directory and leaf directories is up to the implementation.
-* However, the compressed size of the root directory cannot exceed 200 kb. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete.
+* However, the compressed size of the root directory cannot exceed (200? 50?) kb. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. (A sophisticated writer needs to determine the optimal root size via numerical method ?)
 * Root vs directory sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
 
 # Header Design
@@ -58,4 +58,4 @@ The archive as a whole contains this 83 byte header, then the header directory, 
 
 ## Clustered archives
 
-If the `clustered` header is `True`, this means that the tile data in the data section are generally ordered by TileID (Hilbert order). This enables certain optimized read access patterns, but is not a requirement. (it is impossible for data to 100% ordered while also supporting tile deduplication)
+If the `clustered` header is `True`, this means that the tile data in the data section are generally ordered by TileID (Hilbert order). More concretely, this means that: when traversing all entries in TileID order, the offsets are either contiguous with the immediately previous entry, or refer to a lesser offset (a deduplicated tile).

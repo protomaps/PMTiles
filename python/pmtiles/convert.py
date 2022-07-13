@@ -85,8 +85,10 @@ def pmtiles_to_mbtiles(input, output, gzip):
 def pmtiles_to_dir(input, output, gzip):
     os.makedirs(output)
 
-    with read(input) as reader:
-        metadata = reader.metadata
+    with open(input, "r+b") as f:
+        source = MmapSource(f)
+        reader = Reader(source)
+        metadata = reader.header().metadata
         metadata = set_metadata_compression(metadata, gzip)
         with open(os.path.join(output, "metadata.json"), "w") as f:
             f.write(json.dumps(metadata))

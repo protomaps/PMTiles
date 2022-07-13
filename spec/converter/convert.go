@@ -92,6 +92,32 @@ func serialize_entries(entries []Entry) []byte {
 	return b.Bytes()
 }
 
+func build_tree(entries []Entry, dir_size int) ([]byte, []byte) {
+	root_entries := make([]Entry, 0)
+	var leaves []byte
+	var root []byte
+
+	fmt.Println("target directory count", dir_size)
+
+	for idx := 0; idx <= len(entries); idx += dir_size {
+		end := idx + dir_size
+		if idx+dir_size > len(entries) {
+			end = len(entries)
+		}
+		serialized := serialize_entries(entries[idx:end])
+
+		root_entries = append(root_entries, Entry{entries[idx].Id, int64(len(leaves)), int32(len(serialized)), 0})
+		leaves = append(leaves, serialized...)
+	}
+
+	fmt.Println("root entries count", len(root_entries))
+	root = serialize_entries(root_entries)
+	fmt.Println("root dir bytes", len(root))
+	fmt.Println("leaves dir bytes", len(leaves))
+	fmt.Println("average leaf dir bytes", len(leaves) / (len(entries)/dir_size+1))
+	return root, leaves
+}
+
 func main() {
 	// f, err := os.Create("output.profile")
 	// if err != nil {
@@ -216,30 +242,26 @@ func main() {
 	fmt.Println("Length of entries", len(entries))
 
 	// construct index
-	root_entries := make([]Entry, 0)
 	var leaves []byte
 	var root []byte
 
-	if len(entries) <= 5461 {
+	// test the size of the root directory
+	test_root := serialize_entries(entries)
+	fmt.Println("Test root entries", len(test_root))
+
+	// (8 + 58 kb) root entries # 2282
+	// (16 + 29 kb) root entrie # 4564
+	// 20 kb + 23 kb root entries # 5714
+
+	if len(test_root) <= 16384 - 83 {
 		fmt.Println("root entries len", len(entries))
 		root = serialize_entries(entries)
 	} else {
-		dir_size := int(math.Ceil(math.Sqrt(float64(len(entries)))))
-		fmt.Println("target directory size", dir_size)
+		// dir_size := int(math.Ceil(math.Sqrt(float64(len(entries)))))
 
-		for idx := 0; idx <= len(entries); idx += dir_size {
-			end := idx + dir_size
-			if idx+dir_size > len(entries) {
-				end = len(entries)
-			}
-			serialized := serialize_entries(entries[idx:end])
-
-			root_entries = append(root_entries, Entry{entries[idx].Id, int64(len(leaves)), int32(len(serialized)), 0})
-			leaves = append(leaves, serialized...)
-		}
-
-		fmt.Println("root entries len", len(root_entries))
-		root = serialize_entries(root_entries)
+		root, leaves = build_tree(entries, 4096)
+		root, leaves = build_tree(entries, 8192)
+		root, leaves = build_tree(entries, 16384)
 	}
 	total_index_size := len(root) + len(leaves)
 

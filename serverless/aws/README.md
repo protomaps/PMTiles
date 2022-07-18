@@ -1,21 +1,23 @@
+# PMTiles on Lambda
+
+Generates a Lambda function for deploying PMTiles on Lambda behind Lambda Function URLs or API Gateway. (CloudFront is recommended as a cache in front.)
 
 ## How To Use
 
-`python create_lambda_function.py MY_REGION MY_BUCKET_NAME`
+```sh
+git clone https://github.com/protomaps/PMTiles
+cd serverless/aws
+python create_lambda_function.py
+```
 
 Upload the resulting `lambda_function.zip` using the Lambda console.
 
-
-## Configuration
+Configure these Lambda environment variables:
 
 * `BUCKET`: the S3 bucket name.
-* `PMTILES_PATH`
-* `TILE_PATH`
-
-## AWS Notes
-
-1. API Gateway (Event format v2.0)
-2. Lambda Function URLs are not recommended.
+* `PMTILES_PATH`: optional, define how a tileset name is translated into an S3 key. Default `{name}.pmtiles`
+  * Example path setting for objects in a directory: `my_folder/{name}/file.pmtiles`
+* `TILE_PATH`: optional, define the URL route of the tiles API. Default `/{name}/{z}/{x}/{y}.pbf`
 
 ## Test Event
 

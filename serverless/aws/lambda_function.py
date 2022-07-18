@@ -10,7 +10,7 @@ import re
 import boto3
 
 # create_lambda_function.py will vendor the relevant file
-import pmtiles
+from pmtiles.reader import Reader
 
 Zxy = collections.namedtuple("Zxy", ["z", "x", "y"])
 
@@ -33,17 +33,17 @@ def get_object_bytes(key, offset, length):
     )
 
 
-def pmtiles_path(p, tileset):
+def pmtiles_path(p, name):
     if not p:
-        p = "{tileset}.pmtiles"
-    return p.replace("{tileset}", tileset)
+        p = "{name}.pmtiles"
+    return p.replace("{name}", name)
 
 
 def parse_tile_path(p, str):
     if not p:
-        p = "/{tileset}/{z}/{x}/{y}.pbf"
+        p = "/{name}/{z}/{x}/{y}.pbf"
     p = re.escape(p)
-    p = p.replace(r"\{tileset\}", r"(?P<tileset>[0-9a-zA-Z/!\-_\.\*'\(\)]+)")
+    p = p.replace(r"\{name\}", r"(?P<name>[0-9a-zA-Z/!\-_\.\*'\(\)]+)")
     p = p.replace(r"\{z\}", r"(?P<z>\d+)")
     p = p.replace(r"\{x\}", r"(?P<x>\d+)")
     p = p.replace(r"\{y\}", r"(?P<y>\d+)")
@@ -51,7 +51,7 @@ def parse_tile_path(p, str):
     if not m:
         return None, None
     return (
-        m.group("tileset"),
+        m.group("name"),
         Zxy(int(m.group("z")), int(m.group("x")), int(m.group("y"))),
     )
 
@@ -60,19 +60,18 @@ def parse_tile_path(p, str):
 # and returns API Gateway V2 / Lambda Function dict responses
 # Does not work with CloudFront events/Lambda@Edge; see README
 def lambda_handler(event, context):
-    start = datetime.now()
     uri = event["rawPath"]
-    tileset, tile = parse_tile_uri(os.environ.get("TILE_PATH"), uri)
+    name, tile = parse_tile_path(os.environ.get("TILE_PATH"), uri)
 
     if not tile:
         return {"statusCode": 400, "body": "Invalid Tile URL"}
 
     def get_bytes(offset, length):
         return get_object_bytes(
-            pmtiles_path(os.environ.get("PMTILES_PATH"), tileset), offset, length
+            pmtiles_path(os.environ.get("PMTILES_PATH"), name), offset, length
         )
 
-    reader = pmtiles.Reader(get_bytes)
+    reader = Reader(get_bytes)
     tile_data = reader.get(tile.z, tile.x, tile.y)
     if not tile_data:
         return {"statusCode": 404, "body": "Tile not found"}

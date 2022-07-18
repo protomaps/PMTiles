@@ -1,5 +1,5 @@
 import unittest
-from lambda_function import parse_tile_uri, cloudfrontResponse, apiGatewayResponse
+from lambda_function import parse_tile_uri
 
 
 class TestLambda(unittest.TestCase):
@@ -12,14 +12,6 @@ class TestLambda(unittest.TestCase):
 
         tileset, tile = parse_tile_uri("abcd")
         self.assertEqual(tile, None)
-
-    def test_cloudfront_response(self):
-        resp = cloudfrontResponse(200, "ok", False, {"a": "b"})
-        self.assertEqual(resp["headers"]["a"], [{"value": "b"}])
-
-    def test_api_gateway_response(self):
-        resp = apiGatewayResponse(200, "ok", False, {"a": "b"})
-        self.assertEqual(resp["headers"]["a"], "b")
 
 
 if __name__ == "__main__":

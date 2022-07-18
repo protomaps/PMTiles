@@ -1,16 +1,30 @@
-import json
-import pmtiles
-import re
-import boto3
 import base64
 import collections
-from config import BUCKET, REGION
+from functools import lru_cache
+import gzip
+import json
+import os
+import re
+import boto3
+import pmtiles
 
 Zxy = collections.namedtuple("Zxy", ["z", "x", "y"])
 
 s3 = boto3.client("s3")
 
-rootCache = {}
+
+@lru_cache
+def get_object_bytes(key, offset, length):
+    end = offset + length - 1
+    return (
+        s3.get_object(
+            Bucket=os.environ["BUCKET"],
+            Key=key,
+            Range=f"bytes={offset}-{end}",
+        )
+        .get("Body")
+        .read()
+    )
 
 
 def parse_tile_uri(str):
@@ -20,60 +34,28 @@ def parse_tile_uri(str):
     return (m.group(1), Zxy(int(m.group(2)), int(m.group(3)), int(m.group(4))))
 
 
-def cloudfrontResponse(status_code, body, body_b64=False, headers={}):
-    headers = {key: [{"value": value}] for key, value in headers.items()}
-    resp = {"status": status_code, "body": body, "headers": headers}
-    if body_b64:
-        resp["bodyEncoding"] = "base64"
-    return resp
-
-
-def apiGatewayResponse(status_code, body, body_b64=False, headers={}):
-    resp = {"statusCode": status_code, "body": body, "headers": headers}
-    if body_b64:
-        resp["isBase64Encoded"] = True
-    return resp
-
-
 def lambda_handler(event, context):
-    if "Records" in event:
-        uri = event["Records"][0]["cf"]["request"]["uri"]  # CloudFront Origin Request
-        lambdaResponse = cloudfrontResponse
-    else:
-        uri = event["rawPath"]  # API Gateway and Lambda Function URLs
-        lambdaResponse = apiGatewayResponse
+    start = datetime.now()
+    uri = event["rawPath"]  # API Gateway and Lambda Function URLs
     tileset, tile = parse_tile_uri(uri)
 
     if not tile:
-        return lambdaResponse(400, "Invalid tile URL")
+        return {"statusCode": 400, "body": "Invalid Tile URL"}
 
     def get_bytes(offset, length):
-        global rootCache
-        if offset == 0 and length == 512000 and tileset in rootCache:
-            return rootCache[tileset]
-
-        end = offset + length - 1
-        result = (
-            s3.get_object(
-                Bucket=BUCKET,
-                Key=tileset + ".pmtiles",
-                Range=f"bytes={offset}-{end}",
-            )
-            .get("Body")
-            .read()
-        )
-        if offset == 0 and length == 512000:
-            rootCache[tileset] = result
-        return result
+        return get_object_bytes(tileset + ".pmtiles", offset, length)
 
     reader = pmtiles.Reader(get_bytes)
     tile_data = reader.get(tile.z, tile.x, tile.y)
     if not tile_data:
-        return lambdaResponse(404, "Tile not found")
+        return {"statusCode": 404, "body": "Tile not found"}
 
-    headers = {
-        "Content-Encoding": "gzip",
-        "Content-Type": "application/protobuf",
-        "Access-Control-Allow-Origin": "*",
+    if reader.header().metadata.get("compression") == "gzip":
+        tile_data = gzip.decompress(tile_data)
+
+    return {
+        "statusCode": 200,
+        "body": base64.b64encode(tile_data),
+        "isBase64Encoded": True,
+        "headers": {"Content-Type": "application/protobuf"},
     }
-    return lambdaResponse(200, base64.b64encode(tile_data), True, headers)

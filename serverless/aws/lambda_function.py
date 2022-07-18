@@ -8,6 +8,7 @@ import re
 
 # Exists inside all lambda functions
 import boto3
+from botocore.exceptions import ClientError
 
 # create_lambda_function.py will vendor the relevant file
 from pmtiles.reader import Reader
@@ -15,7 +16,6 @@ from pmtiles.reader import Reader
 Zxy = collections.namedtuple("Zxy", ["z", "x", "y"])
 
 s3 = boto3.client("s3")
-
 
 # Given a 512MB lambda function, use half of the memory for the cache,
 # assuming the average root/leaf/tile size is 512 KB
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
     name, tile = parse_tile_path(os.environ.get("TILE_PATH"), uri)
 
     if not tile:
-        return {"statusCode": 400, "body": "Invalid Tile URL"}
+        return {"statusCode": 400, "body": "Invalid tile URL"}
 
     def get_bytes(offset, length):
         return get_object_bytes(
@@ -72,9 +72,21 @@ def lambda_handler(event, context):
         )
 
     reader = Reader(get_bytes)
-    tile_data = reader.get(tile.z, tile.x, tile.y)
-    if not tile_data:
+    minzoom = int(reader.header().metadata["minzoom"])
+    maxzoom = int(reader.header().metadata["maxzoom"])
+    if tile.z < minzoom or tile.z > maxzoom:
         return {"statusCode": 404, "body": "Tile not found"}
+
+    try:
+        tile_data = reader.get(tile.z, tile.x, tile.y)
+        if not tile_data:
+            return {"statusCode": 204}
+    except ClientError as e:
+        error_code = e.response["Error"]["Code"]
+        if error_code == "AccessDenied":
+            return {"statusCode": 404, "body": "Archive not found"}
+        else:
+            raise e
 
     # CloudFront requires decompressed responses from lambda
     # in order to implement the Compressed CacheOptimized policy correctly

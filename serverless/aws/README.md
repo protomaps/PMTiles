@@ -5,10 +5,12 @@
 
 Upload the resulting `lambda_function.zip` using the Lambda console.
 
-## Restrictions
 
-1. There is a limit of 1 MB for tiles served through Lambda@Edge.
-2. Lambda@Edge does not support layers, environment variables, or ARM functions.
+## Configuration
+
+* `BUCKET`: the S3 bucket name.
+* `PMTILES_PATH`
+* `TILE_PATH`
 
 ## AWS Notes
 
@@ -17,24 +19,6 @@ Upload the resulting `lambda_function.zip` using the Lambda console.
 
 ## Test Event
 
-CloudFront event:
-
-```json
-{
-  "Records": [
-    {
-      "cf": {
-        "request": {
-          "uri": "/my-tileset-name/0/0/0.pbf",
-          "method": "GET",
-          "headers": {}
-        }
-      }
-    }
-  ]
-}
-```
-
 API Gateway V2 / Lambda Function URLs:
 
 ```json
@@ -42,3 +26,12 @@ API Gateway V2 / Lambda Function URLs:
   "rawPath": "/my-tileset-name/0/0/0.pbf"
 }
 ```
+
+
+### Monitoring
+
+
+
+### Lambda@Edge
+
+Lambda@Edge's multi-region features have little benefit when fetching data from S3 in a single region, and Lambda@Edge [doesn't support](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-functions-restrictions.html) environment variables or responses over 1 MB. For globally distributed caching, use CloudFront in combination with Lambda Function URLs.

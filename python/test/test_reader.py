@@ -7,11 +7,10 @@ from pmtiles.reader import Reader, MemorySource
 class TestReader(unittest.TestCase):
     def test_roundtrip(self):
         buf = BytesIO()
-        writer = Writer(buf, 7)
+        writer = Writer(buf, 5)
         writer.write_tile(1, 0, 0, b"0")
         writer.write_tile(1, 0, 1, b"1")
         writer.write_tile(1, 1, 0, b"2")
-        writer.write_tile(1, 1, 1, b"3")
         writer.write_tile(2, 0, 0, b"4")
         writer.write_tile(3, 0, 0, b"5")
         writer.write_tile(2, 0, 1, b"6")
@@ -24,8 +23,8 @@ class TestReader(unittest.TestCase):
         self.assertEqual(reader.get(1, 0, 0), b"0")
         self.assertEqual(reader.get(1, 0, 1), b"1")
         self.assertEqual(reader.get(1, 1, 0), b"2")
-        self.assertEqual(reader.get(1, 1, 1), b"3")
         self.assertEqual(reader.get(2, 0, 0), b"4")
         self.assertEqual(reader.get(3, 0, 0), b"5")
         self.assertEqual(reader.get(2, 0, 1), b"6")
         self.assertEqual(reader.get(3, 0, 2), b"7")
+        self.assertEqual(reader.get(1, 1, 1), None)

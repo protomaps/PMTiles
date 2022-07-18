@@ -72,6 +72,8 @@ class Reader:
         else:
             if len(self.header().leaves) > 0:
                 level_diff = z - self._leaf_level()
+                if level_diff < 0:
+                    return None
                 leaf = (
                     self._leaf_level(),
                     x // (1 << level_diff),

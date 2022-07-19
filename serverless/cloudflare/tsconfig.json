@@ -8,5 +8,5 @@
     },
     "types": []
   },
-  "include": ["src/*.ts"]
+  "include": ["worker.ts","cloudflare.d.ts"]
 }

@@ -1,5 +1,5 @@
 import unittest
-from lambda_function import parse_tile_path, pmtiles_path
+from util import parse_tile_path, pmtiles_path
 
 
 class TestLambda(unittest.TestCase):
@@ -48,7 +48,3 @@ class TestLambda(unittest.TestCase):
             pmtiles_path("folder/{name}.pmtiles", "foo/bar"),
             "folder/foo/bar.pmtiles",
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

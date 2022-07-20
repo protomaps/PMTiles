@@ -98,6 +98,7 @@ export default {
       let source = new TempSource();
 
       let p = new PMTiles(source);
+      let metadata = await p.metadata();
       let entry = await p.getZxy(+match[2], +match[3], +match[4]);
       if (entry) {
         let tile = await env.BUCKET.get(match![1] + ".pmtiles", {
@@ -108,9 +109,15 @@ export default {
         headers.set("Access-Control-Allow-Origin", "*");
         headers.set("Content-Type", "application/x-protobuf");
         headers.set("X-Pmap-Subrequests", subrequests.toString());
+
+        if (metadata.compression === "gzip") {
+          headers.set("Content-Encoding", "gzip");
+        }
+
         return new Response((tile as R2ObjectBody).body, {
           headers: headers,
-        });
+          encodeBody: "manual",
+        } as any);
       }
     }
     return new Response("Not Found");

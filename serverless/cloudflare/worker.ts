@@ -7,7 +7,7 @@ interface Env {
 
 interface CacheEntry {
   lastUsed: number;
-  buffer: Promise<ArrayBuffer>;
+  buffer: DataView;
 }
 
 export class LRUCache {
@@ -29,17 +29,18 @@ export class LRUCache {
     let val = this.entries.get(cacheKey);
     if (val) {
       val.lastUsed = this.counter++;
-      return [true, new DataView(await val.buffer)];
+      return [true, val.buffer];
     }
 
     let resp = await bucket.get(key, {
       range: { offset: offset, length: length },
     });
-    let a = (resp as R2ObjectBody).arrayBuffer();
+    let a = await (resp as R2ObjectBody).arrayBuffer();
+    let d = new DataView(a);
 
     this.entries.set(cacheKey, {
       lastUsed: this.counter++,
-      buffer: a,
+      buffer: d,
     });
     if (this.entries.size > 128) {
       let minUsed = Infinity;
@@ -53,7 +54,7 @@ export class LRUCache {
       if (minKey) this.entries.delete(minKey);
     }
 
-    return [false, new DataView(await a)];
+    return [false, d];
   }
 }
 

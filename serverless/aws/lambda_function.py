@@ -34,8 +34,21 @@ def get_object_bytes(key, offset, length):
 # and returns API Gateway V2 / Lambda Function dict responses
 # Does not work with CloudFront events/Lambda@Edge; see README
 def lambda_handler(event, context):
-    uri = event["rawPath"]
-    name, tile = parse_tile_path(os.environ.get("TILE_PATH"), uri)
+    path = None
+    if event.get("pathParameters"):
+        # API Gateway (HTTP or REST)
+        if "tile_path" in event["pathParameters"]:
+            path = "/" + event["pathParameters"]["tile_path"]
+        else:
+            return {
+                "statusCode": 500,
+                "body": "Proxy integration missing tile_path parameter",
+            }
+    else:
+        # Lambda Function URL
+        path = event.get("rawPath")
+
+    name, tile = parse_tile_path(os.environ.get("TILE_PATH"), path)
 
     if not tile:
         return {"statusCode": 400, "body": "Invalid tile URL"}
@@ -46,12 +59,12 @@ def lambda_handler(event, context):
         )
 
     reader = Reader(get_bytes)
-    minzoom = int(reader.header().metadata["minzoom"])
-    maxzoom = int(reader.header().metadata["maxzoom"])
-    if tile.z < minzoom or tile.z > maxzoom:
-        return {"statusCode": 404, "body": "Tile not found"}
-
     try:
+        minzoom = int(reader.header().metadata["minzoom"])
+        maxzoom = int(reader.header().metadata["maxzoom"])
+        if tile.z < minzoom or tile.z > maxzoom:
+            return {"statusCode": 404, "body": "Tile not found"}
+
         tile_data = reader.get(tile.z, tile.x, tile.y)
         if not tile_data:
             return {"statusCode": 204}

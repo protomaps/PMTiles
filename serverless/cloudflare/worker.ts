@@ -2,7 +2,7 @@ import { PMTiles, Source } from "../../js";
 
 interface Env {
   BUCKET: R2Bucket;
-  CACHE_TTL: string;
+  PMTILES_PATH: string | undefined;
 }
 
 interface CacheEntry {
@@ -60,6 +60,13 @@ export class LRUCache {
 
 let worker_cache = new LRUCache();
 
+export const pmtiles_path = (p: string | undefined, name: string): string => {
+  if (p) {
+    return p.replace("{name}", name);
+  }
+  return name + ".pmtiles";
+};
+
 const TILE = new RegExp(
   /^\/([0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(\d+)\/(\d+)\/(\d+).pbf$/
 );
@@ -72,11 +79,15 @@ export default {
   ): Promise<Response> {
     let url = new URL(request.url);
 
-    let match = url.pathname.match(TILE);
+    let match = url.pathname.match(TILE)!;
 
     let subrequests = 1;
 
     if (match) {
+      let name = match[1];
+      let z = +match[2];
+      let x = +match[3];
+      let y = +match[4];
       class TempSource {
         getKey() {
           return "";
@@ -85,7 +96,7 @@ export default {
         async getBytes(offset: number, length: number) {
           let result = await worker_cache.get(
             env.BUCKET,
-            match![1] + ".pmtiles",
+            pmtiles_path(env.PMTILES_PATH, name),
             offset,
             length
           );
@@ -100,9 +111,9 @@ export default {
 
       let p = new PMTiles(source);
       let metadata = await p.metadata();
-      let entry = await p.getZxy(+match[2], +match[3], +match[4]);
+      let entry = await p.getZxy(z, x, y);
       if (entry) {
-        let tile = await env.BUCKET.get(match![1] + ".pmtiles", {
+        let tile = await env.BUCKET.get(pmtiles_path(env.PMTILES_PATH, name), {
           range: { offset: entry.offset, length: entry.length },
         });
 

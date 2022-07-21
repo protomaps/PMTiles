@@ -10,6 +10,12 @@ interface CacheEntry {
   buffer: DataView;
 }
 
+class KeyNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export class LRUCache {
   entries: Map<string, CacheEntry>;
   counter: number;
@@ -35,6 +41,9 @@ export class LRUCache {
     let resp = await bucket.get(key, {
       range: { offset: offset, length: length },
     });
+    if (!resp) {
+      throw new KeyNotFoundError("Key not found");
+    }
     let a = await (resp as R2ObjectBody).arrayBuffer();
     let d = new DataView(a);
 
@@ -110,28 +119,45 @@ export default {
       let source = new TempSource();
 
       let p = new PMTiles(source);
-      let metadata = await p.metadata();
-      let entry = await p.getZxy(z, x, y);
-      if (entry) {
-        let tile = await env.BUCKET.get(pmtiles_path(env.PMTILES_PATH, name), {
-          range: { offset: entry.offset, length: entry.length },
-        });
+      try {
+        let metadata = await p.metadata();
 
-        let headers = new Headers();
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Content-Type", "application/x-protobuf");
-        headers.set("X-Pmap-Subrequests", subrequests.toString());
-
-        if (metadata.compression === "gzip") {
-          headers.set("Content-Encoding", "gzip");
+        if (z < metadata.minzoom || z > metadata.maxzoom) {
+          return new Response("Tile not found", { status: 404 });
         }
+        let entry = await p.getZxy(z, x, y);
+        if (entry) {
+          let tile = await env.BUCKET.get(
+            pmtiles_path(env.PMTILES_PATH, name),
+            {
+              range: { offset: entry.offset, length: entry.length },
+            }
+          );
 
-        return new Response((tile as R2ObjectBody).body, {
-          headers: headers,
-          encodeBody: "manual",
-        } as any);
+          let headers = new Headers();
+          headers.set("Access-Control-Allow-Origin", "*");
+          headers.set("Content-Type", "application/x-protobuf");
+          headers.set("X-Pmap-Subrequests", subrequests.toString());
+
+          if (metadata.compression === "gzip") {
+            headers.set("Content-Encoding", "gzip");
+          }
+
+          return new Response((tile as R2ObjectBody).body, {
+            headers: headers,
+            encodeBody: "manual",
+          } as any);
+        } else {
+          return new Response(undefined, { status: 204 });
+        }
+      } catch (e) {
+        if (e instanceof KeyNotFoundError) {
+          return new Response("Archive not found", { status: 404 });
+        } else {
+          throw e;
+        }
       }
     }
-    return new Response("Not Found");
+    return new Response("Invalid tile URL", { status: 400 });
   },
 };

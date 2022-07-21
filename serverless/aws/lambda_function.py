@@ -37,8 +37,8 @@ def lambda_handler(event, context):
     path = None
     if event.get("pathParameters"):
         # API Gateway (HTTP or REST)
-        if "tile_path" in event["pathParameters"]:
-            path = "/" + event["pathParameters"]["tile_path"]
+        if "proxy" in event["pathParameters"]:
+            path = "/" + event["pathParameters"]["proxy"]
         else:
             return {
                 "statusCode": 500,

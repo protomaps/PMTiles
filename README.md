@@ -91,6 +91,13 @@ Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabu
     pmtiles-convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k_nolimit.pmtiles
 ```
 
+For uploading your PMTiles to cloud storage, [rclone](https://rclone.org) is recommended:
+
+```
+rclone config
+rclone copy my_archive.pmtiles my_destination:my_folder --progress --s3-chunk-size=256M
+```
+
 ## License
 
 The reference implementations of PMTiles are published under the BSD 3-Clause License. The PMTiles specification itself is public domain, or under a CC0 license where applicable.

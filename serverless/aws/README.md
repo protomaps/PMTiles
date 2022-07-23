@@ -19,7 +19,7 @@ Configure these Lambda environment variables:
   * Example path setting for objects in a directory: `my_folder/{name}/file.pmtiles`
 * `TILE_PATH`: optional, define the URL route of the tiles API. Default `/{name}/{z}/{x}/{y}.pbf`
 
-For API Gateway integration, your Lambda Proxy Integration route will need to specify a greedy capturing parameter called `proxy` e.g. `/{proxy+}` (the default)
+For API Gateway integration, your Lambda Proxy Integration route will need to specify a greedy capturing parameter called `proxy` e.g. `/{proxy+}` (the default). Also, your binary content types setting for REST APIs needs to be set to `*/*` otherwise tiles will be returned as base64-encoded text.
 
 ## Test Event
 

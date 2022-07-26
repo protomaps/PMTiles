@@ -35,7 +35,9 @@ def get_object_bytes(key, offset, length):
 # Does not work with CloudFront events/Lambda@Edge; see README
 def lambda_handler(event, context):
     path = None
+    is_api_gateway = False
     if event.get("pathParameters"):
+        is_api_gateway = True
         # API Gateway (HTTP or REST)
         if "proxy" in event["pathParameters"]:
             path = "/" + event["pathParameters"]["proxy"]
@@ -75,15 +77,22 @@ def lambda_handler(event, context):
         else:
             raise e
 
-    # CloudFront requires decompressed responses from lambda
-    # in order to implement the Compressed CacheOptimized policy correctly
-    # as well as Brotli support
+    headers = {"Content-Type": "application/protobuf"}
+
     if reader.header().metadata.get("compression") == "gzip":
-        tile_data = gzip.decompress(tile_data)
+        if is_api_gateway:
+            # API Gateway requires a compressed response to correctly return binary data
+            # instead of base64
+            headers["Content-Encoding"] = "gzip"
+        else:
+            # CloudFront requires decompressed responses from lambda
+            # in order to implement the Compressed CacheOptimized policy correctly
+            # as well as Brotli support
+            tile_data = gzip.decompress(tile_data)
 
     return {
         "statusCode": 200,
         "body": base64.b64encode(tile_data),
         "isBase64Encoded": True,
-        "headers": {"Content-Type": "application/protobuf"},
+        "headers": headers,
     }

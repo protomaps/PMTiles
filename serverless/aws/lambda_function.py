@@ -77,7 +77,10 @@ def lambda_handler(event, context):
         else:
             raise e
 
-    headers = {"Content-Type": "application/protobuf"}
+    headers = {
+        "Content-Type": "application/protobuf",
+        "Access-Control-Allow-Origin": "*",
+    }
 
     if reader.header().metadata.get("compression") == "gzip":
         if is_api_gateway:

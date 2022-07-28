@@ -22,7 +22,7 @@ jobs:
       - run: echo "VITE_GIT_SHA=$(git rev-parse --short HEAD)" >> app/.env
       - run: cd app && npm install && ./node_modules/.bin/tsc && ./node_modules/.bin/vite build --base=/PMTiles/
       - run: cd serverless/aws && python create_lambda_function.py && cp lambda_function.zip ../../app/dist
-      - run: cd serverless/cloudflare && npm run build && cp dist/worker.js ../../app/dist
+      - run: cd serverless/cloudflare && npm install && npm run build && cp dist/worker.js ../../app/dist
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}

@@ -44,7 +44,7 @@ Self-contained Lambda ZIP:
 
 Self-contained Cloudflare Worker:
 
-[protomaps.github.io/PMTiles/lambda_function.zip](https://protomaps.github.io/PMTiles/worker.js)
+[protomaps.github.io/PMTiles/worker.js](https://protomaps.github.io/PMTiles/worker.js)
 
 ## Specification
 

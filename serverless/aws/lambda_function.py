@@ -79,8 +79,10 @@ def lambda_handler(event, context):
 
     headers = {
         "Content-Type": "application/protobuf",
-        "Access-Control-Allow-Origin": "*",
     }
+
+    if "CORS" in os.environ:
+        headers["Access-Control-Allow-Origin"] = os.environ.get("CORS")
 
     if reader.header().metadata.get("compression") == "gzip":
         if is_api_gateway:

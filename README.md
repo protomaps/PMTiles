@@ -36,6 +36,16 @@ See https://github.com/protomaps/go-pmtiles
 
 See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usage
 
+### Serverless
+
+Self-contained Lambda ZIP:
+
+[protomaps.github.io/PMTiles/lambda_function.zip](https://protomaps.github.io/PMTiles/lambda_function.zip)
+
+Self-contained Cloudflare Worker:
+
+[protomaps.github.io/PMTiles/lambda_function.zip](https://protomaps.github.io/PMTiles/worker.js)
+
 ## Specification
 
 ![layout](layout.png)

@@ -60,29 +60,29 @@ def lambda_handler(event, context):
             pmtiles_path(os.environ.get("PMTILES_PATH"), name), offset, length
         )
 
+    headers = {}
+
+    if "CORS" in os.environ:
+        headers["Access-Control-Allow-Origin"] = os.environ.get("CORS")
+
     reader = Reader(get_bytes)
     try:
         minzoom = int(reader.header().metadata["minzoom"])
         maxzoom = int(reader.header().metadata["maxzoom"])
         if tile.z < minzoom or tile.z > maxzoom:
-            return {"statusCode": 404, "body": "Tile not found"}
+            return {"statusCode": 404, "headers": headers, "body": "Tile not found"}
 
         tile_data = reader.get(tile.z, tile.x, tile.y)
         if not tile_data:
-            return {"statusCode": 204}
+            return {"statusCode": 204, "headers": headers}
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
         if error_code == "AccessDenied":
-            return {"statusCode": 404, "body": "Archive not found"}
+            return {"statusCode": 404, "headers": headers, "body": "Archive not found"}
         else:
             raise e
 
-    headers = {
-        "Content-Type": "application/protobuf",
-    }
-
-    if "CORS" in os.environ:
-        headers["Access-Control-Allow-Origin"] = os.environ.get("CORS")
+    headers["Content-Type"] = "application/protobuf"
 
     if reader.header().metadata.get("compression") == "gzip":
         if is_api_gateway:

@@ -74,7 +74,7 @@ def lambda_handler(event, context):
 
         tile_data = reader.get(tile.z, tile.x, tile.y)
         if not tile_data:
-            return {"statusCode": 204}
+            return {"statusCode": 204, "headers": headers}
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
         if error_code == "AccessDenied":

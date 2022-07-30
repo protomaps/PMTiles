@@ -38,13 +38,9 @@ See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usag
 
 ### Serverless
 
-Self-contained Lambda ZIP:
+[PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/master/serverless/aws)
 
-[protomaps.github.io/PMTiles/lambda_function.zip](https://protomaps.github.io/PMTiles/lambda_function.zip)
-
-Self-contained Cloudflare Worker:
-
-[protomaps.github.io/PMTiles/worker.js](https://protomaps.github.io/PMTiles/worker.js)
+[PMTiles on Cloudflare Workers](https://github.com/protomaps/PMTiles/tree/master/serverless/cloudflare)
 
 ## Specification
 

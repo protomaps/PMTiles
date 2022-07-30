@@ -4,7 +4,11 @@ Use [rclone](https://rclone.org/downloads/) to upload your PMTiles archives to a
 
 # Getting started
 
-* Generate `worker.js` with all dependencies bundled:
+Bundled single-file worker with all dependencies:
+
+[protomaps.github.io/PMTiles/worker.js](https://protomaps.github.io/PMTiles/worker.js)
+
+To generate `worker.js` from a checkout:
 
 ```sh
 git clone https://github.com/protomaps/PMTiles
@@ -20,7 +24,7 @@ By default, your worker will serve tiles at path `NAME/0/0/0.pbf` using the arch
 
 This behavior can be customized with two optional environment variables:
 
-`PMTILES_PATH`
-`TILE_PATH`
+`PMTILES_PATH` - optional. 
+`TILE_PATH`- optional.
+`CORS` - optional.
 
-(TODO)

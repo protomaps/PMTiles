@@ -8,6 +8,8 @@ Self-contained Lambda ZIP:
 
 [protomaps.github.io/PMTiles/lambda_function.zip](https://protomaps.github.io/PMTiles/lambda_function.zip)
 
+(On Safari, right click -> Download Linked File... will keep the ZIP intact)
+
 Building the Lambda ZIP yourself:
 
 ```sh

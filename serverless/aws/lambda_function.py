@@ -50,6 +50,12 @@ def lambda_handler(event, context):
         # Lambda Function URL
         path = event.get("rawPath")
 
+    if not path:
+        return {
+            "statusCode": 500,
+            "body": "Invalid event configuration",
+        }
+
     name, tile = parse_tile_path(os.environ.get("TILE_PATH"), path)
 
     if not tile:

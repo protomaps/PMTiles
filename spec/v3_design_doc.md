@@ -26,7 +26,7 @@
 
 # Directory Hierarchy
 * The number of entries in the root directory and leaf directories is up to the implementation.
-* However, the compressed size of the root directory cannot exceed (200? 50?) kb. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. (A sophisticated writer needs to determine the optimal root size via numerical method ?)
+* However, the compressed size of the header plus root directory cannot exceed **16384 bytes**. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. (A sophisticated writer needs to determine the optimal root size via numerical method ?)
 * Root vs directory sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
 
 # Header Design
@@ -37,24 +37,26 @@
 * Spec version (1 byte)
 * Root dir length in bytes (4 bytes)
 * JSON Metadata length in bytes (4 bytes)
-* No. of tiles addressed by entries (8 bytes)
-* No. number of entries (after RLE) (8 bytes)
-* No. of unique tiles (8 bytes)
-* string that is the index compression method (gzip, br, std) (10 bytes)
-* string that is the tile compression method (10 bytes)
+* Start offset of leaf directories (8 bytes)
+* Start offset of tile data (8 bytes)
+* Number of non-unique tiles addressed by entries (8 bytes)
+* Number of entries (after RLE) (8 bytes)
+* Number of unique tiles (8 bytes)
+* string that is the index compression method (gzip, br, zstd) (10 bytes)
+* string that is the tile compression method (gzip, br, zstd) (10 bytes)
 * boolean that indicates if the archive is clustered (boolean)
 * the format of the of the tiles (pbf, png, jpg...) (10 bytes)
 * The minimum zoom (1 byte)
 * the maximum zoom (1 byte)
 * the minimum longitude (IEEE754 float) (4 bytes)
-* the min lat
-* the max lon
-* the max lat
-* the center zoom (optional)
-* the center lon
-* the center lat
+* the min lat (4 bytes)
+* the max lon (4 bytes)
+* the max lat (4 bytes)
+* the center zoom (optional) (1 byte)
+* the center lon (optional) (4 bytes)
+* the center lat (optional) (4 bytes)
 
-The archive as a whole contains this 83 byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data.
+The archive SHOULD contain this 109-byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data. Leaf directories and tile data are, however, relocatable. 
 
 ## Clustered archives
 

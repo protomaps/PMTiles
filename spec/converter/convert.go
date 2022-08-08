@@ -23,9 +23,9 @@ import (
 
 type Entry struct {
 	Id        int64
+	RunLength uint32
 	Offset    int64
 	Length    int32
-	RunLength uint32
 }
 
 type Header struct {
@@ -106,7 +106,7 @@ func build_tree(entries []Entry, dir_size int) ([]byte, []byte) {
 		}
 		serialized := serialize_entries(entries[idx:end])
 
-		root_entries = append(root_entries, Entry{entries[idx].Id, int64(len(leaves)), int32(len(serialized)), 0})
+		root_entries = append(root_entries, Entry{entries[idx].Id, 0, int64(len(leaves)), int32(len(serialized))})
 		leaves = append(leaves, serialized...)
 	}
 
@@ -220,12 +220,12 @@ func main() {
 						maxRunLength = entries[len(entries)-1].RunLength
 					}
 				} else {
-					entries = append(entries, Entry{int64(id), int64(val), int32(len(data)), 1})
+					entries = append(entries, Entry{int64(id), 1, int64(val), int32(len(data))})
 				}
 			} else {
 
 				id_to_offset[sum] = offset
-				entries = append(entries, Entry{int64(id), int64(offset), int32(len(data)), 1})
+				entries = append(entries, Entry{int64(id), 1, int64(offset), int32(len(data))})
 
 				tmpfile.Write(data)
 				offset += uint64(len(data))

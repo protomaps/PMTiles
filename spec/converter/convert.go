@@ -114,7 +114,7 @@ func build_tree(entries []Entry, dir_size int) ([]byte, []byte) {
 	root = serialize_entries(root_entries)
 	fmt.Println("root dir bytes", len(root))
 	fmt.Println("leaves dir bytes", len(leaves))
-	fmt.Println("average leaf dir bytes", len(leaves) / (len(entries)/dir_size+1))
+	fmt.Println("average leaf dir bytes", len(leaves)/(len(entries)/dir_size+1))
 	return root, leaves
 }
 
@@ -253,7 +253,17 @@ func main() {
 	// (16 + 29 kb) root entrie # 4564
 	// 20 kb + 23 kb root entries # 5714
 
-	if len(test_root) <= 16384 - 83 {
+	// output raw directory
+	raw, err := os.Create("dir.bin")
+	defer raw.Close()
+	for _, entry := range entries {
+		err = binary.Write(raw, binary.LittleEndian, entry)
+		if err != nil {
+			log.Fatal("Write failed")
+		}
+	}
+
+	if len(test_root) <= 16384-83 {
 		fmt.Println("root entries len", len(entries))
 		root = serialize_entries(entries)
 	} else {

@@ -25,3 +25,37 @@ def parse_tile_path(p, str):
         m.group("name"),
         Zxy(int(m.group("z")), int(m.group("x")), int(m.group("y"))),
     )
+
+
+def parse_attribute(string):
+    """Convert string representing single attribut to (table, attribute) tuple.
+
+    Boolean True in either position matches anything, False matches nothing."""
+    if string is None:
+        return (True, True)
+    parts = [part.replace("\\:", ":") for part in re.split(r"(?<!\\):", string, 1)]
+    if parts[-1] == "*":
+        attribute = True
+    elif parts[-1] == "":
+        attribute = False
+    else:
+        attribute = parts[-1].replace("\\*", "*")
+    if len(parts) == 1:
+        table = True
+    elif parts[-2] == "*":
+        table = True
+    elif parts[-2] == "":
+        table = False
+    else:
+        table = parts[-2].replace("\\*", "*")
+    return (table, attribute)
+
+
+def parse_attributes(string):
+    """Convert string representing sequence of comma-delimited attributes to list"""
+    if string is None:
+        return [parse_attribute(string)]
+    return [
+        parse_attribute(part.replace("\\,", ","))
+        for part in re.split(r"(?<!\\),", string)
+    ]

@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"fmt"
 )
 
 // TestHelloEmpty calls greetings.Hello with an empty string,
@@ -66,7 +67,7 @@ func TestAll(t *testing.T) {
 	}
 }
 
-func TestQuadkey(t *testing.T) {
+func TestZxyToQuadkey(t *testing.T) {
 	id := ZxyToQuadkey(0, 0, 0)
 	if id != 0b1 {
 		t.Fatalf(`expected %d to be 1`, id)
@@ -86,5 +87,29 @@ func TestQuadkey(t *testing.T) {
 	id = ZxyToQuadkey(1, 1, 1)
 	if id != 0b111 {
 		t.Fatalf(`expected %d to be 0b111`, id)
+	}
+}
+
+func TestQuadkeyToZxy(t *testing.T) {
+	z, x, y := QuadkeyToZxy(0b1)
+	fmt.Println(z,x,y)
+	if !(z == 0 && x == 0 && y == 0) {
+		t.Fatalf(`expected to be (0,0,0)`)
+	}
+	z, x, y = QuadkeyToZxy(0b100)
+	if !(z == 1 && x == 0 && y == 0) {
+		t.Fatalf(`expected to be (1,0,0)`)
+	}
+	z, x, y = QuadkeyToZxy(0b101)
+	if !(z == 1 && x == 1 && y == 0) {
+		t.Fatalf(`expected to be (1,1,0)`)
+	}
+	z, x, y = QuadkeyToZxy(0b110)
+	if !(z == 1 && x == 0 && y == 1) {
+		t.Fatalf(`expected to be (1,0,1)`)
+	}
+	z, x, y = QuadkeyToZxy(0b111)
+	if !(z == 1 && x == 1 && y == 1) {
+		t.Fatalf(`expected to be (1,1,1)`)
 	}
 }

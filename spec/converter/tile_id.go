@@ -1,5 +1,7 @@
 package main
 
+import "math/bits"
+
 func rotate(n int64, x *int64, y *int64, rx int64, ry int64) {
 	if ry == 0 {
 		if rx == 1 {
@@ -115,4 +117,31 @@ func ZxyToQuadkey(z int64, px int64, py int64) int64 {
 
 	result := x | (y << 1) | sentinel
 	return result
+}
+
+func QuadkeyToZxy(i int64) (int64, int64, int64) { 
+	z := 32 - (bits.LeadingZeros64(uint64(i)) + 1) / 2
+
+	var x int64
+	var y int64
+
+	var mask int64
+	mask = ^(0b1 << (z * 2))
+
+	x = (i & mask)
+	y = (i & mask) >> 1
+
+	x &= 0x55555555
+  x = (x ^ (x >>  1)) & 0x33333333
+  x = (x ^ (x >>  2)) & 0x0f0f0f0f
+  x = (x ^ (x >>  4)) & 0x00ff00ff
+  x = (x ^ (x >>  8)) & 0x0000ffff
+
+	y &= 0x55555555
+  y = (y ^ (y >>  1)) & 0x33333333
+  y = (y ^ (y >>  2)) & 0x0f0f0f0f
+  y = (y ^ (y >>  4)) & 0x00ff00ff
+  y = (y ^ (y >>  8)) & 0x0000ffff
+
+	return int64(z),x,y
 }

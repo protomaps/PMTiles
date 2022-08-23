@@ -65,3 +65,26 @@ func TestAll(t *testing.T) {
 		}
 	}
 }
+
+func TestQuadkey(t *testing.T) {
+	id := ZxyToQuadkey(0, 0, 0)
+	if id != 0b1 {
+		t.Fatalf(`expected %d to be 1`, id)
+	}
+	id = ZxyToQuadkey(1, 0, 0)
+	if id != 0b100 {
+		t.Fatalf(`expected %d to be 0b100`, id)
+	}
+	id = ZxyToQuadkey(1, 1, 0)
+	if id != 0b101 {
+		t.Fatalf(`expected %d to be 0b101`, id)
+	}
+	id = ZxyToQuadkey(1, 0, 1)
+	if id != 0b110 {
+		t.Fatalf(`expected %d to be 0b110`, id)
+	}
+	id = ZxyToQuadkey(1, 1, 1)
+	if id != 0b111 {
+		t.Fatalf(`expected %d to be 0b111`, id)
+	}
+}

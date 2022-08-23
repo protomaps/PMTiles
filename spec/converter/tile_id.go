@@ -83,3 +83,36 @@ func IdToZxy(i int64) (int64, int64, int64) {
 		z++
 	}
 }
+
+// 32 bit only
+func ZxyToQuadkey(z int64, px int64, py int64) int64 {
+	var b0 int64
+	var b1 int64
+	var b2 int64
+	var b3 int64
+	b0 = 0x55555555
+	b1 = 0x33333333
+	b2 = 0x0F0F0F0F
+	b3 = 0x00FF00FF
+
+	var sentinel int64
+	sentinel = 0b1 << (z * 2)
+
+	var x int64
+	var y int64
+
+	x = px
+	x = (x | (x << 8)) & b3
+	x = (x | (x << 4)) & b2
+	x = (x | (x << 2)) & b1
+	x = (x | (x << 1)) & b0
+
+	y = py
+	y = (y | (y << 8)) & b3
+	y = (y | (y << 4)) & b2
+	y = (y | (y << 2)) & b1
+	y = (y | (y << 1)) & b0
+
+	result := x | (y << 1) | sentinel
+	return result
+}

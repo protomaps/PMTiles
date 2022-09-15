@@ -216,9 +216,7 @@ async function deserializeIndex(body: Body): Promise<Entry[]> {
 	return entries;
 }
 
-// let URL = 'http://localhost:8500/tw.pmtiles'
-let URL = "http://100.78.29.81/planet.pmtiles";
-let HEADER_LEN = 83;
+let URL = 'http://localhost:8500/label_points.pmtiles'
 
 async function getBytes(offset: number, len: number): Promise<Body> {
 	let resp = await fetch(URL, {
@@ -230,21 +228,46 @@ async function getBytes(offset: number, len: number): Promise<Body> {
 export async function doFunc() {
 	let tileId = zxyToTileId(7,0,0);
 
-	let resp = await getBytes(0, HEADER_LEN);
+	let dec = new TextDecoder("utf-8");
+	let resp = await getBytes(0, 16384);
 	let a = await resp.arrayBuffer();
 	var v = new DataView(a);
-	var root_len = v.getUint32(3, true);
-	var metadata_len = v.getUint32(7, true);
-	let start = HEADER_LEN;
-	let str = await getBytes(start, root_len);
+	var root_offset = Number(v.getBigUint64(3, true));
+	var root_len = Number(v.getBigUint64(11, true));
+
+	let leaf_dirs_offset = Number(v.getBigUint64(35,true));
+	let tile_data_offset = Number(v.getBigUint64(43,true));
+
+	let min_zoom = v.getUint8(109);
+	let max_zoom = v.getUint8(110);
+	console.log(min_zoom,max_zoom);
+
+	let min_lon = v.getFloat32(111,true);
+	let min_lat = v.getFloat32(115,true);
+	let max_lon = v.getFloat32(119,true);
+	let max_lat = v.getFloat32(123,true);
+	console.log(min_lon, min_lat, max_lon, max_lat);
+
+	// console.log(dec.decode(a.slice(61,61+v.getUint8(60))));
+	// console.log(dec.decode(a.slice(72,72+v.getUint8(71))));
+	// console.log(dec.decode(a.slice(83,83+v.getUint8(82))));
+
+	let str = await getBytes(root_offset, root_len);
 	let idx = await deserializeIndex(str);
+
+	// metadata
+	var metadata_offset = Number(v.getBigUint64(19, true));
+	var metadata_len = Number(v.getBigUint64(27, true));
+	let jm = await getBytes(metadata_offset, metadata_len);
+	let jb = await jm.arrayBuffer();
+  console.log(JSON.parse(dec.decode(jb)));
 
 	let result = findTile(idx,tileId)
 	if (result) {
 		if (result.runLength > 0) {
 
 		} else {
-			str = await getBytes(HEADER_LEN + root_len + metadata_len + result.offset, result.length);
+			str = await getBytes(leaf_dirs_offset + result.offset, result.length);
 			idx = await deserializeIndex(str);
 			result = findTile(idx,tileId);
 			console.log(result);

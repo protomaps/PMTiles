@@ -16,47 +16,62 @@
 
 # Directory Serialization
 * The fixed 24-byte entry is how directories will usually be laid out in memory.
-* A single directory is serialized using the following 5 compression steps:
+* A single directory is sorted and serialized using the following 5 compression steps:
 	1. A header varint storing the # of entries in the directory
 	2. Run-length encoding of consecutive identical entries
-	3. Delta encoding of `TileId` and `Offset`
-	4. Varint encoding of `TileId`, `Offset` (signed zigzag-encoded), `Length` and `RunLength`
-	5. Columnar organization: all `TileId`s, all `Offset`s, all `Length`s then all `RunLengths`
-	6. Finally, general purpose compression: usually `gzip`
+	3. Delta encoding of `TileId`
+	4. Encoding of `Offset`:
+		* `0` if it is equal to the `Offset` + `Length` of the previous entry
+		* `Offset+1` otherwise
+	5. Varint encoding of `TileId`, `Offset`, `Length` and `RunLength`
+	6. Columnar organization: all `TileId`s, all `RunLength`s, all `Length`s, then all `Offset`s
+	7. Finally, general purpose compression: usually `gzip`
 
 # Directory Hierarchy
 * The number of entries in the root directory and leaf directories is up to the implementation.
-* However, the compressed size of the header plus root directory cannot exceed **16384 bytes**. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. (A sophisticated writer needs to determine the optimal root size via numerical method ?)
-* Root vs directory sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
+* However, the compressed size of the header plus root directory is recommended to be under **16384 bytes**. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. A sophisticated writer might need several attempts to optimize this. Otherwise, there is no limit to the size of the root directory.
+* Root size, leaf sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
 
 # Header Design
 
 *Certain fields belonging to metadata in v2 are promoted to fixed-size header fields. This allows a map container to be initialized to the desired extent or center without blocking on the JSON metadata.*
 
-* Magic number PM (2 bytes)
-* Spec version (1 byte)
-* Root dir length in bytes (4 bytes)
-* JSON Metadata length in bytes (4 bytes)
-* Start offset of leaf directories (8 bytes)
-* Start offset of tile data (8 bytes)
-* Number of non-unique tiles addressed by entries (8 bytes)
-* Number of entries (after RLE) (8 bytes)
-* Number of unique tiles (8 bytes)
-* string that is the index compression method (gzip, br, zstd) (10 bytes)
-* string that is the tile compression method (gzip, br, zstd) (10 bytes)
-* boolean that indicates if the archive is clustered (boolean)
-* the format of the of the tiles (pbf, png, jpg...) (10 bytes)
-* The minimum zoom (1 byte)
-* the maximum zoom (1 byte)
-* the minimum longitude (IEEE754 float) (4 bytes)
-* the min lat (4 bytes)
-* the max lon (4 bytes)
-* the max lat (4 bytes)
-* the center zoom (optional) (1 byte)
-* the center lon (optional) (4 bytes)
-* the center lat (optional) (4 bytes)
+fixed-width 152-byte header
 
-The archive SHOULD contain this 109-byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data. Leaf directories and tile data are, however, relocatable. 
+| offset | description | width |
+| --- | --- | --- |
+| 0 | magic number PM | 2 |
+| 2 | spec version, currently `3` | 1 |
+| 3 | offset of root directory | 8 |
+| 11 | length of root directory | 8 |
+| 19 | offset of JSON metadata | 8 |
+| 27 | length of JSON metadata | 8 |
+| 35 | offset of leaf directories | 8 |
+| 43 | length of leaf directories | 8 |
+| 51 | offset of tile data | 8 |
+| 59 | length of tile data | 8 |
+| 67 | # of addressed tiles, 0 if unknown | 8 |
+| 75 | # of tile entries, 0 if unknown | 8 |
+| 83 | # of tile contents, 0 if unknown | 8 |
+| 91 | boolean clustered flag | 1 |
+| 92 | length of directory compression string | 1 |
+| 93 | directory compression string | 10 |
+| 103 | length of tile compression string | 1 |
+| 104 | tile compression string (`gzip`,`br`,`zstd`, etc.) | 10 |
+| 114 | length of tile format string | 1 |
+| 115 | tile format string (`pbf`, `png`, `jpg`, etc.) | 10 |
+| 125 | min zoom | 1 |
+| 126 | max zoom | 1 |
+| 127 | min longitude (IEEE 754 float) | 4 |
+| 131 | min latitude | 4 |
+| 135 | max longitude | 4 |
+| 139 | max latitude | 4 |
+| 143 | center zoom | 1 |
+| 144 | center longitude | 4 |
+| 148 | center latitude | 4 |
+
+
+The archive SHOULD contain this 152-byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data.
 
 ## Clustered archives
 

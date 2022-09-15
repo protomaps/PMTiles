@@ -50,10 +50,10 @@ fixed-width 152-byte header
 | 43 | length of leaf directories | 8 |
 | 51 | offset of tile data | 8 |
 | 59 | length of tile data | 8 |
-| 67 | # of addressed tiles, 0 if unknown | 8 |
-| 75 | # of tile entries, 0 if unknown | 8 |
-| 83 | # of tile contents, 0 if unknown | 8 |
-| 91 | boolean clustered flag | 1 |
+| 67 | # of addressed tiles[^1], 0 if unknown | 8 |
+| 75 | # of tile entries[^2], 0 if unknown | 8 |
+| 83 | # of tile contents[^3], 0 if unknown | 8 |
+| 91 | boolean clustered[^4] flag | 1 |
 | 92 | length of directory compression string | 1 |
 | 93 | directory compression string | 10 |
 | 103 | length of tile compression string | 1 |

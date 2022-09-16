@@ -50,16 +50,16 @@ fixed-width 152-byte header
 | 43 | length of leaf directories | 8 |
 | 51 | offset of tile data | 8 |
 | 59 | length of tile data | 8 |
-| 67 | # of addressed tiles[^1], 0 if unknown | 8 |
-| 75 | # of tile entries[^2], 0 if unknown | 8 |
-| 83 | # of tile contents[^3], 0 if unknown | 8 |
-| 91 | boolean clustered[^4] flag | 1 |
+| 67 | # of addressed tiles, 0 if unknown | 8 |
+| 75 | # of tile entries, 0 if unknown | 8 |
+| 83 | # of tile contents, 0 if unknown | 8 |
+| 91 | boolean clustered flag | 1 |
 | 92 | length of directory compression string | 1 |
 | 93 | directory compression string | 10 |
 | 103 | length of tile compression string | 1 |
 | 104 | tile compression string (`gzip`,`br`,`zstd`, etc.) | 10 |
 | 114 | length of tile format string | 1 |
-| 115 | tile format string (`pbf`, `png`, `jpg`, etc.) | 10 |
+| 115 | tile format extension (`pbf`, `png`, `jpg`, etc.) | 10 |
 | 125 | min zoom | 1 |
 | 126 | max zoom | 1 |
 | 127 | min longitude (IEEE 754 float) | 4 |
@@ -70,9 +70,15 @@ fixed-width 152-byte header
 | 144 | center longitude | 4 |
 | 148 | center latitude | 4 |
 
+### Notes
+
+* **# of addressed tiles**: the total number of tiles before run-length encoding, i.e. `Sum(RunLlength)` over all entries.
+* **# of tile entries**: the total number of entries across all directories where `RunLength > 0`.
+* **# # of tile contents**: the number of referenced blobs in the tile section, or the unique # of offsets. If the archive is completely deduplicated, this is equal to the # of unique tile contents. If there is no deduplication, this is equal to the number of tile entries above.
+* **boolean clustered flag**: if `True`, blobs in the data section are generally ordered by Hilbert TileID. More concretely, this means that: when traversing all entries in TileID order, the offsets are either contiguous with the immediately previous entry, or refer to a lesser offset - a deduplicated tile.
+* **tile format extension**: the conventional file extension for the tile contents; may be used to enforce that client requests match this string. should not be a full MIME type.
+
+### Organization
 
 The archive SHOULD contain this 152-byte header, then the header directory, then the JSON metadata, then the leaf directories (if present), then all tile data.
 
-## Clustered archives
-
-If the `clustered` header is `True`, this means that the tile data in the data section are generally ordered by TileID (Hilbert order). More concretely, this means that: when traversing all entries in TileID order, the offsets are either contiguous with the immediately previous entry, or refer to a lesser offset (a deduplicated tile).

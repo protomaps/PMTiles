@@ -11,7 +11,13 @@ import {
   createDirectory,
 } from "./index";
 
-import { Entry as EntryV3, zxyToTileId, tileIdToZxy, findTile } from "./v3";
+import {
+  Entry as EntryV3,
+  zxyToTileId,
+  tileIdToZxy,
+  findTile,
+  readVarint,
+} from "./v3";
 
 test("stub data", (assertion) => {
   let dataview = createDirectory([
@@ -148,6 +154,22 @@ test("convert spec v1 directory to spec v2 directory", (assertion) => {
   assertion.ok(entry!.offset === 3);
 });
 
+test("varint", (assertion) => {
+  let b: BufferPosition = {
+    buf: new Uint8Array([0, 1, 127, 0xe5, 0x8e, 0x26]),
+    pos: 0,
+  };
+  assertion.eq(readVarint(b), 0);
+  assertion.eq(readVarint(b), 1);
+  assertion.eq(readVarint(b), 127);
+  assertion.eq(readVarint(b), 624485);
+  b = {
+    buf: new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]),
+    pos: 0,
+  };
+  assertion.eq(readVarint(b), 9007199254740991);
+});
+
 test("zxy to tile id", (assertion) => {
   assertion.eq(zxyToTileId(0, 0, 0), 0);
   assertion.eq(zxyToTileId(1, 0, 0), 1);
@@ -185,7 +207,9 @@ test("tile search for first entry == id", (assertion) => {
 });
 
 test("tile search for first entry == id", (assertion) => {
-  let entries: EntryV3[] = [{ tileId: 100, offset: 1, length: 1, runLength: 1 }];
+  let entries: EntryV3[] = [
+    { tileId: 100, offset: 1, length: 1, runLength: 1 },
+  ];
   let entry = findTile(entries, 100)!;
   assertion.eq(entry.offset, 1);
   assertion.eq(entry.length, 1);
@@ -193,7 +217,9 @@ test("tile search for first entry == id", (assertion) => {
 });
 
 test("tile search for first entry == id", (assertion) => {
-  let entries: EntryV3[] = [{ tileId: 100, offset: 1, length: 1, runLength: 2 }];
+  let entries: EntryV3[] = [
+    { tileId: 100, offset: 1, length: 1, runLength: 2 },
+  ];
   let entry = findTile(entries, 101)!;
   assertion.eq(entry.offset, 1);
   assertion.eq(entry.length, 1);
@@ -217,7 +243,9 @@ test("tile search for first entry == id", (assertion) => {
 });
 
 test("leaf search", (assertion) => {
-  let entries: EntryV3[] = [{ tileId: 100, offset: 1, length: 1, runLength: 0 }];
+  let entries: EntryV3[] = [
+    { tileId: 100, offset: 1, length: 1, runLength: 0 },
+  ];
   let entry = findTile(entries, 150);
   assertion.eq(entry!.offset, 1);
   assertion.eq(entry!.length, 1);

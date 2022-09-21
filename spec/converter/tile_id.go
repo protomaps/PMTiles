@@ -15,13 +15,10 @@ func rotate(n int64, x *int64, y *int64, rx int64, ry int64) {
 }
 
 func t_on_level(z int64, pos int64) (int64, int64, int64) {
-	var n int64
-	n = 1 << z
+	var n int64 = 1 << z
 	rx, ry, t := pos, pos, pos
 	var tx int64
 	var ty int64
-	tx = 0
-	ty = 0
 	var s int64
 	for s = 1; s < n; s *= 2 {
 		rx = 1 & (t / 2)
@@ -36,23 +33,16 @@ func t_on_level(z int64, pos int64) (int64, int64, int64) {
 
 func ZxyToId(z int64, x int64, y int64) int64 {
 	var acc int64
-	acc = 0
 	var tz int64
-	for tz = 0; tz < z; tz++ {
+	for ; tz < z; tz++ {
 		acc += (0x1 << tz) * (0x1 << tz)
 	}
-	var n int64
-	n = 1 << z
+	var n int64 = 1 << z
 	var rx int64
 	var ry int64
 	var d int64
-	rx = 0
-	ry = 0
-	d = 0
-	var tx int64
-	var ty int64
-	tx = x
-	ty = y
+	var tx int64 = x
+	var ty int64 = y
 	for s := n / 2; s > 0; s /= 2 {
 		if tx&s > 0 {
 			rx = 1
@@ -74,8 +64,6 @@ func IdToZxy(i int64) (int64, int64, int64) {
 	var acc int64
 	var num_tiles int64
 	var z int64
-	acc = 0
-	z = 0
 	for {
 		num_tiles = (1 << z) * (1 << z)
 		if acc+num_tiles > i {
@@ -88,17 +76,12 @@ func IdToZxy(i int64) (int64, int64, int64) {
 
 // 32 bit only
 func ZxyToQuadkey(z int64, px int64, py int64) int64 {
-	var b0 int64
-	var b1 int64
-	var b2 int64
-	var b3 int64
-	b0 = 0x55555555
-	b1 = 0x33333333
-	b2 = 0x0F0F0F0F
-	b3 = 0x00FF00FF
+	var b0 int64 = 0x55555555
+	var b1 int64 = 0x33333333
+	var b2 int64 = 0x0F0F0F0F
+	var b3 int64 = 0x00FF00FF
 
-	var sentinel int64
-	sentinel = 0b1 << (z * 2)
+	var sentinel int64 = 0b1 << (z * 2)
 
 	var x int64
 	var y int64
@@ -120,16 +103,11 @@ func ZxyToQuadkey(z int64, px int64, py int64) int64 {
 }
 
 func QuadkeyToZxy(i int64) (int64, int64, int64) { 
-	z := 32 - (bits.LeadingZeros64(uint64(i)) + 1) / 2
+	var z = 32 - (bits.LeadingZeros64(uint64(i)) + 1) / 2
+	var mask int64 = ^(0b1 << (z * 2))
 
-	var x int64
-	var y int64
-
-	var mask int64
-	mask = ^(0b1 << (z * 2))
-
-	x = (i & mask)
-	y = (i & mask) >> 1
+	var x int64 x = (i & mask)
+	var y int64 = (i & mask) >> 1
 
 	x &= 0x55555555
   x = (x ^ (x >>  1)) & 0x33333333

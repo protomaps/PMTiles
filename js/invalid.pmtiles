@@ -1,0 +1,1 @@
+This is an invalid tile archive, a test case to make sure that the code throws an error, but it needs to be the minimum size to pass the first test

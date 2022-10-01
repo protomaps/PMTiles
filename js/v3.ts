@@ -238,7 +238,7 @@ export class FileAPISource implements Source {
 
 	async getBytes(
 		offset: number,
-		length: number,
+		length: number
 	): Promise<[ArrayBuffer, undefined]> {
 		const blob = this.file.slice(offset, offset + length);
 		const a = await blob.arrayBuffer();
@@ -471,7 +471,8 @@ export class Cache {
 					resolve(directory);
 
 					if (this.cache.has(cacheKey)) {
-						this.cache.get(cacheKey)!.size = ENTRY_SIZE_BYTES * directory.length;
+						this.cache.get(cacheKey)!.size =
+							ENTRY_SIZE_BYTES * directory.length;
 						this.sizeBytes += ENTRY_SIZE_BYTES * directory.length;
 					}
 					this.prune();
@@ -527,6 +528,10 @@ export class PMTiles {
 	): Promise<ArrayBuffer | undefined> {
 		const tile_id = zxyToTileId(z, x, y);
 		const header = await this.cache.getHeader(this.source);
+
+		if (z < header.minzoom || z > header.maxzoom) {
+			return undefined;
+		}
 
 		let d_o = header.rootDirectoryOffset;
 		let d_l = header.rootDirectoryLength;

@@ -213,6 +213,13 @@ export function findTile(entries: Entry[], tileId: number): Entry | null {
 	return null;
 }
 
+export interface Response {
+	data: ArrayBuffer;
+	etag?: string;
+	expires?: string;
+	cacheControl?: string;
+}
+
 // In the future this may need to change
 // to support ReadableStream to pass to native DecompressionStream API
 export interface Source {
@@ -220,7 +227,7 @@ export interface Source {
 		offset: number,
 		length: number,
 		signal?: AbortSignal
-	) => Promise<[ArrayBuffer, string?]>;
+	) => Promise<Response>;
 
 	getKey: () => string;
 }
@@ -236,13 +243,10 @@ export class FileAPISource implements Source {
 		return this.file.name;
 	}
 
-	async getBytes(
-		offset: number,
-		length: number
-	): Promise<[ArrayBuffer, undefined]> {
+	async getBytes(offset: number, length: number): Promise<Response> {
 		const blob = this.file.slice(offset, offset + length);
 		const a = await blob.arrayBuffer();
-		return [a, undefined];
+		return { data: a };
 	}
 }
 
@@ -261,7 +265,7 @@ export class FetchSource implements Source {
 		offset: number,
 		length: number,
 		signal?: AbortSignal
-	): Promise<[ArrayBuffer, string?]> {
+	): Promise<Response> {
 		let controller;
 		if (!signal) {
 			// TODO check this works or assert 206
@@ -282,7 +286,12 @@ export class FetchSource implements Source {
 		}
 
 		const a = await resp.arrayBuffer();
-		return [a, resp.headers.get("ETag") || undefined];
+		return {
+			data: a,
+			etag: resp.headers.get("ETag") || undefined,
+			cacheControl: resp.headers.get("Cache-Control") || undefined,
+			expires: resp.headers.get("Expires") || undefined,
+		};
 	}
 }
 
@@ -396,16 +405,16 @@ export class Cache {
 						this.sizeBytes += HEADER_SIZE_BYTES;
 					}
 
-					const headerData = resp[0].slice(0, HEADER_SIZE_BYTES);
+					const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
 					if (headerData.byteLength !== HEADER_SIZE_BYTES) {
 						throw new Error("Invalid PMTiles header");
 					}
-					const header = bytesToHeader(headerData, resp[1]);
+					const header = bytesToHeader(headerData, resp.etag);
 
 					// optimistically set the root directory
 					// TODO check root bounds
 					if (this.prefetch) {
-						const rootDirData = resp[0].slice(
+						const rootDirData = resp.data.slice(
 							header.rootDirectoryOffset,
 							header.rootDirectoryOffset + header.rootDirectoryLength
 						);
@@ -458,11 +467,11 @@ export class Cache {
 			source
 				.getBytes(offset, length)
 				.then((resp) => {
-					if (header.etag && header.etag !== resp[1]) {
-						throw new VersionMismatch(header.etag);
+					if (header.etag && header.etag !== resp.etag) {
+						throw new VersionMismatch("ETag mismatch: " + header.etag);
 					}
 
-					const data = tryDecompress(resp[0], header.internalCompression);
+					const data = tryDecompress(resp.data, header.internalCompression);
 					const directory = deserializeIndex(data);
 					if (directory.length === 0) {
 						return reject(new Error("Empty directory is invalid"));
@@ -520,12 +529,23 @@ export class PMTiles {
 		}
 	}
 
+	async root_entries() {
+		const header = await this.cache.getHeader(this.source);
+		let d_o = header.rootDirectoryOffset;
+		let d_l = header.rootDirectoryLength;
+		return await this.cache.getDirectory(this.source, d_o, d_l, header);
+	}
+
+	async getHeader() {
+		return await this.cache.getHeader(this.source);
+	}
+
 	async getZxyAttempt(
 		z: number,
 		x: number,
 		y: number,
 		signal?: AbortSignal
-	): Promise<ArrayBuffer | undefined> {
+	): Promise<Response | undefined> {
 		const tile_id = zxyToTileId(z, x, y);
 		const header = await this.cache.getHeader(this.source);
 
@@ -545,15 +565,19 @@ export class PMTiles {
 			const entry = findTile(directory, tile_id);
 			if (entry) {
 				if (entry.runLength > 0) {
-					const [data, new_etag] = await this.source.getBytes(
+					const resp = await this.source.getBytes(
 						header.tileDataOffset + entry.offset,
 						entry.length,
 						signal
 					);
-					if (header.etag && header.etag !== new_etag) {
-						throw new VersionMismatch(header.etag);
+					if (header.etag && header.etag !== resp.etag) {
+						throw new VersionMismatch("ETag mismatch: " + header.etag);
 					}
-					return tryDecompress(data, header.tileCompression);
+					return {
+						data: tryDecompress(resp.data, header.tileCompression),
+						cacheControl: resp.cacheControl,
+						expires: resp.expires,
+					};
 				} else {
 					d_o = header.leafDirectoryOffset + entry.offset;
 					d_l = entry.length;
@@ -570,7 +594,7 @@ export class PMTiles {
 		x: number,
 		y: number,
 		signal?: AbortSignal
-	): Promise<ArrayBuffer | undefined> {
+	): Promise<Response | undefined> {
 		try {
 			return await this.getZxyAttempt(z, x, y, signal);
 		} catch (e) {
@@ -585,14 +609,14 @@ export class PMTiles {
 
 	async getMetadataAttempt(): Promise<any> {
 		const header = await this.cache.getHeader(this.source);
-		const [data, new_etag] = await this.source.getBytes(
+		const resp = await this.source.getBytes(
 			header.jsonMetadataOffset,
 			header.jsonMetadataLength
 		);
-		if (header.etag && header.etag !== new_etag) {
-			throw new VersionMismatch(header.etag);
+		if (header.etag && header.etag !== resp.etag) {
+			throw new VersionMismatch("Etag mismatch: " + header.etag);
 		}
-		const decompressed = tryDecompress(data, header.internalCompression);
+		const decompressed = tryDecompress(resp.data, header.internalCompression);
 		const dec = new TextDecoder("utf-8");
 		return JSON.parse(dec.decode(decompressed));
 	}

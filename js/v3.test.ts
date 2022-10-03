@@ -14,6 +14,7 @@ import {
 	Cache,
 	BufferPosition,
 	Source,
+	Response,
 	VersionMismatch,
 	PMTiles,
 } from "./v3";
@@ -134,10 +135,10 @@ class TestNodeFileSource implements Source {
 	async getBytes(
 		offset: number,
 		length: number
-	): Promise<[ArrayBuffer, string?]> {
+	): Promise<Response> {
 		const slice = new Uint8Array(this.buffer.slice(offset, offset + length))
 			.buffer;
-		return [slice, this.etag];
+		return {data:slice, etag:this.etag};
 	}
 }
 
@@ -283,6 +284,7 @@ test("pmtiles get metadata", async (assertion) => {
 	assertion.ok(metadata.name);
 });
 
+// echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_2.pmtiles
 test("pmtiles handle retries", async (assertion) => {
 	const source = new TestNodeFileSource("test_fixture_1.pmtiles", "1");
 	source.etag = "1";

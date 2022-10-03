@@ -549,7 +549,7 @@ export class PMTiles {
 		const tile_id = zxyToTileId(z, x, y);
 		const header = await this.cache.getHeader(this.source);
 
-		if (z < header.minzoom || z > header.maxzoom) {
+		if (z < header.minZoom || z > header.maxZoom) {
 			return undefined;
 		}
 

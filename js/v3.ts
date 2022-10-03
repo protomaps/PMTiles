@@ -213,7 +213,7 @@ export function findTile(entries: Entry[], tileId: number): Entry | null {
 	return null;
 }
 
-export interface Response {
+export interface SourceData {
 	data: ArrayBuffer;
 	etag?: string;
 	expires?: string;
@@ -227,7 +227,7 @@ export interface Source {
 		offset: number,
 		length: number,
 		signal?: AbortSignal
-	) => Promise<Response>;
+	) => Promise<SourceData>;
 
 	getKey: () => string;
 }
@@ -243,7 +243,7 @@ export class FileAPISource implements Source {
 		return this.file.name;
 	}
 
-	async getBytes(offset: number, length: number): Promise<Response> {
+	async getBytes(offset: number, length: number): Promise<SourceData> {
 		const blob = this.file.slice(offset, offset + length);
 		const a = await blob.arrayBuffer();
 		return { data: a };
@@ -265,7 +265,7 @@ export class FetchSource implements Source {
 		offset: number,
 		length: number,
 		signal?: AbortSignal
-	): Promise<Response> {
+	): Promise<SourceData> {
 		let controller;
 		if (!signal) {
 			// TODO check this works or assert 206
@@ -545,7 +545,7 @@ export class PMTiles {
 		x: number,
 		y: number,
 		signal?: AbortSignal
-	): Promise<Response | undefined> {
+	): Promise<SourceData | undefined> {
 		const tile_id = zxyToTileId(z, x, y);
 		const header = await this.cache.getHeader(this.source);
 
@@ -594,7 +594,7 @@ export class PMTiles {
 		x: number,
 		y: number,
 		signal?: AbortSignal
-	): Promise<Response | undefined> {
+	): Promise<SourceData | undefined> {
 		try {
 			return await this.getZxyAttempt(z, x, y, signal);
 		} catch (e) {

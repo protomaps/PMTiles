@@ -14,7 +14,7 @@ import {
 	Cache,
 	BufferPosition,
 	Source,
-	SourceData,
+	RangeResponse,
 	VersionMismatch,
 	PMTiles,
 } from "./v3";
@@ -135,7 +135,7 @@ class TestNodeFileSource implements Source {
 	async getBytes(
 		offset: number,
 		length: number
-	): Promise<SourceData> {
+	): Promise<RangeResponse> {
 		const slice = new Uint8Array(this.buffer.slice(offset, offset + length))
 			.buffer;
 		return {data:slice, etag:this.etag};

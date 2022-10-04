@@ -213,7 +213,7 @@ export function findTile(entries: Entry[], tileId: number): Entry | null {
 	return null;
 }
 
-export interface SourceData {
+export interface RangeResponse {
 	data: ArrayBuffer;
 	etag?: string;
 	expires?: string;
@@ -227,7 +227,7 @@ export interface Source {
 		offset: number,
 		length: number,
 		signal?: AbortSignal
-	) => Promise<SourceData>;
+	) => Promise<RangeResponse>;
 
 	getKey: () => string;
 }
@@ -243,7 +243,7 @@ export class FileAPISource implements Source {
 		return this.file.name;
 	}
 
-	async getBytes(offset: number, length: number): Promise<SourceData> {
+	async getBytes(offset: number, length: number): Promise<RangeResponse> {
 		const blob = this.file.slice(offset, offset + length);
 		const a = await blob.arrayBuffer();
 		return { data: a };
@@ -265,7 +265,7 @@ export class FetchSource implements Source {
 		offset: number,
 		length: number,
 		signal?: AbortSignal
-	): Promise<SourceData> {
+	): Promise<RangeResponse> {
 		let controller;
 		if (!signal) {
 			// TODO check this works or assert 206
@@ -392,6 +392,7 @@ export class Cache {
 	async getHeader(source: Source): Promise<Header> {
 		const cacheKey = source.getKey();
 		if (this.cache.has(cacheKey)) {
+			this.cache.get(cacheKey)!.lastUsed = this.counter++;
 			const data = await this.cache.get(cacheKey)!.data;
 			return data as Header;
 		}
@@ -545,7 +546,7 @@ export class PMTiles {
 		x: number,
 		y: number,
 		signal?: AbortSignal
-	): Promise<SourceData | undefined> {
+	): Promise<RangeResponse | undefined> {
 		const tile_id = zxyToTileId(z, x, y);
 		const header = await this.cache.getHeader(this.source);
 
@@ -594,7 +595,7 @@ export class PMTiles {
 		x: number,
 		y: number,
 		signal?: AbortSignal
-	): Promise<SourceData | undefined> {
+	): Promise<RangeResponse | undefined> {
 		try {
 			return await this.getZxyAttempt(z, x, y, signal);
 		} catch (e) {

@@ -8,5 +8,5 @@
     },
     "types": []
   },
-  "include": ["*.ts"]
+  "include": ["*.ts","test/*.ts"]
 }

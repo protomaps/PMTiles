@@ -1,4 +1,4 @@
-import { Source, Header, Cache, RangeResponse, Compression } from "./v3";
+import { Source, Header, Cache, RangeResponse, Compression } from "./index";
 import { decompressSync } from "fflate";
 
 export const shift = (n: number, shift: number) => {

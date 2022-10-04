@@ -133,7 +133,7 @@ export interface Entry {
 const ENTRY_SIZE_BYTES = 32;
 
 export enum Compression {
-	None = 0,
+	Unknown = 0,
 	Gzip = 1,
 	Brotli = 2,
 	Zstd = 3,
@@ -149,7 +149,7 @@ function tryDecompress(buf: ArrayBuffer, compression: Compression) {
 	}
 }
 
-enum TileType {
+export enum TileType {
 	Unknown = 0,
 	Mvt = 1,
 	Png = 2,

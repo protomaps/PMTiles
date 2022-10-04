@@ -11,7 +11,7 @@ import {
 	tileIdToZxy,
 	findTile,
 	readVarint,
-	Cache,
+	SharedPromiseCache,
 	BufferPosition,
 	Source,
 	RangeResponse,
@@ -145,7 +145,7 @@ class TestNodeFileSource implements Source {
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_1.pmtiles
 test("cache getHeader", async (assertion) => {
 	const source = new TestNodeFileSource("test_fixture_1.pmtiles", "1");
-	const cache = new Cache();
+	const cache = new SharedPromiseCache();
 	const header = await cache.getHeader(source);
 	assertion.eq(header.rootDirectoryOffset, 122);
 	assertion.eq(header.rootDirectoryLength, 25);
@@ -172,7 +172,7 @@ test("cache getHeader", async (assertion) => {
 
 test("cache check against empty", async (assertion) => {
 	const source = new TestNodeFileSource("empty.pmtiles", "1");
-	const cache = new Cache();
+	const cache = new SharedPromiseCache();
 	try {
 		await cache.getHeader(source);
 		assertion.fail("Should have thrown");
@@ -183,7 +183,7 @@ test("cache check against empty", async (assertion) => {
 
 test("cache check magic number", async (assertion) => {
 	const source = new TestNodeFileSource("invalid.pmtiles", "1");
-	const cache = new Cache();
+	const cache = new SharedPromiseCache();
 	try {
 		await cache.getHeader(source);
 		assertion.fail("Should have thrown");
@@ -196,11 +196,11 @@ test("cache check magic number", async (assertion) => {
 test("cache getDirectory", async (assertion) => {
 	const source = new TestNodeFileSource("test_fixture_1.pmtiles", "1");
 
-	let cache = new Cache(6400, false);
+	let cache = new SharedPromiseCache(6400, false);
 	let header = await cache.getHeader(source);
 	assertion.eq(cache.cache.size, 1);
 
-	cache = new Cache(6400, true);
+	cache = new SharedPromiseCache(6400, true);
 	header = await cache.getHeader(source);
 
 	// prepopulates the root directory
@@ -225,7 +225,7 @@ test("cache getDirectory", async (assertion) => {
 });
 
 test("multiple sources in a single cache", async (assertion) => {
-	const cache = new Cache();
+	const cache = new SharedPromiseCache();
 	const source1 = new TestNodeFileSource("test_fixture_1.pmtiles", "1");
 	const source2 = new TestNodeFileSource("test_fixture_1.pmtiles", "2");
 	await cache.getHeader(source1);
@@ -235,7 +235,7 @@ test("multiple sources in a single cache", async (assertion) => {
 });
 
 test("etags are part of key", async (assertion) => {
-	const cache = new Cache(6400, false);
+	const cache = new SharedPromiseCache(6400, false);
 	const source = new TestNodeFileSource("test_fixture_1.pmtiles", "1");
 	source.etag = "etag_1";
 	let header = await cache.getHeader(source);
@@ -267,7 +267,7 @@ test("etags are part of key", async (assertion) => {
 });
 
 test("cache pruning by byte size", async (assertion) => {
-	const cache = new Cache(1000, false);
+	const cache = new SharedPromiseCache(1000, false);
 	cache.cache.set("0", { lastUsed: 0, data: Promise.resolve([]), size: 400 });
 	cache.cache.set("1", { lastUsed: 1, data: Promise.resolve([]), size: 200 });
 	cache.cache.set("2", { lastUsed: 2, data: Promise.resolve([]), size: 900 });

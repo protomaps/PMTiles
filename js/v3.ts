@@ -370,11 +370,22 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
 
 export class VersionMismatch extends Error {}
 
+export interface Cache {
+	getHeader: (source: Source) => Promise<Header>;
+	getDirectory: (
+		source: Source,
+		offset: number,
+		length: number,
+		header: Header
+	) => Promise<Entry[]>;
+	invalidate: (source: Source) => void;
+}
+
 // a "dumb" bag of bytes.
 // only caches headers and directories
 // deduplicates simultaneous responses
 // (estimates) the maximum size of the cache.
-export class Cache {
+export class SharedPromiseCache {
 	cache: Map<string, CacheEntry>;
 	sizeBytes: number;
 	maxSizeBytes: number;
@@ -526,7 +537,7 @@ export class PMTiles {
 		if (cache) {
 			this.cache = cache;
 		} else {
-			this.cache = new Cache();
+			this.cache = new SharedPromiseCache();
 		}
 	}
 

@@ -132,7 +132,7 @@ export interface Entry {
 
 const ENTRY_SIZE_BYTES = 32;
 
-enum Compression {
+export enum Compression {
 	None = 0,
 	Gzip = 1,
 	Brotli = 2,
@@ -299,9 +299,6 @@ export class FetchSource implements Source {
 
 export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
 	const v = new DataView(bytes);
-	if (v.getUint16(0, true) !== 0x4d50) {
-		throw new Error("Wrong magic number for PMTiles archive");
-	}
 	return {
 		specVersion: 3,
 		rootDirectoryOffset: Number(v.getBigUint64(3, true)),
@@ -366,6 +363,14 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
 }
 
 function detectVersion(a: ArrayBuffer): number {
+	const v = new DataView(a);
+	if (v.getUint16(2, true) === 2) {
+		console.warn("PMTiles spec version 2 has been deprecated;");
+		return 2;
+	} else if (v.getUint16(2, true) === 1) {
+		console.warn("PMTiles spec version 1 has been deprecated;");
+		return 1;
+	}
 	return 3;
 }
 
@@ -394,9 +399,14 @@ async function getHeaderAndRoot(
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
 	let resp = await source.getBytes(0, 16384);
 
+	const v = new DataView(resp.data);
+	if (v.getUint16(0, true) !== 0x4d50) {
+		throw new Error("Wrong magic number for PMTiles archive");
+	}
+
 	// V2 COMPATIBILITY
-	if (detectVersion(resp.data) < 2) {
-		return v2.getHeaderAndRoot(resp.data, resp.etag);
+	if (detectVersion(resp.data) < 3) {
+		return v2.getHeaderAndRoot(source);
 	}
 
 	const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
@@ -728,8 +738,12 @@ export class PMTiles {
 	source: Source;
 	cache: Cache;
 
-	constructor(source: Source, cache?: Cache) {
-		this.source = source;
+	constructor(source: Source | string, cache?: Cache) {
+		if (typeof source === "string") {
+			this.source = new FetchSource(source);
+		} else {
+			this.source = source;
+		}
 		if (cache) {
 			this.cache = cache;
 		} else {
@@ -739,6 +753,11 @@ export class PMTiles {
 
 	async root_entries() {
 		const header = await this.cache.getHeader(this.source);
+
+		// V2 COMPATIBILITY
+		if (header.specVersion < 3) {
+			return [];
+		}
 		let d_o = header.rootDirectoryOffset;
 		let d_l = header.rootDirectoryLength;
 		return await this.cache.getDirectory(this.source, d_o, d_l, header);
@@ -759,7 +778,7 @@ export class PMTiles {
 
 		// V2 COMPATIBILITY
 		if (header.specVersion < 3) {
-			return v2.getZxy(header, this.cache);
+			return v2.getZxy(header, this.source, this.cache, z, x, y);
 		}
 
 		if (z < header.minZoom || z > header.maxZoom) {

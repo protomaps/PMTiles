@@ -1,4 +1,5 @@
 import { decompressSync } from "fflate";
+import v2 from "./v2";
 
 export interface BufferPosition {
 	buf: Uint8Array;
@@ -159,14 +160,15 @@ enum TileType {
 const HEADER_SIZE_BYTES = 122;
 
 export interface Header {
+	specVersion: number;
 	rootDirectoryOffset: number;
 	rootDirectoryLength: number;
 	jsonMetadataOffset: number;
 	jsonMetadataLength: number;
 	leafDirectoryOffset: number;
-	leafDirectoryLength: number;
+	leafDirectoryLength?: number;
 	tileDataOffset: number;
-	tileDataLength: number;
+	tileDataLength?: number;
 	numAddressedTiles: number;
 	numTileEntries: number;
 	numTileContents: number;
@@ -301,6 +303,7 @@ export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
 		throw new Error("Wrong magic number for PMTiles archive");
 	}
 	return {
+		specVersion: 3,
 		rootDirectoryOffset: Number(v.getBigUint64(3, true)),
 		rootDirectoryLength: Number(v.getBigUint64(11, true)),
 		jsonMetadataOffset: Number(v.getBigUint64(19, true)),
@@ -362,6 +365,10 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
 	return entries;
 }
 
+function detectVersion(a: ArrayBuffer): number {
+	return 3;
+}
+
 export class VersionMismatch extends Error {}
 
 export interface Cache {
@@ -387,36 +394,37 @@ async function getHeaderAndRoot(
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
 	let resp = await source.getBytes(0, 16384);
 
-	// check spec revision
-	if (false) {
-	} else {
-		const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
-		const header = bytesToHeader(headerData, resp.etag);
-
-		// optimistically set the root directory
-		// TODO check root bounds
-		if (prefetch) {
-			const rootDirData = resp.data.slice(
-				header.rootDirectoryOffset,
-				header.rootDirectoryOffset + header.rootDirectoryLength
-			);
-			const dirKey =
-				source.getKey() +
-				"|" +
-				(header.etag || "") +
-				"|" +
-				header.rootDirectoryOffset +
-				"|" +
-				header.rootDirectoryLength;
-
-			const rootDir = deserializeIndex(
-				tryDecompress(rootDirData, header.internalCompression)
-			);
-			return [header, [dirKey, ENTRY_SIZE_BYTES * rootDir.length, rootDir]];
-		}
-
-		return [header, undefined];
+	// V2 COMPATIBILITY
+	if (detectVersion(resp.data) < 2) {
+		return v2.getHeaderAndRoot(resp.data, resp.etag);
 	}
+
+	const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
+	const header = bytesToHeader(headerData, resp.etag);
+
+	// optimistically set the root directory
+	// TODO check root bounds
+	if (prefetch) {
+		const rootDirData = resp.data.slice(
+			header.rootDirectoryOffset,
+			header.rootDirectoryOffset + header.rootDirectoryLength
+		);
+		const dirKey =
+			source.getKey() +
+			"|" +
+			(header.etag || "") +
+			"|" +
+			header.rootDirectoryOffset +
+			"|" +
+			header.rootDirectoryLength;
+
+		const rootDir = deserializeIndex(
+			tryDecompress(rootDirData, header.internalCompression)
+		);
+		return [header, [dirKey, ENTRY_SIZE_BYTES * rootDir.length, rootDir]];
+	}
+
+	return [header, undefined];
 }
 
 async function getDirectory(
@@ -749,6 +757,11 @@ export class PMTiles {
 		const tile_id = zxyToTileId(z, x, y);
 		const header = await this.cache.getHeader(this.source);
 
+		// V2 COMPATIBILITY
+		if (header.specVersion < 3) {
+			return v2.getZxy(header, this.cache);
+		}
+
 		if (z < header.minZoom || z > header.maxZoom) {
 			return undefined;
 		}
@@ -809,6 +822,7 @@ export class PMTiles {
 
 	async getMetadataAttempt(): Promise<any> {
 		const header = await this.cache.getHeader(this.source);
+
 		const resp = await this.source.getBytes(
 			header.jsonMetadataOffset,
 			header.jsonMetadataLength

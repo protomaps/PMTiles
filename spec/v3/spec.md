@@ -61,13 +61,13 @@ The `Header` is 127 bytes, with little-endian integer values:
 | 72 | # of addressed tiles, 0 if unknown | 8 |
 | 80 | # of tile entries, 0 if unknown | 8 |
 | 88 | # of tile contents, 0 if unknown | 8 |
-| 96 | boolean clustered flag | 1 |
+| 96 | boolean clustered flag, `1` if true | 1 |
 | 97 | internal compression enum (0 = Unknown, 1 = None, 2 = Gzip, 3 = Brotli, 4 = Zstd) | 1 |
 | 98 | tile compression enum | 1 |
 | 99 | tile type enum (0 = Unknown/Other, 1 = MVT (PBF Vector Tile), 2 = PNG, 3 = JPEG, 4 = WEBP | 1 |
 | 100 | min zoom | 1 |
 | 101 | max zoom | 1 |
-| 102 | min longitude (IEEE 754 float) | 4 |
+| 102 | min longitude (signed 32-bit integer: longitude * 10,000,000) | 4 |
 | 106 | min latitude | 4 |
 | 110 | max longitude | 4 |
 | 114 | max latitude | 4 |

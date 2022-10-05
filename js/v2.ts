@@ -1,4 +1,4 @@
-import { Source, Header, Cache, RangeResponse, Compression } from "./index";
+import { Source, Header, Cache, RangeResponse, Compression, TileType } from "./index";
 import { decompressSync } from "fflate";
 
 export const shift = (n: number, shift: number) => {
@@ -213,12 +213,12 @@ async function getHeaderAndRoot(
 			`Archive is missing 'bounds' in metadata, required in v2 and above.`
 		);
 	}
-	if (!json_metadata.minzoom) {
+	if (!('minzoom' in json_metadata)) {
 		console.warn(
 			`Archive is missing 'minzoom' in metadata, required in v2 and above.`
 		);
 	}
-	if (!json_metadata.maxzoom) {
+	if (!('maxzoom' in json_metadata)) {
 		console.warn(
 			`Archive is missing 'maxzoom' in metadata, required in v2 and above.`
 		);
@@ -239,8 +239,8 @@ async function getHeaderAndRoot(
 		numTileContents: 0,
 		clustered: false,
 		internalCompression: Compression.Unknown,
-		tileCompression: 0,
-		tileType: 0,
+		tileCompression: Compression.Unknown,
+		tileType: TileType.Mvt,
 		minZoom: +json_metadata.minzoom,
 		maxZoom: +json_metadata.maxzoom,
 		minLon: 0,

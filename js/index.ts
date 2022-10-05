@@ -142,7 +142,7 @@ export enum Compression {
 }
 
 function tryDecompress(buf: ArrayBuffer, compression: Compression) {
-	if (compression === Compression.None) {
+	if (compression === Compression.None || compression === Compression.Unknown) {
 		return buf;
 	} else if (compression === Compression.Gzip) {
 		return decompressSync(new Uint8Array(buf));

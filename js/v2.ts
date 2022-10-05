@@ -261,7 +261,8 @@ async function getZxy(
 	cache: Cache,
 	z: number,
 	x: number,
-	y: number
+	y: number,
+	signal?: AbortSignal
 ): Promise<RangeResponse | undefined> {
 	let root_dir = await cache.getArrayBuffer(
 		source,
@@ -275,7 +276,7 @@ async function getZxy(
 
 	const entry = queryTile(new DataView(root_dir), z, x, y);
 	if (entry) {
-		let resp = await source.getBytes(entry.offset, entry.length); // TODO signal
+		let resp = await source.getBytes(entry.offset, entry.length, signal);
 		let tile_data = resp.data;
 
 		let view = new DataView(tile_data);
@@ -309,7 +310,7 @@ async function getZxy(
 			}
 			let tile_entry = queryTile(new DataView(leaf_dir), z, x, y);
 			if (tile_entry) {
-				let resp = await source.getBytes(tile_entry.offset, tile_entry.length); // TODO signal
+				let resp = await source.getBytes(tile_entry.offset, tile_entry.length, signal);
 				let tile_data = resp.data;
 
 				let view = new DataView(tile_data);

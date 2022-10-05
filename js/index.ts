@@ -780,7 +780,7 @@ export class PMTiles {
 
 		// V2 COMPATIBILITY
 		if (header.specVersion < 3) {
-			return v2.getZxy(header, this.source, this.cache, z, x, y);
+			return v2.getZxy(header, this.source, this.cache, z, x, y, signal);
 		}
 
 		if (z < header.minZoom || z > header.maxZoom) {

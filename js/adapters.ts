@@ -81,15 +81,16 @@ export class Protocol {
       controller.abort();
     };
 
-    instance.getZxy(+z, +x, +y, signal).then((arr) => {
-      if (arr) {
-        let data = new Uint8Array(arr.data);
-        callback(null, data, null, null);
+    instance.getZxy(+z, +x, +y, signal).then((resp) => {
+      if (resp) {
+        callback(null, new Uint8Array(resp.data), resp.cacheControl, resp.expires);
       } else {
         callback(null, new Uint8Array(), null, null);
       }
     }).catch((e) => {
-      console.log(e);
+      if (e.name !== "AbortError") {
+        throw e;
+      }
     });
     return {
       cancel: cancel

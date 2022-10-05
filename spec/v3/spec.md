@@ -35,6 +35,7 @@ Entries are stored in memory as integers, but serialized to disk using these com
 	6. Finally, general purpose compression as described by the `Header`'s `InternalCompression` field.
 
 # Directory Hierarchy
+
 * The number of entries in the root directory and leaf directories is up to the implementation.
 * However, the compressed size of the header plus root directory is required in v3 to be under **16,384 bytes**. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. A sophisticated writer might need several attempts to optimize this. 
 * Root size, leaf sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
@@ -76,10 +77,10 @@ The `Header` is 127 bytes, with little-endian integer values:
 
 ### Notes
 
-* **# of addressed tiles**: the total number of tiles before run-length encoding, i.e. `Sum(RunLlength)` over all entries.
+* **# of addressed tiles**: the total number of tiles before run-length encoding, i.e. `Sum(RunLength)` over all entries.
 * **# of tile entries**: the total number of entries across all directories where `RunLength > 0`.
 * **# # of tile contents**: the number of referenced blobs in the tile section, or the unique # of offsets. If the archive is completely deduplicated, this is equal to the # of unique tile contents. If there is no deduplication, this is equal to the number of tile entries above.
-* **boolean clustered flag**: if `True`, blobs in the data section are generally ordered by Hilbert TileID. More concretely, this means that: when traversing all entries in TileID order, the offsets are either contiguous with the immediately previous entry, or refer to a lesser offset - a deduplicated tile.
+* **boolean clustered flag**: if `True`, blobs in the data section are ordered by Hilbert `TileId`. When writing with deduplication, this means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset.
 * **compression enum**: Mandatory, tells the client how to decompress contents as well as provide correct `Content-Encoding` headers to browsers.
 * **tile type**: A hint as to the tile contents. Clients and proxies may use this to:
  	* Automatically determine a visualization method

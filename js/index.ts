@@ -1,5 +1,6 @@
 import { decompressSync } from "fflate";
 import v2 from "./v2";
+export * from './adapters';
 
 export interface BufferPosition {
 	buf: Uint8Array;
@@ -134,9 +135,10 @@ const ENTRY_SIZE_BYTES = 32;
 
 export enum Compression {
 	Unknown = 0,
-	Gzip = 1,
-	Brotli = 2,
-	Zstd = 3,
+	None = 1,
+	Gzip = 2,
+	Brotli = 3,
+	Zstd = 4,
 }
 
 function tryDecompress(buf: ArrayBuffer, compression: Compression) {
@@ -157,7 +159,7 @@ export enum TileType {
 	Webp = 4,
 }
 
-const HEADER_SIZE_BYTES = 122;
+const HEADER_SIZE_BYTES = 127;
 
 export interface Header {
 	specVersion: number;
@@ -301,30 +303,30 @@ export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
 	const v = new DataView(bytes);
 	return {
 		specVersion: 3,
-		rootDirectoryOffset: Number(v.getBigUint64(3, true)),
-		rootDirectoryLength: Number(v.getBigUint64(11, true)),
-		jsonMetadataOffset: Number(v.getBigUint64(19, true)),
-		jsonMetadataLength: Number(v.getBigUint64(27, true)),
-		leafDirectoryOffset: Number(v.getBigUint64(35, true)),
-		leafDirectoryLength: Number(v.getBigUint64(43, true)),
-		tileDataOffset: Number(v.getBigUint64(51, true)),
-		tileDataLength: Number(v.getBigUint64(59, true)),
-		numAddressedTiles: Number(v.getBigUint64(67, true)),
-		numTileEntries: Number(v.getBigUint64(75, true)),
-		numTileContents: Number(v.getBigUint64(83, true)),
-		clustered: v.getUint8(91) === 1,
-		internalCompression: v.getUint8(92),
-		tileCompression: v.getUint8(93),
-		tileType: v.getUint8(94),
-		minZoom: v.getUint8(95),
-		maxZoom: v.getUint8(96),
-		minLon: v.getInt32(97, true) / 10000000,
-		minLat: v.getInt32(101, true) / 10000000,
-		maxLon: v.getInt32(105, true) / 10000000,
-		maxLat: v.getInt32(109, true) / 10000000,
-		centerZoom: v.getUint8(113),
-		centerLon: v.getInt32(114, true) / 10000000,
-		centerLat: v.getInt32(118, true) / 10000000,
+		rootDirectoryOffset: Number(v.getBigUint64(8, true)),
+		rootDirectoryLength: Number(v.getBigUint64(16, true)),
+		jsonMetadataOffset: Number(v.getBigUint64(24, true)),
+		jsonMetadataLength: Number(v.getBigUint64(32, true)),
+		leafDirectoryOffset: Number(v.getBigUint64(40, true)),
+		leafDirectoryLength: Number(v.getBigUint64(48, true)),
+		tileDataOffset: Number(v.getBigUint64(56, true)),
+		tileDataLength: Number(v.getBigUint64(64, true)),
+		numAddressedTiles: Number(v.getBigUint64(72, true)),
+		numTileEntries: Number(v.getBigUint64(80, true)),
+		numTileContents: Number(v.getBigUint64(88, true)),
+		clustered: v.getUint8(96) === 1,
+		internalCompression: v.getUint8(97),
+		tileCompression: v.getUint8(98),
+		tileType: v.getUint8(99),
+		minZoom: v.getUint8(100),
+		maxZoom: v.getUint8(101),
+		minLon: v.getInt32(102, true) / 10000000,
+		minLat: v.getInt32(106, true) / 10000000,
+		maxLon: v.getInt32(110, true) / 10000000,
+		maxLat: v.getInt32(114, true) / 10000000,
+		centerZoom: v.getUint8(118),
+		centerLon: v.getInt32(119, true) / 10000000,
+		centerLat: v.getInt32(123, true) / 10000000,
 		etag: etag,
 	};
 }

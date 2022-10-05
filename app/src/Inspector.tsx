@@ -1,6 +1,6 @@
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { createPortal } from "react-dom";
-import { PMTiles, Entry, tileIdToZxy, TileType } from "../../js";
+import { PMTiles, Entry, tileIdToZxy, TileType, Header } from "../../js";
 import { styled } from "./stitches.config";
 import { decompressSync } from "fflate";
 import Protobuf from "pbf";
@@ -274,14 +274,14 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
 function Inspector(props: { file: PMTiles }) {
   let [entryRows, setEntryRows] = useState<Entry[]>([]);
   let [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-  let [tileType, setTileType] = useState<TileType>(TileType.Unknown);
+  let [header, setHeader] = useState<Header | null>(null);
 
   useEffect(() => {
     let fn = async () => {
       let header = await props.file.getHeader();
       let entries = await props.file.root_entries();
       setEntryRows(entries);
-      setTileType(header.tileType);
+      setHeader(header);
     };
 
     fn();
@@ -292,13 +292,13 @@ function Inspector(props: { file: PMTiles }) {
   ));
 
   let tilePreview = <div></div>;
-  if (selectedEntry && tileType) {
-    if (tileType === TileType.Mvt) {
+  if (selectedEntry && header?.tileType) {
+    if (header.tileType === TileType.Mvt) {
       tilePreview = (
         <VectorPreview
           file={props.file}
           entry={selectedEntry}
-          tileType={tileType}
+          tileType={header.tileType}
         />
       );
     } else {
@@ -306,9 +306,15 @@ function Inspector(props: { file: PMTiles }) {
     }
   }
 
+  let warning = "";
+  if (header && header.specVersion < 3) {
+    warning = "Directory listing supported only for PMTiles v3 archives."
+  }
+
   return (
     <Split>
       <TableContainer>
+        {warning}
         <table>
           <thead>
             <tr>

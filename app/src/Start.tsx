@@ -98,7 +98,6 @@ const ExampleList = styled("div", {
 });
 
 const EXAMPLE_FILES = [
-  "https://protomaps-static.sfo3.digitaloceanspaces.com/osm_carto.pmtiles",
   "https://protomaps-static.sfo3.digitaloceanspaces.com/mantle-trial.pmtiles",
   "https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_nolimit.pmtiles",
   "https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_gzip.pmtiles",

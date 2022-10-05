@@ -156,10 +156,11 @@ function MaplibreMap(props: { file: PMTiles }) {
       if (map) {
         let header = await props.file.getHeader();
 
-        // map.fitBounds([
-        //   [header.minLon, header.minLat],
-        //   [header.maxLon, header.maxLat],
-        // ]);
+        map.fitBounds([
+          [header.minLon, header.minLat],
+          [header.maxLon, header.maxLat],
+        ],{animate:false});
+
         let style: any; // TODO maplibre types (not any)
         if (header.tileType === TileType.Png || header.tileType == TileType.Jpeg) {
           map.setStyle(rasterStyle(props.file) as any);

@@ -1,4 +1,11 @@
-import { Source, Header, Cache, RangeResponse, Compression, TileType } from "./index";
+import {
+	Source,
+	Header,
+	Cache,
+	RangeResponse,
+	Compression,
+	TileType,
+} from "./index";
 import { decompressSync } from "fflate";
 
 export const shift = (n: number, shift: number) => {
@@ -190,9 +197,7 @@ export const deriveLeaf = (view: DataView, tile: Zxy): Zxy | null => {
 	return null;
 };
 
-async function getHeaderAndRoot(
-	source: Source
-): Promise<[Header, [string, number, ArrayBuffer]]> {
+async function getHeader(source: Source): Promise<Header> {
 	let resp = await source.getBytes(0, 512000);
 
 	const dataview = new DataView(resp.data);
@@ -204,24 +209,42 @@ async function getHeaderAndRoot(
 	const json_metadata = JSON.parse(
 		dec.decode(new DataView(resp.data, 10, json_size))
 	);
-
-	// if (json_metadata.compression) {
-
-	// }
-	if (!json_metadata.bounds) {
-		console.warn(
-			`Archive is missing 'bounds' in metadata, required in v2 and above.`
-		);
+	let tile_compression = Compression.Unknown;
+	if (json_metadata.compression === "gzip") {
+		tile_compression = Compression.Gzip;
 	}
-	if (!('minzoom' in json_metadata)) {
-		console.warn(
-			`Archive is missing 'minzoom' in metadata, required in v2 and above.`
-		);
+
+	let minzoom = 0;
+	if ("minzoom" in json_metadata) {
+		minzoom = +json_metadata.minzoom;
 	}
-	if (!('maxzoom' in json_metadata)) {
-		console.warn(
-			`Archive is missing 'maxzoom' in metadata, required in v2 and above.`
-		);
+
+	let maxzoom = 0;
+	if ("maxzoom" in json_metadata) {
+		maxzoom = +json_metadata.maxzoom;
+	}
+
+	let center_lon = 0;
+	let center_lat = 0;
+	let center_zoom = 0;
+	let min_lon = -180.0;
+	let min_lat = -85.0;
+	let max_lon = 180.0;
+	let max_lat = 85.0;
+
+	if (json_metadata.bounds) {
+		let split = json_metadata.bounds.split(",");
+		min_lon = +split[0];
+		min_lat = +split[1];
+		max_lon = +split[2];
+		max_lat = +split[3];
+	}
+
+	if (json_metadata.center) {
+		let split = json_metadata.center.split(",");
+		center_lon = +split[0];
+		center_lat = +split[1];
+		center_zoom = +split[2];
 	}
 
 	const header = {
@@ -238,21 +261,21 @@ async function getHeaderAndRoot(
 		numTileEntries: 0,
 		numTileContents: 0,
 		clustered: false,
-		internalCompression: Compression.Unknown,
-		tileCompression: Compression.Unknown,
+		internalCompression: Compression.None,
+		tileCompression: tile_compression,
 		tileType: TileType.Mvt,
-		minZoom: +json_metadata.minzoom,
-		maxZoom: +json_metadata.maxzoom,
-		minLon: 0,
-		minLat: 0,
-		maxLon: 0,
-		maxLat: 0,
-		centerZoom: 0,
-		centerLon: 0,
-		centerLat: 0,
+		minZoom: minzoom,
+		maxZoom: maxzoom,
+		minLon: min_lon,
+		minLat: min_lat,
+		maxLon: max_lon,
+		maxLat: max_lat,
+		centerZoom: center_zoom,
+		centerLon: center_lon,
+		centerLat: center_lat,
 		etag: resp.etag,
 	};
-	return [header, ["", 0, new ArrayBuffer(0)]];
+	return header;
 }
 
 async function getZxy(
@@ -310,7 +333,11 @@ async function getZxy(
 			}
 			let tile_entry = queryTile(new DataView(leaf_dir), z, x, y);
 			if (tile_entry) {
-				let resp = await source.getBytes(tile_entry.offset, tile_entry.length, signal);
+				let resp = await source.getBytes(
+					tile_entry.offset,
+					tile_entry.length,
+					signal
+				);
 				let tile_data = resp.data;
 
 				let view = new DataView(tile_data);
@@ -328,6 +355,6 @@ async function getZxy(
 }
 
 export default {
-	getHeaderAndRoot: getHeaderAndRoot,
+	getHeader: getHeader,
 	getZxy: getZxy,
 };

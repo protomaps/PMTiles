@@ -408,7 +408,7 @@ async function getHeaderAndRoot(
 
 	// V2 COMPATIBILITY
 	if (detectVersion(resp.data) < 3) {
-		return v2.getHeaderAndRoot(source);
+		return [await v2.getHeader(source)];
 	}
 
 	const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);

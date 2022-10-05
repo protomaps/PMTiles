@@ -10,14 +10,6 @@ import { MagnifyingGlassIcon, ImageIcon } from "@radix-ui/react-icons";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
-export enum TileType {
-  UNKNOWN = 1,
-  PNG,
-  JPG,
-  MVT,
-  MVT_GZ,
-}
-
 const StyledToolbar = styled(ToolbarPrimitive.Root, {
   display: "flex",
   height: "$4",
@@ -113,25 +105,6 @@ const JsonValue = styled(MetadataValue, {
   overflowX:"scroll"
 })
 
-
-export const introspectTileType = async (file: PMTiles): Promise<TileType> => {
-  let magic = await file.source.getBytes(512000, 4);
-  let b0 = magic.getUint8(0);
-  let b1 = magic.getUint8(1);
-  let b2 = magic.getUint8(2);
-  let b3 = magic.getUint8(3);
-
-  if (b0 == 0x89 && b1 == 0x50 && b2 == 0x4e && b3 == 0x47) {
-    return TileType.PNG;
-  } else if (b0 == 0xff && b1 == 0xd8 && b2 == 0xff && b3 == 0xe0) {
-    return TileType.JPG;
-  } else if (b0 == 0x1f && b1 == 0x8b) {
-    return TileType.MVT_GZ;
-  } else {
-    return TileType.MVT;
-  }
-};
-
 const Toolbar = StyledToolbar;
 const ToolbarLink = StyledLink;
 const ToolbarToggleGroup = StyledToggleGroup;
@@ -139,7 +112,6 @@ const ToolbarToggleItem = StyledToggleItem;
 
 function Loader(props: { file: PMTiles }) {
   let [tab, setTab] = useState("inspector");
-  let [tileType, setTileType] = useState<TileType>(TileType.UNKNOWN);
   let [metadata, setMetadata] = useState<[string, string][]>([]);
   let [modalOpen, setModalOpen] = useState<boolean>(false);
 
@@ -155,7 +127,7 @@ function Loader(props: { file: PMTiles }) {
   useEffect(() => {
     let pmtiles = props.file;
     const fetchData = async () => {
-      let m = await pmtiles.metadata();
+      let m = await pmtiles.getMetadata();
       let tmp: [string, string][] = [];
       for (var key in m) {
         tmp.push([key, m[key]]);

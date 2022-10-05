@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { PMTiles, ProtocolCache } from "../../js";
+import { PMTiles, TileType } from "../../js";
+import { Protocol } from "../../js/adapters"
 import { styled } from "./stitches.config";
-import { introspectTileType, TileType } from "./Loader";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -30,47 +30,83 @@ const rasterStyle = (file: PMTiles) => {
 };
 
 const vectorStyle = async (file: PMTiles): Promise<any> => {
-  let metadata = await file.metadata();
+  let header = await file.getHeader();
+  let metadata = await file.getMetadata();
   let layers: any[] = [];
 
+
+  var tilestats:any;
   if (metadata.json) {
-    let root = JSON.parse(metadata.json);
-    if (root.tilestats) {
-      for (let layer of root.tilestats.layers) {
-        if (layer.geometry === "Polygon") {
-          layers.push({
-            id: layer.layer + "_fill",
-            type: "fill",
-            source: "source",
-            "source-layer": layer.layer,
-            paint: {
-              "fill-color": "white",
-            },
-          });
-        } else if (layer.geometry === "LineString") {
-          layers.push({
-            id: layer.layer + "_stroke",
-            type: "line",
-            source: "source",
-            "source-layer": layer.layer,
-            paint: {
-              "line-color": "steelblue",
-              "line-width": 0.5,
-            },
-          });
-        } else {
-          layers.push({
-            id: layer.layer + "_point",
-            type: "circle",
-            source: "source",
-            "source-layer": layer.layer,
-            paint: {
-              "circle-color": "red",
-            },
-          });
-        }
+    let j = JSON.parse(metadata.json);
+    tilestats = j.tilestats;
+  } else {
+    tilestats = metadata.tilestats;
+  }
+
+  if (tilestats) {
+    for (let layer of tilestats.layers) {
+      if (layer.geometry === "Polygon") {
+        layers.push({
+          id: layer.layer + "_fill",
+          type: "fill",
+          source: "source",
+          "source-layer": layer.layer,
+          paint: {
+            "fill-color": "white",
+          },
+        });
+      } else if (layer.geometry === "LineString") {
+        layers.push({
+          id: layer.layer + "_stroke",
+          type: "line",
+          source: "source",
+          "source-layer": layer.layer,
+          paint: {
+            "line-color": "steelblue",
+            "line-width": 0.5,
+          },
+        });
+      } else {
+        layers.push({
+          id: layer.layer + "_point",
+          type: "circle",
+          source: "source",
+          "source-layer": layer.layer,
+          paint: {
+            "circle-color": "red",
+          },
+        });
       }
     }
+  } else {
+    layers.push({
+      id:"water",
+      type:"fill",
+      source:"source",
+      "source-layer":"water",
+      paint: {
+        "fill-color":"blue"
+      }
+    })
+    layers.push({
+      id:"landuse",
+      type:"fill",
+      source:"source",
+      "source-layer":"landuse",
+      paint: {
+        "fill-color":"green"
+      }
+    })
+    layers.push({
+      id:"roads",
+      type:"line",
+      source:"source",
+      "source-layer":"roads",
+      paint: {
+        "line-color":"white",
+        "line-width":0.5
+      }
+    })
   }
 
   return {
@@ -79,7 +115,8 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
       source: {
         type: "vector",
         tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
-        maxzoom: 10,
+        minzoom: header.minZoom,
+        maxzoom: header.maxZoom
       },
     },
     layers: layers,
@@ -91,14 +128,15 @@ function MaplibreMap(props: { file: PMTiles }) {
   let map: maplibregl.Map;
 
   useEffect(() => {
-    let cache = new ProtocolCache();
-    maplibregl.addProtocol("pmtiles", cache.protocol);
-    cache.add(props.file); // this is necessary for non-HTTP sources
+    let protocol = new Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tileFunc);
+    protocol.add(props.file); // this is necessary for non-HTTP sources
 
     map = new maplibregl.Map({
       container: mapContainerRef.current!,
+      hash: true,
       zoom: 0,
-      center: [0, 0],
+      center: [0,0],
       style: {
         version: 8,
         sources: {},
@@ -116,15 +154,14 @@ function MaplibreMap(props: { file: PMTiles }) {
   useEffect(() => {
     let initStyle = async () => {
       if (map) {
-        let metadata = await props.file.metadata();
-        let bounds = metadata.bounds.split(",");
-        map.fitBounds([
-          [+bounds[0], +bounds[1]],
-          [+bounds[2], +bounds[3]],
-        ]);
-        let tileType = await introspectTileType(props.file);
+        let header = await props.file.getHeader();
+
+        // map.fitBounds([
+        //   [header.minLon, header.minLat],
+        //   [header.maxLon, header.maxLat],
+        // ]);
         let style: any; // TODO maplibre types (not any)
-        if (tileType === TileType.PNG || tileType == TileType.JPG) {
+        if (header.tileType === TileType.Png || header.tileType == TileType.Jpeg) {
           map.setStyle(rasterStyle(props.file) as any);
         } else {
           let style = await vectorStyle(props.file);

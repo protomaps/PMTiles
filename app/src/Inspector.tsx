@@ -1,6 +1,6 @@
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { createPortal } from "react-dom";
-import { PMTiles, Entry } from "../../js";
+import { PMTiles, Entry, tileIdToZxy, TileType } from "../../js";
 import { styled } from "./stitches.config";
 import { decompressSync } from "fflate";
 import Protobuf from "pbf";
@@ -8,7 +8,6 @@ import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";
 import { path } from "d3-path";
 import { schemeSet3 } from "d3-scale-chromatic";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { introspectTileType, TileType } from "./Loader";
 
 const TableContainer = styled("div", {
   height: "calc(100vh - $4 - $4)",
@@ -44,18 +43,20 @@ const TileRow = (props: {
   entry: Entry;
   setSelectedEntry: Dispatch<SetStateAction<Entry | null>>;
 }) => {
+  let [z,x,y] = tileIdToZxy(props.entry.tileId);
   return (
     <TableRow
       onClick={() => {
         props.setSelectedEntry(props.entry);
       }}
     >
-      <td>{props.entry.z}</td>
-      <td>{props.entry.x}</td>
-      <td>{props.entry.y}</td>
+      <td>{props.entry.tileId}</td>
+      <td>{z}</td>
+      <td>{x}</td>
+      <td>{y}</td>
       <td>{props.entry.offset}</td>
       <td>{props.entry.length}</td>
-      <td>{props.entry.is_dir}</td>
+      <td>{props.entry.runLength}</td>
     </TableRow>
   );
 };
@@ -178,14 +179,12 @@ const VectorPreview = (props: {
 
   useEffect(() => {
     let fn = async (entry: Entry) => {
-      let view = await props.file.source.getBytes(entry.offset, entry.length);
-      if (props.tileType == TileType.MVT_GZ) {
-        view = new DataView(decompressSync(new Uint8Array(view.buffer)).buffer);
-      }
+      let [z,x,y] = tileIdToZxy(entry.tileId);
+      let resp = await props.file.getZxy(z,x,y);
 
       let tile = new VectorTile(
         new Protobuf(
-          new Uint8Array(view.buffer, view.byteOffset, view.byteLength)
+          new Uint8Array(resp!.data)
         )
       );
       let newLayers = [];
@@ -257,8 +256,9 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
   useEffect(() => {
     let fn = async (entry: Entry) => {
       // TODO 0,0,0 is broken
-      let view = await props.file.source.getBytes(entry.offset, entry.length);
-      let blob = new Blob([view]);
+      let [z,x,y] = tileIdToZxy(entry.tileId);
+      let resp = await props.file.getZxy(z,x,y);
+      let blob = new Blob([resp!.data]);
       var imageUrl = window.URL.createObjectURL(blob);
       setImageSrc(imageUrl);
     };
@@ -274,14 +274,14 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
 function Inspector(props: { file: PMTiles }) {
   let [entryRows, setEntryRows] = useState<Entry[]>([]);
   let [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-  let [tileType, setTileType] = useState<TileType>(TileType.UNKNOWN);
+  let [tileType, setTileType] = useState<TileType>(TileType.Unknown);
 
   useEffect(() => {
     let fn = async () => {
+      let header = await props.file.getHeader();
       let entries = await props.file.root_entries();
-      let tileType = await introspectTileType(props.file);
       setEntryRows(entries);
-      setTileType(tileType);
+      setTileType(header.tileType);
     };
 
     fn();
@@ -293,7 +293,7 @@ function Inspector(props: { file: PMTiles }) {
 
   let tilePreview = <div></div>;
   if (selectedEntry && tileType) {
-    if (tileType === TileType.MVT || tileType === TileType.MVT_GZ) {
+    if (tileType === TileType.Mvt) {
       tilePreview = (
         <VectorPreview
           file={props.file}

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { PMTiles, leafletLayer as rasterLeafletLayer } from "../../js";
+import { PMTiles, TileType } from "../../js";
+import { leafletRasterLayer } from "../../js/adapters";
 import { leafletLayer as vectorLeafletLayer } from "protomaps";
 import { styled } from "./stitches.config";
-import { introspectTileType, TileType } from "./Loader";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -25,9 +25,9 @@ function LeafletMap(props: { file: PMTiles }) {
     if (currentLayer) currentLayer.remove();
     let initStyle = async () => {
       if (map) {
-        let tileType = await introspectTileType(props.file);
-        if (tileType === TileType.PNG || tileType == TileType.JPG) {
-          currentLayer = rasterLeafletLayer(props.file, {
+        let header = await props.file.getHeader();
+        if (header.tileType === TileType.Png || header.tileType == TileType.Jpeg) {
+          currentLayer = leafletRasterLayer(props.file, {
             attribution:
               '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
           });

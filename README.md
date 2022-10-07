@@ -4,9 +4,8 @@ PMTiles is a single-file archive format for tiled data. A PMTiles archive can be
 
 * [Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
 
-* [PMTiles Inspector](https://protomaps.github.io/PMTiles/) - inspect and preview PMTiles local or remote PMTiles archives. Archives on cloud storage may require CORS for the origin https://protomaps.github.io.
-
-* [Raster Tiles Demo (OSM Carto)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fprotomaps-static.sfo3.digitaloceanspaces.com%2Fosm_carto.pmtiles)
+* [PMTiles Inspector](https://protomaps.github.io/PMTiles/) - inspect and preview PMTiles local or remote PMTiles archives. 
+    * Archives on cloud storage may require CORS for the origin `https://protomaps.github.io`
 
 * [Vector Tiles Example (US Zip Codes)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fprotomaps-static.sfo3.digitaloceanspaces.com%2Fcb_2018_us_zcta510_500k_nolimit.pmtiles)
 
@@ -16,7 +15,14 @@ Demos require MapLibre GL JS v1.14.1-rc.2 or later
 See also:
 * [Cloud Optimized GeoTIFFs](https://www.cogeo.org)
 
-## How To Use
+## Creating PMTiles
+
+Download the `pmtiles` binary for your system at [go-pmtiles/Releases](https://github.com/protomaps/go-pmtiles/releases).
+
+    pmtiles convert INPUT.mbtiles OUTPUT.pmtiles
+    pmtiles upload OUTPUT.mbtiles s3://my-bucket?region=us-west-2 // requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY env vars to be set
+
+## Consuming PMTiles
 
 ### JavaScript
 
@@ -24,15 +30,9 @@ See [js/README.md](js/README.md) for usage in Leaflet or MapLibre GL JS.
 
 ### Go
 
-See https://github.com/protomaps/go-pmtiles
+See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.
 
 ### Python
-
-    pip install pmtiles
-    pmtiles-convert TILES.mbtiles TILES.pmtiles
-    pmtiles-convert TILES.pmtiles DIRECTORY
-    pmtiles-show TILES.pmtiles // see info about a PMTiles directory
-    pmtiles-serve TILES.pmtiles // start an HTTP server that decodes PMTiles into traditional Z/X/Y paths
 
 See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usage
 
@@ -44,6 +44,7 @@ See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usag
 
 ## Specification
 
+The current specification version is [Version 3](./spec/v3/spec.md).
 
 ## Recipes
 
@@ -54,14 +55,7 @@ Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabu
     ogr2ogr -t_srs EPSG:4326 cb_2018_us_zcta510_500k.json cb_2018_us_zcta510_500k.shp
     # Creates a layer in the vector tiles named "zcta"
     tippecanoe -zg --projection=EPSG:4326 --no-tile-compression --no-feature-limit --no-tile-size-limit -o cb_2018_us_zcta510_500k_nolimit.mbtiles -l zcta cb_2018_us_zcta510_500k.json
-    pmtiles-convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k_nolimit.pmtiles
-```
-
-For uploading your PMTiles to cloud storage, [rclone](https://rclone.org) is recommended:
-
-```
-rclone config
-rclone copy my_archive.pmtiles my_destination:my_folder --progress --s3-chunk-size=256M
+    pmtiles convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k_nolimit.pmtiles
 ```
 
 ## License

@@ -25,14 +25,15 @@ A Directory is a list of `Entries`, in ascending order by `TileId`:
 # Directory Serialization
 
 Entries are stored in memory as integers, but serialized to disk using these compression steps:
-	1. A little-endian varint indicating the # of entries.
-	2. Delta encoding of `TileId`
-	3. Zeroing of `Offset`:
-		* `0` if it is equal to the `Offset` + `Length` of the previous entry
-		* `Offset+1` otherwise
-	4. Varint encoding of ll numbers
-	5. Columnar ordering: all `TileId`s, all `RunLength`s, all `Length`s, then all `Offset`s
-	6. Finally, general purpose compression as described by the `Header`'s `InternalCompression` field.
+
+1. A little-endian varint indicating the # of entries
+2. Delta encoding of `TileId`
+3. Zeroing of `Offset`:
+	* `0` if it is equal to the `Offset` + `Length` of the previous entry
+	* `Offset+1` otherwise
+4. Varint encoding of all numbers
+5. Columnar ordering: all `TileId`s, all `RunLength`s, all `Length`s, then all `Offset`s
+6. Finally, general purpose compression as described by the `Header`'s `InternalCompression` field
 
 # Directory Hierarchy
 

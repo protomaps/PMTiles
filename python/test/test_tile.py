@@ -126,7 +126,7 @@ class TestHeader(unittest.TestCase):
             "tile_type": TileType.MVT,
             "min_zoom": 1,
             "max_zoom": 2,
-            "min_lon_e7": int(1.1 * 10000000),
+            "min_lon_e7": int(-1.1 * 10000000),
             "min_lat_e7": int(2.1 * 10000000),
             "max_lon_e7": int(1.2 * 10000000),
             "max_lat_e7": int(2.2 * 10000000),
@@ -153,7 +153,7 @@ class TestHeader(unittest.TestCase):
         self.assertEqual(result["tile_type"], TileType.MVT)
         self.assertEqual(result["min_zoom"], 1)
         self.assertEqual(result["max_zoom"], 2)
-        self.assertEqual(result["min_lon_e7"], 1.1 * 10000000)
+        self.assertEqual(result["min_lon_e7"], -1.1 * 10000000)
         self.assertEqual(result["min_lat_e7"], 2.1 * 10000000)
         self.assertEqual(result["max_lon_e7"], 1.2 * 10000000)
         self.assertEqual(result["max_lat_e7"], 2.2 * 10000000)

@@ -16,9 +16,6 @@ parser.add_argument(
     "--maxzoom", help="the maximum zoom level to include in the output."
 )
 parser.add_argument(
-    "--gzip", help="The output should be gzip-compressed.", action="store_true"
-)
-parser.add_argument(
     "--overwrite", help="Overwrite the existing output.", action="store_true"
 )
 args = parser.parse_args()
@@ -32,16 +29,14 @@ if args.overwrite:
     elif os.path.isdir(args.output):
         shutil.rmtree(args.output)
 
-print("compression:", "gzip" if args.gzip else "disabled")
-
 if args.input.endswith(".mbtiles") and args.output.endswith(".pmtiles"):
-    mbtiles_to_pmtiles(args.input, args.output, args.maxzoom, args.gzip)
+    mbtiles_to_pmtiles(args.input, args.output, args.maxzoom)
 
 elif args.input.endswith(".pmtiles") and args.output.endswith(".mbtiles"):
-    pmtiles_to_mbtiles(args.input, args.output, args.gzip)
+    pmtiles_to_mbtiles(args.input, args.output)
 
 elif args.input.endswith(".pmtiles"):
-    pmtiles_to_dir(args.input, args.output, args.gzip)
+    pmtiles_to_dir(args.input, args.output)
 
 else:
     print("Conversion not implemented")

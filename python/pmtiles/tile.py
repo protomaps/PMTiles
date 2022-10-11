@@ -194,7 +194,7 @@ def deserialize_header(buf):
         return int.from_bytes(buf[pos : pos + 8], byteorder="little")
 
     def read_int32(pos):
-        return int.from_bytes(buf[pos : pos + 4], byteorder="little")
+        return int.from_bytes(buf[pos : pos + 4], byteorder="little", signed=True)
 
     return {
         "root_offset": read_uint64(8),
@@ -231,7 +231,7 @@ def serialize_header(h):
         b_io.write(i.to_bytes(8, byteorder="little"))
 
     def write_int32(i):
-        b_io.write(i.to_bytes(4, byteorder="little"))
+        b_io.write(i.to_bytes(4, byteorder="little", signed=True))
 
     def write_uint8(i):
         b_io.write(i.to_bytes(1, byteorder="little"))

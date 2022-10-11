@@ -1,9 +1,6 @@
-from collections import namedtuple
 from enum import Enum
 import io
 import gzip
-
-Header = namedtuple("Header", [])
 
 
 class Entry:
@@ -133,6 +130,14 @@ class Compression(Enum):
     ZSTD = 4
 
 
+class TileType(Enum):
+    UNKNOWN = 0
+    MVT = 1
+    PNG = 2
+    JPEG = 3
+    WEBP = 4
+
+
 def deserialize_directory(buf):
     b_io = io.BytesIO(gzip.decompress(buf))
     entries = []
@@ -184,9 +189,78 @@ def serialize_directory(entries):
     return gzip.compress(b_io.getvalue())
 
 
-def deserialize_header(bytes):
-    pass
+def deserialize_header(buf):
+    def read_uint64(pos):
+        return int.from_bytes(buf[pos : pos + 8], byteorder="little")
+
+    def read_int32(pos):
+        return int.from_bytes(buf[pos : pos + 4], byteorder="little")
+
+    return {
+        "root_offset": read_uint64(8),
+        "root_length": read_uint64(16),
+        "metadata_offset": read_uint64(24),
+        "metadata_length": read_uint64(32),
+        "leaf_directory_offset": read_uint64(40),
+        "leaf_directory_length": read_uint64(48),
+        "tile_data_offset": read_uint64(56),
+        "tile_data_length": read_uint64(64),
+        "addressed_tiles_count": read_uint64(72),
+        "tile_entries_count": read_uint64(80),
+        "tile_contents_count": read_uint64(88),
+        "clustered": buf[96] == 0x1,
+        "internal_compression": Compression(buf[97]),
+        "tile_compression": Compression(buf[98]),
+        "tile_type": TileType(buf[99]),
+        "min_zoom": buf[100],
+        "max_zoom": buf[101],
+        "min_lon_e7": read_int32(102),
+        "min_lat_e7": read_int32(106),
+        "max_lon_e7": read_int32(110),
+        "max_lat_e7": read_int32(114),
+        "center_zoom": buf[118],
+        "center_lon_e7": read_int32(119),
+        "center_lat_e7": read_int32(123),
+    }
 
 
-def serialize_header(bytes):
-    pass
+def serialize_header(h):
+    b_io = io.BytesIO()
+
+    def write_uint64(i):
+        b_io.write(i.to_bytes(8, byteorder="little"))
+
+    def write_int32(i):
+        b_io.write(i.to_bytes(4, byteorder="little"))
+
+    def write_uint8(i):
+        b_io.write(i.to_bytes(1, byteorder="little"))
+
+    b_io.write("PMTiles".encode())
+    b_io.write(b"3")
+    write_uint64(h["root_offset"])
+    write_uint64(h["root_length"])
+    write_uint64(h["metadata_offset"])
+    write_uint64(h["metadata_length"])
+    write_uint64(h.get("leaf_directory_offset", 0))
+    write_uint64(h.get("leaf_directory_length", 0))
+    write_uint64(h["tile_data_offset"])
+    write_uint64(h["tile_data_length"])
+    write_uint64(h.get("addressed_tiles_count", 0))
+    write_uint64(h.get("tile_entries_count", 0))
+    write_uint64(h.get("tile_contents_count", 0))
+    b_io.write(b"\x01" if h["clustered"] else b"\x00")
+    write_uint8(h["internal_compression"].value)
+    write_uint8(h["tile_compression"].value)
+    write_uint8(h["tile_type"].value)
+    write_uint8(h["min_zoom"])
+    write_uint8(h["max_zoom"])
+    write_int32(h["min_lon_e7"])
+    write_int32(h["min_lat_e7"])
+    write_int32(h["max_lon_e7"])
+    write_int32(h["max_lat_e7"])
+    write_uint8(h["center_zoom"])
+    write_int32(h["center_lon_e7"])
+    write_int32(h["center_lat_e7"])
+
+    return b_io.getvalue()

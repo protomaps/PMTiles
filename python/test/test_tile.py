@@ -1,8 +1,9 @@
 import unittest
 from pmtiles.tile import zxy_to_tileid, tileid_to_zxy, Entry
 from pmtiles.tile import read_varint, write_varint
-from pmtiles.tile import Entry, find_tile
+from pmtiles.tile import Entry, find_tile, Compression, TileType
 from pmtiles.tile import serialize_directory, deserialize_directory
+from pmtiles.tile import serialize_header, deserialize_header
 import io
 
 
@@ -103,3 +104,59 @@ class TestDirectory(unittest.TestCase):
         self.assertEqual(result[2].offset, 2)
         self.assertEqual(result[2].length, 2)
         self.assertEqual(result[2].run_length, 2)
+
+
+class TestHeader(unittest.TestCase):
+    def test_roundtrip(self):
+        header = {
+            "root_offset": 1,
+            "root_length": 2,
+            "metadata_offset": 3,
+            "metadata_length": 4,
+            "leaf_directory_offset": 5,
+            "leaf_directory_length": 6,
+            "tile_data_offset": 7,
+            "tile_data_length": 8,
+            "addressed_tiles_count": 9,
+            "tile_entries_count": 10,
+            "tile_contents_count": 11,
+            "clustered": True,
+            "internal_compression": Compression.GZIP,
+            "tile_compression": Compression.BROTLI,
+            "tile_type": TileType.MVT,
+            "min_zoom": 1,
+            "max_zoom": 2,
+            "min_lon_e7": int(1.1 * 10000000),
+            "min_lat_e7": int(2.1 * 10000000),
+            "max_lon_e7": int(1.2 * 10000000),
+            "max_lat_e7": int(2.2 * 10000000),
+            "center_zoom": 3,
+            "center_lon_e7": int(3.1 * 10000000),
+            "center_lat_e7": int(3.2 * 10000000),
+        }
+        serialized = serialize_header(header)
+        result = deserialize_header(serialized)
+        self.assertEqual(result["root_offset"], 1)
+        self.assertEqual(result["root_length"], 2)
+        self.assertEqual(result["metadata_offset"], 3)
+        self.assertEqual(result["metadata_length"], 4)
+        self.assertEqual(result["leaf_directory_offset"], 5)
+        self.assertEqual(result["leaf_directory_length"], 6)
+        self.assertEqual(result["tile_data_offset"], 7)
+        self.assertEqual(result["tile_data_length"], 8)
+        self.assertEqual(result["addressed_tiles_count"], 9)
+        self.assertEqual(result["tile_entries_count"], 10)
+        self.assertEqual(result["tile_contents_count"], 11)
+        self.assertEqual(result["clustered"], True)
+        self.assertEqual(result["internal_compression"], Compression.GZIP)
+        self.assertEqual(result["tile_compression"], Compression.BROTLI)
+        self.assertEqual(result["tile_type"], TileType.MVT)
+        self.assertEqual(result["min_zoom"], 1)
+        self.assertEqual(result["max_zoom"], 2)
+        self.assertEqual(result["min_lon_e7"], 1.1 * 10000000)
+        self.assertEqual(result["min_lat_e7"], 2.1 * 10000000)
+        self.assertEqual(result["max_lon_e7"], 1.2 * 10000000)
+        self.assertEqual(result["max_lat_e7"], 2.2 * 10000000)
+        self.assertEqual(result["center_zoom"], 3)
+        self.assertEqual(result["center_lon_e7"], 3.1 * 10000000)
+        self.assertEqual(result["center_lat_e7"], 3.2 * 10000000)

@@ -42,5 +42,6 @@ jobs:
           node-version: 16.x
       - run: cd js && npm install && npm test
       - run: cd python && python -m unittest test/test_*
+      - run: cd cpp && make
       - run: cd serverless/aws && python -m unittest test_*.py
       - run: cd serverless/cloudflare && npm install && npm test

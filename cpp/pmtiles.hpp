@@ -1,155 +1,312 @@
-#include <iostream>
-#include <fstream>
-#include <tuple>
+#ifndef PMTILES_HPP
+#define PMTILES_HPP
+
+#include <string>
+#include <sstream>
 #include <vector>
-#include "xxhash.h"
-#include <map>
 
-void writePmtilesHeader(std::ostream &outfile, const std::string &metadata, uint16_t root_entries_len) {
-    uint16_t MAGIC = 0x4d50;
-    outfile.write((char *)&MAGIC,2);
-    uint16_t version = 2;
-    outfile.write((char *)&version,2);
-    uint32_t metadata_size = metadata.size();
-    outfile.write((char *)&metadata_size,4);
-    outfile.write((char *)&root_entries_len,2);
-    outfile << metadata;
-}
+namespace pmtiles {
 
-void writeEntry(std::ostream &outfile, const std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t> &tile, bool is_directory = false) {
-    uint8_t z_val = std::get<0>(tile);
-    if (is_directory) z_val |= 0b10000000;
-    outfile.write((char *)&z_val,1);
-    outfile.write((char *)&std::get<1>(tile),3);
-    outfile.write((char *)&std::get<2>(tile),3);
-    outfile.write((char *)&std::get<3>(tile),6);
-    outfile.write((char *)&std::get<4>(tile),4);
-}
+struct headerv3 {
+  uint64_t root_dir_offset;
+  uint64_t root_dir_bytes;
+  uint64_t json_metadata_offset;
+  uint64_t json_metadata_bytes;
+  uint64_t leaf_dirs_offset;
+  uint64_t leaf_dirs_bytes;
+  uint64_t tile_data_offset;
+  uint64_t tile_data_bytes;
+  uint64_t addressed_tiles_count;
+  uint64_t tile_entries_count;
+  uint64_t tile_contents_count;
+  bool clustered;
+  uint8_t internal_compression;
+  uint8_t tile_compression;
+  uint8_t tile_type;
+  uint8_t min_zoom;
+  uint8_t max_zoom;
+  int32_t min_lon_e7;
+  int32_t min_lat_e7;
+  int32_t max_lon_e7;
+  int32_t max_lat_e7;
+  uint8_t center_zoom;
+  int32_t center_lon_e7;
+  int32_t center_lat_e7;
 
-struct pmtiles_v2_writer {
-    std::vector<std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t>> entries{};
-    std::ofstream ostream;
-    uint64_t offset = 0;
-    std::map<XXH64_hash_t,uint64_t> hash_to_offset;
+  // WARNING: this is limited to little-endian
+  std::string serialize() {
+    std::stringstream ss;
+    ss << "PMTiles";
+    uint8_t version = 3;
+    ss.write((char *)&version,1);
+    ss.write((char *)&root_dir_offset,8);
+    ss.write((char *)&root_dir_bytes,8);
+    ss.write((char *)&json_metadata_offset,8);
+    ss.write((char *)&json_metadata_bytes,8);
+    ss.write((char *)&leaf_dirs_offset,8);
+    ss.write((char *)&leaf_dirs_bytes,8);
+    ss.write((char *)&tile_data_offset,8);
+    ss.write((char *)&tile_data_bytes,8);
+    ss.write((char *)&addressed_tiles_count,8);
+    ss.write((char *)&tile_entries_count,8);
+    ss.write((char *)&tile_contents_count,8);
+
+    uint8_t clustered_val = 0x0;
+    if (clustered) {
+      clustered_val = 0x1;
+    }
+
+    ss.write((char *)&clustered_val,1);
+    ss.write((char *)&internal_compression,1);
+    ss.write((char *)&tile_compression,1);
+    ss.write((char *)&tile_type,1);
+    ss.write((char *)&min_zoom,1);
+    ss.write((char *)&max_zoom,1);
+    ss.write((char *)&min_lon_e7,4);
+    ss.write((char *)&min_lat_e7,4);
+    ss.write((char *)&max_lon_e7,4);
+    ss.write((char *)&max_lat_e7,4);
+    ss.write((char *)&center_zoom,1);
+    ss.write((char *)&center_lon_e7,4);
+    ss.write((char *)&center_lat_e7,4);
+
+    return ss.str();
+  }
 };
 
-pmtiles_v2_writer *pmtiles_v2_open(const char *filename) {
-    pmtiles_v2_writer *w = new pmtiles_v2_writer;
-    w->ostream.open(filename,std::ios::out | std::ios::binary);
+struct zxy {
+  uint8_t z;
+  uint32_t x;
+  uint32_t y;
 
-    w->offset = 512000;
-
-    for (int i = 0; i < w->offset; ++i) {
-        char zero = 0;
-        w->ostream.write(&zero,sizeof(char));
-    }
-
-    return w;
-}
-
-void pmtiles_v2_write_tile(pmtiles_v2_writer *w, int z, int x, int y, const std::string &data) {
-    XXH64_hash_t hash = XXH64(data.data(),data.size(),3857);
-    if (w->hash_to_offset.count(hash) > 0) {
-        w->entries.emplace_back(z,x,y,w->hash_to_offset[hash],data.size());
-    } else {
-        w->ostream << data;
-        w->entries.emplace_back(z,x,y,w->offset,data.size());
-        w->hash_to_offset[hash] = w->offset;
-        w->offset += data.size();
-    }
-}
-
-struct TileCompare {
-    bool operator()(std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t> const &lhs, std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t> const &rhs) const
-    {
-        uint8_t zl = std::get<0>(lhs);
-        uint8_t zr = std::get<0>(rhs);
-        if (zl != zr) return zl < zr;
-        uint32_t xl = std::get<1>(lhs);
-        uint32_t xr = std::get<1>(rhs);
-        if (xl != xr) return xl < xr;
-        uint32_t yl = std::get<2>(lhs);
-        uint32_t yr = std::get<2>(rhs);
-        return yl < yr;
-    }
+  zxy(int _z, int _x, int _y) : z(_z), x(_x), y(_y) {
+  }
 };
 
-void pmtiles_v2_finalize(pmtiles_v2_writer *w, const std::string serialized_metadata) {
-    if (w->entries.size() < 21845) {
-        w->ostream.seekp(0);
-        writePmtilesHeader(w->ostream,serialized_metadata,w->entries.size());
-        sort(begin(w->entries),end(w->entries),TileCompare());
+struct entryv3 {
+  uint64_t tile_id;
+  uint64_t offset;
+  uint32_t length;
+  uint32_t run_length;
 
-        for (auto const &entry : w->entries) {
-            writeEntry(w->ostream,entry);
-        }
+  entryv3() : tile_id(0), offset(0), length(0), run_length(0) {
+  }
+
+  entryv3(uint64_t _tile_id, uint64_t _offset, uint32_t _length, uint32_t _run_length)
+    : tile_id(_tile_id), offset(_offset), length(_length), run_length(_run_length) {
+  }
+};
+
+struct varint_too_long_exception : std::exception {
+  const char* what() const noexcept override {
+    return "varint too long exception";
+  }
+};
+
+struct end_of_buffer_exception : std::exception {
+  const char* what() const noexcept override {
+      return "end of buffer exception";
+  }
+};
+
+namespace detail {
+  constexpr const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
+
+  // from https://github.com/mapbox/protozero/blob/master/include/protozero/varint.hpp
+  inline uint64_t decode_varint_impl(const char** data, const char* end) {
+    const auto* begin = reinterpret_cast<const int8_t*>(*data);
+    const auto* iend = reinterpret_cast<const int8_t*>(end);
+    const int8_t* p = begin;
+    uint64_t val = 0;
+
+    if (iend - begin >= max_varint_length) {  // fast path
+      do {
+        int64_t b = *p++;
+                  val  = ((uint64_t(b) & 0x7fU)       ); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) <<  7U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 14U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 21U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 28U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 35U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 42U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 49U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x7fU) << 56U); if (b >= 0) { break; }
+        b = *p++; val |= ((uint64_t(b) & 0x01U) << 63U); if (b >= 0) { break; }
+        throw varint_too_long_exception{};
+      } while (false);
     } else {
-        // this eats too much ram
-        std::map<std::tuple<uint8_t,uint32_t,uint32_t>,std::vector<std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t>>> by_z7;
-        for (auto const &entry : w->entries) {
-            if (std::get<0>(entry) >= 7) {
-                int level_diff = std::get<0>(entry) - 7;
-                std::tuple<uint8_t,uint32_t,uint32_t> z7_tile{7,std::get<1>(entry)/(1 << level_diff),std::get<2>(entry)/(1 << level_diff)};
-                if (by_z7.count(z7_tile) > 0) {
-                    by_z7[z7_tile].push_back(entry);
-                } else {
-                    by_z7[z7_tile] = {entry};
-                }
-            }
-        }
-
-        std::vector<std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t>> leaves;
-        std::vector<std::tuple<uint8_t,uint32_t,uint32_t>> leafdir_z7s;
-        int leafdir_size = 0;
-
-        for (auto const &group : by_z7) {
-            auto key = group.first;
-            if (leafdir_size + group.second.size() <= 21845) {
-                leafdir_z7s.push_back(key);
-                leafdir_size += group.second.size();
-            } else {
-                for (auto const &k : leafdir_z7s) {
-                    leaves.emplace_back(std::get<0>(k),std::get<1>(k),std::get<2>(k),w->offset,17*leafdir_size);
-                    auto to_sort = by_z7[k];
-                    sort(begin(to_sort),end(to_sort),TileCompare());
-                    for (auto const &entry : to_sort) writeEntry(w->ostream,entry);
-                }
-                w->offset += 17 * leafdir_size;
-                leafdir_z7s = {key};
-                leafdir_size = group.second.size();
-            }
-        }
-
-        if (leafdir_size > 0) {
-            for (auto const &k : leafdir_z7s) {
-                leaves.emplace_back(std::get<0>(k),std::get<1>(k),std::get<2>(k),w->offset,17*leafdir_size);
-                    auto to_sort = by_z7[k];
-                    sort(begin(to_sort),end(to_sort),TileCompare());
-                for (auto const &entry : to_sort) writeEntry(w->ostream,entry);
-            }
-        }
-
-        std::vector<std::tuple<uint8_t,uint32_t,uint32_t,uint64_t,uint32_t>> root_entries;
-        for (auto const &entry : w->entries) {
-            if (std::get<0>(entry) < 7) root_entries.push_back(entry);
-        }
-
-        w->ostream.seekp(0);
-        writePmtilesHeader(w->ostream,serialized_metadata,root_entries.size() + leaves.size());
-
-        std::sort(begin(root_entries),end(root_entries),TileCompare());
-        for (auto const &entry : root_entries) {
-            writeEntry(w->ostream,entry);
-        }
-        std::sort(begin(leaves),end(leaves),TileCompare());
-        for (auto const & leaf : leaves) {
-            writeEntry(w->ostream,leaf,true);
-        }
+      unsigned int shift = 0;
+      while (p != iend && *p < 0) {
+        val |= (uint64_t(*p++) & 0x7fU) << shift;
+        shift += 7;
+      }
+      if (p == iend) {
+        throw end_of_buffer_exception{};
+      }
+      val |= uint64_t(*p++) << shift;
     }
 
-    // cout << "Num tiles: " << tiles.size() << endl;
-    // cout << "Num unique tiles: " << hash_to_offset.size() << endl;
+    *data = reinterpret_cast<const char*>(p);
+    return val;
+  }
 
-    w->ostream.close();
+  inline uint64_t decode_varint(const char** data, const char* end) {
+    // If this is a one-byte varint, decode it here.
+    if (end != *data && ((static_cast<uint64_t>(**data) & 0x80U) == 0)) {
+      const auto val = static_cast<uint64_t>(**data);
+      ++(*data);
+      return val;
+    }
+    // If this varint is more than one byte, defer to complete implementation.
+    return detail::decode_varint_impl(data, end);
+  }
+
+  inline void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
+    if (ry == 0) {
+      if (rx == 1) {
+          x = n-1 - x;
+          y = n-1 - y;
+      }
+      int64_t t = x;
+      x = y;
+      y = t;
+    }
+  }
+
+  zxy t_on_level(uint8_t z, uint64_t pos) {
+    int64_t n = 1 << z;
+    int64_t rx, ry, s, t = pos;
+    int64_t tx = 0;
+    int64_t ty = 0;
+
+    for (s=1; s<n; s*=2) {
+      rx = 1 & (t/2);
+      ry = 1 & (t ^ rx);
+      rotate(s, tx, ty, rx, ry);
+      tx += s * rx;
+      ty += s * ry;
+      t /= 4;
+    }
+    return zxy(z,tx,ty);
+  }
+} // end namespace detail
+
+inline int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
+  int n = 1;
+
+  while (value >= 0x80U) {
+    *data++ = char((value & 0x7fU) | 0x80U);
+    value >>= 7U;
+    ++n;
+  }
+  *data = char(value);
+
+  return n;
+}
+
+zxy tileid_to_zxy(uint64_t tileid) {
+  uint64_t acc = 0;
+  uint8_t t_z = 0;
+  while(true) {
+    uint64_t num_tiles = (1 << t_z) * (1 << t_z);
+    if (acc + num_tiles > tileid) {
+        return detail::t_on_level(t_z, tileid - acc);
+    }
+    acc += num_tiles;
+    t_z++;
+  }
+}
+
+uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
+  uint64_t acc = 0;
+  for (uint8_t t_z = 0; t_z < z; t_z++) acc += (0x1 << t_z) * (0x1 << t_z);
+  int64_t n = 1 << z;
+  int64_t rx, ry, s, d=0;
+  int64_t tx = x;
+  int64_t ty = y;
+  for (s=n/2; s>0; s/=2) {
+    rx = (tx & s) > 0;
+    ry = (ty & s) > 0;
+    d += s * s * ((3 * rx) ^ ry);
+    detail::rotate(s, tx, ty, rx, ry);
+  }
+  return acc + d;
+}
+
+// returns an uncompressed byte buffer
+std::string serialize_directory(const std::vector<entryv3>& entries) {
+  std::string data;
+
+  write_varint(std::back_inserter(data), entries.size());
+
+  uint64_t last_id = 0;
+  for (auto const &entry : entries) {
+    write_varint(std::back_inserter(data), entry.tile_id - last_id);
+    last_id = entry.tile_id;
+  }
+
+  for (auto const &entry : entries) {
+    write_varint(std::back_inserter(data), entry.run_length);
+  }
+
+  for (auto const &entry : entries) {
+    write_varint(std::back_inserter(data), entry.length);
+  }
+
+  for (size_t i = 0; i < entries.size(); i++) {
+    if (i > 0 && entries[i].offset == entries[i-1].offset + entries[i-1].length) {
+      write_varint(std::back_inserter(data), 0);
+    } else {
+      write_varint(std::back_inserter(data), entries[i].offset+1);
+    }
+  }
+
+  return data;
+}
+
+// takes an uncompressed byte buffer
+std::vector<entryv3> deserialize_directory(const std::string &decompressed) {
+  const char *t = decompressed.data();
+  const char *end = t + decompressed.size();
+
+  uint64_t num_entries = detail::decode_varint(&t,end);
+
+  std::vector<entryv3> result;
+  result.resize(num_entries);
+
+  uint64_t last_id = 0;
+  for (size_t i = 0; i < num_entries; i++) {
+    uint64_t tile_id = last_id + detail::decode_varint(&t,end);
+    result[i].tile_id = tile_id;
+    last_id = tile_id;
+  }
+
+  for (size_t i = 0; i < num_entries; i++) {
+    result[i].run_length = detail::decode_varint(&t,end);
+  }
+
+  for (size_t i = 0; i < num_entries; i++) {
+    result[i].length = detail::decode_varint(&t,end);
+  }
+
+  for (size_t i = 0; i < num_entries; i++) {
+    uint64_t tmp = detail::decode_varint(&t,end);
+
+    if (i > 0 && tmp == 0) {
+      result[i].offset = result[i-1].offset + result[i-1].length;
+    } else {
+      result[i].offset = tmp - 1;
+    }
+  }
+
+  // assert the directory has been fully consumed
+  if (t != end) {
+    fprintf(stderr, "Error: malformed pmtiles directory\n");
+    exit(EXIT_FAILURE);
+  }
+
+  return result;
+}
 
 }
+#endif

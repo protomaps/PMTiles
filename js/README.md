@@ -23,7 +23,7 @@ Example of a PMTiles archive displayed in MapLibre GL JS:
 
 ```js
 let protocol = new pmtiles.Protocol();
-maplibregl.addProtocol("pmtiles",protocol.tileFunc);
+maplibregl.addProtocol("pmtiles",protocol.tile);
 var style = {
 "version": 8,
 "sources": {

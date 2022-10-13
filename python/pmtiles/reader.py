@@ -4,6 +4,7 @@ from .tile import (
     deserialize_header,
     deserialize_directory,
     zxy_to_tileid,
+    tileid_to_zxy,
     find_tile,
     Compression,
 )
@@ -56,3 +57,25 @@ class Reader:
                     return self.get_bytes(
                         header["tile_data_offset"] + result.offset, result.length
                     )
+
+
+def traverse(get_bytes, header, dir_offset, dir_length):
+    entries = deserialize_directory(get_bytes(dir_offset, dir_length))
+    for entry in entries:
+        if entry.run_length > 0:
+            yield tileid_to_zxy(entry.tile_id), get_bytes(
+                header["tile_data_offset"] + entry.offset, entry.length
+            )
+        else:
+            for t in traverse(
+                get_bytes,
+                header,
+                header["leaf_directory_offset"] + entry.offset,
+                entry.length,
+            ):
+                yield t
+
+
+def all_tiles(get_bytes):
+    header = deserialize_header(get_bytes(0, 127))
+    return traverse(get_bytes, header, header["root_offset"], header["root_length"])

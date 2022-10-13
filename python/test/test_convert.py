@@ -27,21 +27,34 @@ class TestConvert(unittest.TestCase):
             pass
 
     def test_roundtrip(self):
-        pass
-        # with open("test_tmp.pmtiles", "wb") as f:
-        #     writer = Writer(f, 7)
-        #     writer.write_tile(1, 0, 0, b"0")
-        #     writer.write_tile(1, 0, 1, b"1")
-        #     writer.write_tile(1, 1, 0, b"2")
-        #     writer.write_tile(1, 1, 1, b"3")
-        #     writer.write_tile(2, 0, 0, b"4")
-        #     writer.write_tile(3, 0, 0, b"5")
-        #     writer.write_tile(2, 0, 1, b"6")
-        #     writer.write_tile(3, 0, 2, b"7")
-        #     writer.finalize({"key": "value"})
+        with open("test_tmp.pmtiles", "wb") as f:
+            writer = Writer(f)
+            writer.write_tile(0, b"0")
+            writer.write_tile(1, b"1")
+            writer.write_tile(2, b"2")
+            writer.write_tile(3, b"3")
+            writer.write_tile(4, b"4")
+            writer.write_tile(5, b"5")
+            writer.write_tile(6, b"6")
+            writer.write_tile(7, b"7")
+            writer.finalize(
+                {
+                    "tile_type": TileType.MVT,
+                    "min_zoom": 0,
+                    "max_zoom": 2,
+                    "min_lon_e7": 0,
+                    "max_lon_e7": 0,
+                    "min_lat_e7": 0,
+                    "max_lat_e7": 0,
+                    "center_zoom": 0,
+                    "center_lon_e7": 0,
+                    "center_lat_e7": 0,
+                },
+                {"": "value"},
+            )
 
-        # pmtiles_to_mbtiles("test_tmp.pmtiles", "test_tmp.mbtiles", False)
-        # mbtiles_to_pmtiles("test_tmp.mbtiles", "test_tmp_2.pmtiles", 3, False)
+        pmtiles_to_mbtiles("test_tmp.pmtiles", "test_tmp.mbtiles")
+        mbtiles_to_pmtiles("test_tmp.mbtiles", "test_tmp_2.pmtiles", 3)
 
     def test_mbtiles_header(self):
         header, json_metadata = mbtiles_to_header_json(
@@ -73,6 +86,3 @@ class TestConvert(unittest.TestCase):
         self.assertTrue("name" in json_metadata)
         self.assertTrue("format" in json_metadata)
         self.assertTrue("compression" in json_metadata)
-        self.assertFalse("center" in json_metadata)
-        self.assertFalse("bounds" in json_metadata)
-        self.assertFalse("bounds" in json_metadata)

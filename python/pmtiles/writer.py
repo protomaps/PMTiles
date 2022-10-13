@@ -131,3 +131,4 @@ class Writer:
         self.f.write(leaves_bytes)
         self.tile_f.seek(0)
         shutil.copyfileobj(self.tile_f, self.f)
+        self.tile_f.close()

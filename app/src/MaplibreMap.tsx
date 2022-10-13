@@ -129,7 +129,7 @@ function MaplibreMap(props: { file: PMTiles }) {
 
   useEffect(() => {
     let protocol = new Protocol();
-    maplibregl.addProtocol("pmtiles", protocol.tileFunc);
+    maplibregl.addProtocol("pmtiles", protocol.tile);
     protocol.add(props.file); // this is necessary for non-HTTP sources
 
     map = new maplibregl.Map({

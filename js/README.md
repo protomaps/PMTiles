@@ -10,7 +10,7 @@ Example of a raster PMTiles archive displayed in Leaflet:
 
 ```js
 const p = new pmtiles.PMTiles('example.pmtiles')
-pmtiles.leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
+pmtiles.leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'}).addTo(map)
 ````
 
  ### Vector tileset
@@ -29,6 +29,7 @@ var style = {
 "sources": {
     "example_source": {
         "type": "vector",
-        "tiles": ["pmtiles://example.pmtiles/{z}/{x}/{y}"],
+        "url": "pmtiles://https://example.pmtiles",
+        "attribution": '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
     ...
 ```

@@ -62,38 +62,68 @@ export class Protocol {
   }
 
   tile = (params: any, callback: any) => {
-    const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
-    const result = params.url.match(re);
-    const pmtiles_url = result[1];
+    if (params.type == "json") {
+      const pmtiles_url = params.url.substr(10);
+      let instance = this.tiles.get(pmtiles_url);
+      if (!instance) {
+        instance = new PMTiles(pmtiles_url);
+        this.tiles.set(pmtiles_url, instance);
+      }
 
-    let instance = this.tiles.get(pmtiles_url);
-    if (!instance) {
-      instance = new PMTiles(pmtiles_url);
-      this.tiles.set(pmtiles_url, instance);
+      instance.getHeader().then((h) => {
+        const tilejson = {
+          tiles: [params.url + "/{z}/{x}/{y}"],
+          minzoom: h.minZoom,
+          maxzoom: h.maxZoom,
+        };
+        callback(null, tilejson, null, null);
+      });
+
+      return {
+        cancel: () => {},
+      };
+    } else {
+      const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
+      const result = params.url.match(re);
+      const pmtiles_url = result[1];
+
+      let instance = this.tiles.get(pmtiles_url);
+      if (!instance) {
+        instance = new PMTiles(pmtiles_url);
+        this.tiles.set(pmtiles_url, instance);
+      }
+      const z = result[2];
+      const x = result[3];
+      const y = result[4];
+
+      const controller = new AbortController();
+      const signal = controller.signal;
+      let cancel = () => {
+        controller.abort();
+      };
+
+      instance
+        .getZxy(+z, +x, +y, signal)
+        .then((resp) => {
+          if (resp) {
+            callback(
+              null,
+              new Uint8Array(resp.data),
+              resp.cacheControl,
+              resp.expires
+            );
+          } else {
+            callback(null, new Uint8Array(), null, null);
+          }
+        })
+        .catch((e) => {
+          if (e.name !== "AbortError") {
+            throw e;
+          }
+        });
+      return {
+        cancel: cancel,
+      };
     }
-    const z = result[2];
-    const x = result[3];
-    const y = result[4];
-
-    const controller = new AbortController();
-    const signal = controller.signal;
-    let cancel = () => {
-      controller.abort();
-    };
-
-    instance.getZxy(+z, +x, +y, signal).then((resp) => {
-      if (resp) {
-        callback(null, new Uint8Array(resp.data), resp.cacheControl, resp.expires);
-      } else {
-        callback(null, new Uint8Array(), null, null);
-      }
-    }).catch((e) => {
-      if (e.name !== "AbortError") {
-        throw e;
-      }
-    });
-    return {
-      cancel: cancel
-    };
   };
 }

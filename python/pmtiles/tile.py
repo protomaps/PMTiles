@@ -12,6 +12,9 @@ class Entry:
         self.length = length
         self.run_length = run_length
 
+    def __str__(self):
+        return f"id={self.tile_id} offset={self.offset} length={self.length} runlength={self.run_length}"
+
 
 def rotate(n, xy, rx, ry):
     if ry == 0:

@@ -29,7 +29,7 @@ var style = {
 "sources": {
     "example_source": {
         "type": "vector",
-        "url": "pmtiles://https://example.pmtiles",
+        "url": "pmtiles://https://example.com/example.pmtiles",
         "attribution": '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
     ...
 ```

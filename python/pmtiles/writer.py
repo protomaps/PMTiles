@@ -26,7 +26,7 @@ def build_roots_leaves(entries, leaf_size):
         num_leaves += 1
         serialized = serialize_directory(entries[i : i + leaf_size])
         root_entries.append(
-            Entry(entries[0].tile_id, len(leaves_bytes), len(serialized), 0)
+            Entry(entries[i].tile_id, len(leaves_bytes), len(serialized), 0)
         )
         leaves_bytes += serialized
         i += leaf_size

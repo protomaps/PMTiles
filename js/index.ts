@@ -367,10 +367,10 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
 function detectVersion(a: ArrayBuffer): number {
 	const v = new DataView(a);
 	if (v.getUint16(2, true) === 2) {
-		console.warn("PMTiles spec version 2 has been deprecated;");
+		console.warn("PMTiles spec version 2 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade");
 		return 2;
 	} else if (v.getUint16(2, true) === 1) {
-		console.warn("PMTiles spec version 1 has been deprecated;");
+		console.warn("PMTiles spec version 1 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade");
 		return 1;
 	}
 	return 3;

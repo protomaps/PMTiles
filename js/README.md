@@ -10,7 +10,7 @@ Example of a raster PMTiles archive displayed in Leaflet:
 
 ```js
 const p = new pmtiles.PMTiles('example.pmtiles')
-pmtiles.leafletLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
+pmtiles.leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'}).addTo(map)
 ````
 
  ### Vector tileset
@@ -22,8 +22,8 @@ pmtiles.leafletLayer(p,{attribution:'© <a href="https://openstreetmap.org">Open
 Example of a PMTiles archive displayed in MapLibre GL JS:
 
 ```js
-let cache = new pmtiles.ProtocolCache();
-maplibregl.addProtocol("pmtiles",cache.protocol);
+let protocol = new pmtiles.Protocol();
+maplibregl.addProtocol("pmtiles",protocol.tileFunc);
 var style = {
 "version": 8,
 "sources": {

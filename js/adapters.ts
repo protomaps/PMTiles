@@ -61,7 +61,7 @@ export class Protocol {
     return this.tiles.get(url);
   }
 
-  tileFunc = (params: any, callback: any) => {
+  tile = (params: any, callback: any) => {
     const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
     const result = params.url.match(re);
     const pmtiles_url = result[1];

@@ -281,6 +281,11 @@ export class FetchSource implements Source {
 			signal: signal,
 			headers: { Range: "bytes=" + offset + "-" + (offset + length - 1) },
 		});
+
+		if (resp.status >= 300) {
+			throw Error("404");
+			controller.abort();
+		}
 		const contentLength = resp.headers.get("Content-Length");
 		if (!contentLength || +contentLength !== length) {
 			console.error(
@@ -789,7 +794,7 @@ export class PMTiles {
 
 		let d_o = header.rootDirectoryOffset;
 		let d_l = header.rootDirectoryLength;
-		for (let depth = 0; depth < 5; depth++) {
+		for (let depth = 0; depth <= 3; depth++) {
 			const directory = await this.cache.getDirectory(
 				this.source,
 				d_o,

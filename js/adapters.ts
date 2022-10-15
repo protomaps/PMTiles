@@ -4,24 +4,46 @@ import { PMTiles, Source } from "./index";
 export const leafletRasterLayer = (source: PMTiles, options: any) => {
   const cls = L.GridLayer.extend({
     createTile: function (coord: any, done: any) {
-      const tile: any = document.createElement("img");
+      if (!this.pmtilesHeaderLoaded) {
+        source.getHeader().then((h) => {
+          // Unfortunately this needs to call into private leaflet properties
+          // and might break in future versions
+          // because layer creation is synchronous and these are specified at
+          // initialization time
+          // TODO: set bounds?
+          if (this.options.maxNativeZoom == undefined) {
+            this.options.minNativeZoom = h.minZoom;
+          }
+          if (this.options.maxNativeZoom == undefined) {
+            this.options.maxNativeZoom = h.maxZoom;
+          }
+        });
+        this.pmtilesHeaderLoaded = true;
+      }
+
+      const el: any = document.createElement("img");
       const controller = new AbortController();
       const signal = controller.signal;
-      tile.cancel = () => {
+      el.cancel = () => {
         controller.abort();
       };
-      source.getZxy(coord.z, coord.x, coord.y).then((arr) => {
-        if (arr) {
-          const blob = new Blob([arr.data], { type: "image/png" });
-          const imageUrl = window.URL.createObjectURL(blob);
-          tile.src = imageUrl;
-          tile.cancel = null;
-          done(null, tile);
-        } else {
-          // return an empty image
-        }
-      });
-      return tile;
+      source
+        .getZxy(coord.z, coord.x, coord.y, signal)
+        .then((arr) => {
+          if (arr) {
+            const blob = new Blob([arr.data]);
+            const imageUrl = window.URL.createObjectURL(blob);
+            el.src = imageUrl;
+            el.cancel = null;
+            done(null, el);
+          }
+        })
+        .catch((e) => {
+          if (e.name !== "AbortError") {
+            throw e;
+          }
+        });
+      return el;
     },
 
     _removeTile: function (key: string) {

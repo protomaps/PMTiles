@@ -46,7 +46,7 @@ class Reader:
         header = deserialize_header(self.get_bytes(0, 127))
         dir_offset = header["root_offset"]
         dir_length = header["root_length"]
-        for depth in range(0, 3):  # max depth
+        for depth in range(0, 4):  # max depth
             directory = deserialize_directory(self.get_bytes(dir_offset, dir_length))
             result = find_tile(directory, tile_id)
             if result:

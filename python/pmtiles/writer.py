@@ -107,9 +107,6 @@ class Writer:
         compressed_metadata = gzip.compress(json.dumps(metadata).encode())
         header["clustered"] = True
         header["internal_compression"] = Compression.GZIP
-        header[
-            "tile_compression"
-        ] = Compression.GZIP  # TODO: not necessarily true for non-vector
         header["root_offset"] = 127
         header["root_length"] = len(root_bytes)
         header["metadata_offset"] = header["root_offset"] + header["root_length"]

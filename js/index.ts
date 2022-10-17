@@ -1,6 +1,6 @@
 import { decompressSync } from "fflate";
 import v2 from "./v2";
-export * from './adapters';
+export * from "./adapters";
 
 export interface BufferPosition {
 	buf: Uint8Array;
@@ -372,10 +372,14 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
 function detectVersion(a: ArrayBuffer): number {
 	const v = new DataView(a);
 	if (v.getUint16(2, true) === 2) {
-		console.warn("PMTiles spec version 2 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade");
+		console.warn(
+			"PMTiles spec version 2 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade"
+		);
 		return 2;
 	} else if (v.getUint16(2, true) === 1) {
-		console.warn("PMTiles spec version 1 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade");
+		console.warn(
+			"PMTiles spec version 1 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade"
+		);
 		return 1;
 	}
 	return 3;
@@ -404,7 +408,7 @@ async function getHeaderAndRoot(
 	source: Source,
 	prefetch: boolean
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
-	let resp = await source.getBytes(0, 16384);
+	const resp = await source.getBytes(0, 16384);
 
 	const v = new DataView(resp.data);
 	if (v.getUint16(0, true) !== 0x4d50) {
@@ -450,7 +454,7 @@ async function getDirectory(
 	length: number,
 	header: Header
 ): Promise<Entry[]> {
-	let resp = await source.getBytes(offset, length);
+	const resp = await source.getBytes(offset, length);
 
 	if (header.etag && header.etag !== resp.etag) {
 		throw new VersionMismatch("ETag mismatch: " + header.etag);
@@ -494,7 +498,7 @@ export class ResolvedValueCache {
 			return data as Header;
 		}
 
-		let res = await getHeaderAndRoot(source, this.prefetch);
+		const res = await getHeaderAndRoot(source, this.prefetch);
 		if (res[1]) {
 			this.cache.set(res[1][0], {
 				lastUsed: this.counter++,
@@ -553,7 +557,7 @@ export class ResolvedValueCache {
 			return data as ArrayBuffer;
 		}
 
-		let resp = await source.getBytes(offset, length);
+		const resp = await source.getBytes(offset, length);
 		if (header.etag && header.etag !== resp.etag) {
 			throw new VersionMismatch("ETag mismatch: " + header.etag);
 		}
@@ -765,9 +769,12 @@ export class PMTiles {
 		if (header.specVersion < 3) {
 			return [];
 		}
-		let d_o = header.rootDirectoryOffset;
-		let d_l = header.rootDirectoryLength;
-		return await this.cache.getDirectory(this.source, d_o, d_l, header);
+		return await this.cache.getDirectory(
+			this.source,
+			header.rootDirectoryOffset,
+			header.rootDirectoryLength,
+			header
+		);
 	}
 
 	async getHeader() {

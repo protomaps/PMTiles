@@ -188,7 +188,7 @@ export const deriveLeaf = (view: DataView, tile: Zxy): Zxy | null => {
 	const numEntries = view.byteLength / 17;
 	const entry = parseEntry(view, numEntries - 1);
 	if (entry.is_dir) {
-		let leaf_level = entry.z;
+		const leaf_level = entry.z;
 		const level_diff = tile.z - leaf_level;
 		const leaf_x = Math.trunc(tile.x / (1 << level_diff));
 		const leaf_y = Math.trunc(tile.y / (1 << level_diff));
@@ -198,7 +198,7 @@ export const deriveLeaf = (view: DataView, tile: Zxy): Zxy | null => {
 };
 
 async function getHeader(source: Source): Promise<Header> {
-	let resp = await source.getBytes(0, 512000);
+	const resp = await source.getBytes(0, 512000);
 
 	const dataview = new DataView(resp.data);
 
@@ -233,7 +233,7 @@ async function getHeader(source: Source): Promise<Header> {
 	let max_lat = 85.0;
 
 	if (json_metadata.bounds) {
-		let split = json_metadata.bounds.split(",");
+		const split = json_metadata.bounds.split(",");
 		min_lon = +split[0];
 		min_lat = +split[1];
 		max_lon = +split[2];
@@ -241,7 +241,7 @@ async function getHeader(source: Source): Promise<Header> {
 	}
 
 	if (json_metadata.center) {
-		let split = json_metadata.center.split(",");
+		const split = json_metadata.center.split(",");
 		center_lon = +split[0];
 		center_lat = +split[1];
 		center_zoom = +split[2];
@@ -299,10 +299,10 @@ async function getZxy(
 
 	const entry = queryTile(new DataView(root_dir), z, x, y);
 	if (entry) {
-		let resp = await source.getBytes(entry.offset, entry.length, signal);
+		const resp = await source.getBytes(entry.offset, entry.length, signal);
 		let tile_data = resp.data;
 
-		let view = new DataView(tile_data);
+		const view = new DataView(tile_data);
 		if (view.getUint8(0) == 0x1f && view.getUint8(1) == 0x8b) {
 			tile_data = decompressSync(new Uint8Array(tile_data));
 		}
@@ -331,16 +331,16 @@ async function getZxy(
 			if (header.specVersion === 1) {
 				leaf_dir = sortDir(leaf_dir);
 			}
-			let tile_entry = queryTile(new DataView(leaf_dir), z, x, y);
+			const tile_entry = queryTile(new DataView(leaf_dir), z, x, y);
 			if (tile_entry) {
-				let resp = await source.getBytes(
+				const resp = await source.getBytes(
 					tile_entry.offset,
 					tile_entry.length,
 					signal
 				);
 				let tile_data = resp.data;
 
-				let view = new DataView(tile_data);
+				const view = new DataView(tile_data);
 				if (view.getUint8(0) == 0x1f && view.getUint8(1) == 0x8b) {
 					tile_data = decompressSync(new Uint8Array(tile_data));
 				}

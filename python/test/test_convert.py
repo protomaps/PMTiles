@@ -40,6 +40,7 @@ class TestConvert(unittest.TestCase):
             writer.finalize(
                 {
                     "tile_type": TileType.MVT,
+                    "tile_compression": Compression.GZIP,
                     "min_zoom": 0,
                     "max_zoom": 2,
                     "min_lon_e7": 0,

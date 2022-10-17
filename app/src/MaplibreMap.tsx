@@ -34,7 +34,6 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   let metadata = await file.getMetadata();
   let layers: any[] = [];
 
-
   var tilestats:any;
   if (metadata.json) {
     let j = JSON.parse(metadata.json);
@@ -53,6 +52,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
           "source-layer": layer.layer,
           paint: {
             "fill-color": "white",
+            "fill-opacity": 0.2
           },
         });
       } else if (layer.geometry === "LineString") {
@@ -78,35 +78,6 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         });
       }
     }
-  } else {
-    layers.push({
-      id:"water",
-      type:"fill",
-      source:"source",
-      "source-layer":"water",
-      paint: {
-        "fill-color":"blue"
-      }
-    })
-    layers.push({
-      id:"landuse",
-      type:"fill",
-      source:"source",
-      "source-layer":"landuse",
-      paint: {
-        "fill-color":"green"
-      }
-    })
-    layers.push({
-      id:"roads",
-      type:"line",
-      source:"source",
-      "source-layer":"roads",
-      paint: {
-        "line-color":"white",
-        "line-width":0.5
-      }
-    })
   }
 
   return {

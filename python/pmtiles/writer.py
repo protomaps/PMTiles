@@ -94,7 +94,7 @@ class Writer:
             print("Total dir bytes:", len(root_bytes) + len(leaves_bytes))
             print("Average leaf dir bytes:", len(leaves_bytes) / num_leaves)
             print(
-                "Average bytes per entry:",
+                "Average bytes per addressed tile:",
                 (len(root_bytes) + len(leaves_bytes)) / self.addressed_tiles,
             )
         else:

@@ -12,7 +12,7 @@
     "deploy": "wrangler publish",
     "test": "node -r esbuild-runner/register src/index.test.ts",
     "tsc": "tsc --watch",
-    "build": "wrangler publish --outdir dist --dry-run"
+    "build": "wrangler publish src/index.ts --outdir dist --dry-run"
   },
   "dependencies": {
     "esbuild-runner": "^2.2.2",

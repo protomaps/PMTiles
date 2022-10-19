@@ -27,6 +27,7 @@ const s3 = new s3client({
 // TODO: figure out how much memory to allocate
 const CACHE = new ResolvedValueCache();
 
+// duplicated code below
 export const pmtiles_path = (name: string, setting?: string): string => {
 	if (setting) {
 		return setting.replace("{name}", name);
@@ -134,7 +135,7 @@ export const handler = async (
 		return apiResp(500, "Invalid event configuration");
 	}
 
-	const { ok, name, tile } = tile_path(path, process.env.TILE_PATH);
+	const { ok, name, tile, ext } = tile_path(path, process.env.TILE_PATH);
 
 	if (!ok) {
 		return apiResp(400, "Invalid tile URL");
@@ -146,7 +147,7 @@ export const handler = async (
 	}
 	// TODO: extension enforcement and MIME types
 
-	const source = new S3Source("stamen_toner_z3");
+	const source = new S3Source(name);
 	const p = new PMTiles(source, CACHE);
 	try {
 		const header = await p.getHeader();
@@ -156,7 +157,7 @@ export const handler = async (
 
 		const tile = await p.getZxy(0, 0, 0);
 		if (tile) {
-			// return suncompressed response
+			// returns uncompressed response
 			// TODO: may need to special case API gateway to return compressed response with gzip content-encoding header
 			return apiResp(
 				200,

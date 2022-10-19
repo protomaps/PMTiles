@@ -1,0 +1,16 @@
+{
+  "name": "pmtiles-aws",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.108",
+    "esbuild-runner": "^2.2.2",
+    "typescript": "^4.8.4",
+    "zora": "^5.1.0"
+  },
+  "private": true,
+  "scripts": {
+    "test": "node -r esbuild-runner/register src/index.test.ts",
+    "tsc": "tsc --noEmit --watch",
+    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.js --format=cjs --bundle --banner:js=//$(git describe --always)"
+  }
+}

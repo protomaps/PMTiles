@@ -13,12 +13,10 @@ Self-contained Lambda ZIP:
 Building the Lambda ZIP yourself:
 
 ```sh
-git clone https://github.com/protomaps/PMTiles
-cd serverless/aws
-python create_lambda_function.py
+npm run build
 ```
 
-Upload the resulting `lambda_function.zip` using the Lambda console.
+Upload the resulting `dist/lambda_function.zip` using the Lambda console or paste `dist/index.js`.
 
 Configure these Lambda environment variables:
 
@@ -52,7 +50,7 @@ API Gateway (HTTP or REST):
 
 ### Monitoring
 
-
+TBD
 
 ### Lambda@Edge
 

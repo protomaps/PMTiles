@@ -11,6 +11,6 @@
   "scripts": {
     "test": "node -r esbuild-runner/register src/index.test.ts",
     "tsc": "tsc --noEmit --watch",
-    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.js --format=cjs --bundle --banner:js=//$(git describe --always)"
+    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.js --format=cjs --bundle --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.js"
   }
 }

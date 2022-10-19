@@ -12,7 +12,7 @@ import {
 	TileType,
 } from "../../../js";
 
-export interface Env {
+interface Env {
 	BUCKET: R2Bucket;
 	PMTILES_PATH?: string;
 }
@@ -36,7 +36,7 @@ export const pmtiles_path = (p: string | undefined, name: string): string => {
 
 const CACHE = new ResolvedValueCache();
 
-export class R2Source implements Source {
+class R2Source implements Source {
 	env: Env;
 	archive_name: string;
 
@@ -135,6 +135,6 @@ export default {
 		}
 
 		// TODO: metadata responses
-		return new Response("Invalid URL", { status: 400 });
+		return new Response("Invalid URL", { status: 404 });
 	},
 };

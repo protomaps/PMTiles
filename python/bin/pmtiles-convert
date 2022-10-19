@@ -30,6 +30,7 @@ if args.overwrite:
         shutil.rmtree(args.output)
 
 if args.input.endswith(".mbtiles") and args.output.endswith(".pmtiles"):
+    print("Notice: check out the new PMTiles converter at https://github.com/protomaps/go-pmtiles")
     mbtiles_to_pmtiles(args.input, args.output, args.maxzoom)
 
 elif args.input.endswith(".pmtiles") and args.output.endswith(".mbtiles"):

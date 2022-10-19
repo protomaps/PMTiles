@@ -4,27 +4,18 @@ Use [rclone](https://rclone.org/downloads/) to upload your PMTiles archives to a
 
 # Getting started
 
-Bundled single-file worker with all dependencies:
+Edit `wrangler.toml` with a new name + your development and production R2 buckets.
 
-[protomaps.github.io/PMTiles/worker.js](https://protomaps.github.io/PMTiles/worker.js)
+Publish the worker: `npm deploy`
 
-To generate `worker.js` from a checkout:
-
-```sh
-git clone https://github.com/protomaps/PMTiles
-cd serverless/cloudflare
-npm run build
-```
-
-Copy `dist/worker.js` into the Cloudflare Workers editor. 
-
-* In Settings > Variables, bind your bucket to the environment variable `BUCKET`.
+# Settings
 
 By default, your worker will serve tiles at path `NAME/0/0/0.pbf` using the archive at the root of your bucket `NAME.pmtiles`.
 
-This behavior can be customized with two optional environment variables:
+This behavior can be customized with optional environment variables:
 
-`PMTILES_PATH` - optional. 
-`TILE_PATH`- optional.
-`CORS` - optional.
+`PMTILES_PATH` - A string like `folder/{name}.pmtiles` specifying the path to archives in your bucket. Default `{name}.pmtiles`
 
+# Using the Workers web editor
+
+Generate the Workers script using `npm run build` and copy `dist/index.js` to the editor.

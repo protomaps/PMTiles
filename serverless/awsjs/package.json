@@ -4,14 +4,11 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.108",
     "@types/node": "^18.11.2",
-    "esbuild-runner": "^2.2.2",
-    "typescript": "^4.8.4",
-    "zora": "^5.1.0"
+    "typescript": "^4.8.4"
   },
   "private": true,
   "scripts": {
-    "test": "node -r esbuild-runner/register src/index.test.ts",
     "tsc": "tsc --noEmit --watch",
-    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.js --format=cjs --bundle --platform=node  --target=node16 --external:/var/runtime/node_modules/aws-sdk/clients/s3.js --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.js"
+    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.js --format=cjs --bundle --platform=node --target=node16 --external:/var/runtime/node_modules/aws-sdk/clients/s3.js --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.js"
   }
 }

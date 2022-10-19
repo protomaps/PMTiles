@@ -9,6 +9,7 @@ import {
 	Source,
 	RangeResponse,
 	ResolvedValueCache,
+	TileType,
 } from "../../../js";
 
 export interface Env {
@@ -82,13 +83,41 @@ export default {
 			const source = new R2Source(env, archive_name);
 			const p = new PMTiles(source, CACHE);
 
+			let header = await p.getHeader();
+
+			for (const pair of [
+				[TileType.Mvt, "mvt"],
+				[TileType.Png, "png"],
+				[TileType.Jpeg, "jpg"],
+				[TileType.Webp, "webp"],
+			]) {
+				if (header.tileType === pair[0] && ext !== pair[1]) {
+					return new Response("Bad request: archive has type ." + pair[1], {
+						status: 400,
+					});
+				}
+			}
+
 			// TODO: optimize by checking header min/maxzoom
-			// TODO: enforce extensions and MIME type using header information
 			try {
 				const tile = await p.getZxy(z, x, y);
 				const headers = new Headers();
 				headers.set("Access-Control-Allow-Origin", "*"); // TODO: make configurable
-				headers.set("Content-Type", "application/protobuf");
+
+				switch (header.tileType) {
+					case TileType.Mvt:
+						headers.set("Content-Type", "application/vnd.vector-tile");
+						break;
+					case TileType.Png:
+						headers.set("Content-Type", "image/png");
+						break;
+					case TileType.Jpeg:
+						headers.set("Content-Type", "image/jpeg");
+						break;
+					case TileType.Webp:
+						headers.set("Content-Type", "image/webp");
+						break;
+				}
 
 				// TODO: optimize by making decompression optional
 				if (tile) {

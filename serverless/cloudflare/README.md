@@ -6,7 +6,9 @@ Use [rclone](https://rclone.org/downloads/) to upload your PMTiles archives to a
 
 Edit `wrangler.toml` with a new name + your development and production R2 buckets.
 
-Publish the worker: `npm deploy`
+Test in development: `npm run start`
+
+Publish the worker: `npm run deploy`
 
 # Settings
 

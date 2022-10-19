@@ -39,11 +39,11 @@ Entries are stored in memory as integers, but serialized to disk using these com
 
 * The number of entries in the root directory and leaf directories is up to the implementation.
 * However, the compressed size of the header plus root directory is required in v3 to be under **16,384 bytes**. This is to allow latency-optimized clients to prefetch the root directory and guarantee it is complete. A sophisticated writer might need several attempts to optimize this. 
-* Root size, leaf sizes and depth should be configurable by the user to adjust for optimize for different trade-offs: cost, bandwidth, latency.
+* Root size, leaf sizes and depth should be configurable by the user to optimize for different trade-offs: cost, bandwidth, latency.
 
 # Header Design
 
-*Certain fields belonging to metadata in v2 are promoted to fixed-size header fields. This allows a map container to be initialized to the desired extent or center without blocking on the JSON metadata.*
+*Certain fields belonging to metadata in v2 are promoted to fixed-size header fields. This allows a map container to be initialized to the desired extent or center without blocking on the JSON metadata, and allows proxies to return well-defined HTTP headers.*
 
 The `Header` is 127 bytes, with little-endian integer values:
 
@@ -62,9 +62,9 @@ The `Header` is 127 bytes, with little-endian integer values:
 | 72 | # of addressed tiles, 0 if unknown | 8 |
 | 80 | # of tile entries, 0 if unknown | 8 |
 | 88 | # of tile contents, 0 if unknown | 8 |
-| 96 | boolean clustered flag, `1` if true | 1 |
-| 97 | internal compression enum (0 = Unknown, 1 = None, 2 = Gzip, 3 = Brotli, 4 = Zstd) | 1 |
-| 98 | tile compression enum | 1 |
+| 96 | boolean clustered flag, `0x1` if true | 1 |
+| 97 | `InternalCompression` enum (0 = Unknown, 1 = None, 2 = Gzip, 3 = Brotli, 4 = Zstd) | 1 |
+| 98 | `TileCompression` enum | 1 |
 | 99 | tile type enum (0 = Unknown/Other, 1 = MVT (PBF Vector Tile), 2 = PNG, 3 = JPEG, 4 = WEBP | 1 |
 | 100 | min zoom | 1 |
 | 101 | max zoom | 1 |
@@ -81,13 +81,13 @@ The `Header` is 127 bytes, with little-endian integer values:
 * **# of addressed tiles**: the total number of tiles before run-length encoding, i.e. `Sum(RunLength)` over all entries.
 * **# of tile entries**: the total number of entries across all directories where `RunLength > 0`.
 * **# # of tile contents**: the number of referenced blobs in the tile section, or the unique # of offsets. If the archive is completely deduplicated, this is equal to the # of unique tile contents. If there is no deduplication, this is equal to the number of tile entries above.
-* **boolean clustered flag**: if `True`, blobs in the data section are ordered by Hilbert `TileId`. When writing with deduplication, this means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset.
+* **boolean clustered flag**: if true, blobs in the data section are ordered by Hilbert `TileId`. When writing with deduplication, this means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset.
 * **compression enum**: Mandatory, tells the client how to decompress contents as well as provide correct `Content-Encoding` headers to browsers.
 * **tile type**: A hint as to the tile contents. Clients and proxies may use this to:
  	* Automatically determine a visualization method
-	* provide a conventional MIME type HTTP `Content-Type` header
-	* Enforce a canonical file path extension e.g. `.mvt`, `png`, `jpeg`, `.webp`
+	* provide a conventional MIME type `Content-Type` HTTP header
+	* Enforce a canonical extension e.g. `.mvt`, `png`, `jpeg`, `.webp` to prevent duplication in caches
 
 ### Organization
 
-In most cases, the archive should be in the order `Header`, Root Directory, JSON Metadata, Leaf Directories, Tile Data. It is possible to relocate sections other than `Header` arbitrarily, but no current writers/readers take advantage of this.
+In most cases, the archive should be in the order `Header`, Root Directory, JSON Metadata, Leaf Directories, Tile Data. It is possible to relocate sections other than `Header` arbitrarily, but no current writers/readers take advantage of this. A future design may allow for reverse-ordered archives to enable single-pass writing.

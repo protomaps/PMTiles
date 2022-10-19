@@ -11,7 +11,8 @@
     "start": "wrangler dev",
     "deploy": "wrangler publish",
     "test": "node -r esbuild-runner/register src/index.test.ts",
-    "tsc": "tsc --watch"
+    "tsc": "tsc --watch",
+    "build": "wrangler publish --outdir dist --dry-run"
   },
   "dependencies": {
     "esbuild-runner": "^2.2.2",

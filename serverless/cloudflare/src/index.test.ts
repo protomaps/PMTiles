@@ -1,5 +1,5 @@
 import { test } from "zora";
-import { pmtiles_path } from "./worker";
+import { pmtiles_path } from "./index";
 
 test("pmtiles path", (assertion) => {
   let result = pmtiles_path(undefined, "foo");

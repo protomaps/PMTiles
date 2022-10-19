@@ -21,7 +21,7 @@ jobs:
       - run: cd js && npm install && npm run build
       - run: echo "VITE_GIT_SHA=$(git rev-parse --short HEAD)" >> app/.env
       - run: cd app && npm install && ./node_modules/.bin/tsc && ./node_modules/.bin/vite build --base=/PMTiles/
-      - run: cd serverless/aws && python create_lambda_function.py && cp lambda_function.zip ../../app/dist
+      - run: cd serverless/aws && npm install && npm run build && cp dist/lambda_function.zip ../../app/dist
       - run: cd serverless/cloudflare && npm install && npm run build && cp dist/index.js ../../app/dist
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3
@@ -43,5 +43,5 @@ jobs:
       - run: cd js && npm install && npm test
       - run: cd python && python -m unittest test/test_*
       - run: cd cpp && make
-      - run: cd serverless/aws && python -m unittest test_*.py
+      - run: cd serverless/aws && npm install && npm test
       - run: cd serverless/cloudflare && npm install && npm test

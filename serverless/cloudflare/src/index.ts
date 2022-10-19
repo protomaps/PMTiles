@@ -15,6 +15,7 @@ import {
 interface Env {
 	BUCKET: R2Bucket;
 	PMTILES_PATH?: string;
+	TILE_PATH?: string;
 }
 
 class KeyNotFoundError extends Error {
@@ -23,15 +24,44 @@ class KeyNotFoundError extends Error {
 	}
 }
 
-const TILE = new RegExp(
-	/^\/([0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(\d+)\/(\d+)\/(\d+).([a-z]+)$/
-);
-
-export const pmtiles_path = (p: string | undefined, name: string): string => {
-	if (p) {
-		return p.replace("{name}", name);
+export const pmtiles_path = (name: string, setting?: string): string => {
+	if (setting) {
+		return setting.replace("{name}", name);
 	}
 	return name + ".pmtiles";
+};
+
+const TILE =
+	/^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(?<Z>\d+)\/(?<X>\d+)\/(?<Y>\d+).(?<EXT>[a-z]+)$/;
+
+export const tile_path = (
+	path: string,
+	setting?: string
+): {
+	ok: boolean;
+	name: string;
+	tile: [number, number, number];
+	ext: string;
+} => {
+	let pattern = TILE;
+	if (setting) {
+		// escape regex
+		setting = setting.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
+		setting = setting.replace("{name}", "(?<NAME>[0-9a-zA-Z/!-_.*'()]+)");
+		setting = setting.replace("{z}", "(?<Z>\\d+)");
+		setting = setting.replace("{x}", "(?<X>\\d+)");
+		setting = setting.replace("{y}", "(?<Y>\\d+)");
+		setting = setting.replace("{ext}", "(?<EXT>[a-z]+)");
+		pattern = new RegExp(setting);
+	}
+
+	let match = path.match(pattern);
+
+	if (match) {
+		const g = match.groups!;
+		return { ok: true, name: g.NAME, tile: [+g.Z, +g.X, +g.Y], ext: g.EXT };
+	}
+	return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
 };
 
 const CACHE = new ResolvedValueCache();
@@ -51,7 +81,7 @@ class R2Source implements Source {
 
 	async getBytes(offset: number, length: number): Promise<RangeResponse> {
 		const resp = await this.env.BUCKET.get(
-			pmtiles_path(this.env.PMTILES_PATH, this.archive_name),
+			pmtiles_path(this.archive_name, this.env.PMTILES_PATH),
 			{
 				range: { offset: offset, length: length },
 			}
@@ -72,15 +102,10 @@ export default {
 		ctx: ExecutionContext
 	): Promise<Response> {
 		const url = new URL(request.url);
-		const match = url.pathname.match(TILE)!;
+		const {ok, name, tile, ext} = tile_path(url.pathname, env.TILE_PATH);
 
-		if (match) {
-			const archive_name = match[1];
-			const z = +match[2];
-			const x = +match[3];
-			const y = +match[4];
-			const ext = match[5];
-			const source = new R2Source(env, archive_name);
+		if (ok) {
+			const source = new R2Source(env, name);
 			const p = new PMTiles(source, CACHE);
 
 			let header = await p.getHeader();
@@ -100,7 +125,7 @@ export default {
 
 			// TODO: optimize by checking header min/maxzoom
 			try {
-				const tile = await p.getZxy(z, x, y);
+				const tiledata = await p.getZxy(tile[0], tile[1], tile[2]);
 				const headers = new Headers();
 				headers.set("Access-Control-Allow-Origin", "*"); // TODO: make configurable
 
@@ -120,8 +145,8 @@ export default {
 				}
 
 				// TODO: optimize by making decompression optional
-				if (tile) {
-					return new Response(tile.data, { headers: headers, status: 200 });
+				if (tiledata) {
+					return new Response(tiledata.data, { headers: headers, status: 200 });
 				} else {
 					return new Response(undefined, { headers: headers, status: 204 });
 				}

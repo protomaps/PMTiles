@@ -23,6 +23,7 @@ jobs:
       - run: cd app && npm install && ./node_modules/.bin/tsc && ./node_modules/.bin/vite build --base=/PMTiles/
       - run: cd serverless/aws && npm install && npm run build && cp dist/lambda_function.zip ../../app/dist
       - run: cd serverless/cloudflare && npm install && npm run build && cp dist/index.js ../../app/dist
+      - run: cd spec/v3 && cp *.pmtiles ../../app/dist
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}

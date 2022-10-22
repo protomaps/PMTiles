@@ -98,9 +98,11 @@ const ExampleList = styled("div", {
 });
 
 const EXAMPLE_FILES = [
+  "https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles",
+  "https://protomaps.github.io/PMTiles/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles",
   "https://protomaps-static.sfo3.digitaloceanspaces.com/mantle-trial.pmtiles",
   "https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_nolimit.pmtiles",
-  "https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_gzip.pmtiles",
+  "https://protomaps-static.sfo3.digitaloceanspaces.com/cb_2018_us_zcta510_500k_gzip.pmtiles"
 ];
 
 function Start(props: {

@@ -1,10 +1,8 @@
-# PMTiles
+the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module.
 
- the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module.
+## Leaflet
 
- ## Leaflet
-
- ### Raster tileset
+### Raster tileset
 
 Example of a raster PMTiles archive displayed in Leaflet:
 
@@ -13,11 +11,14 @@ const p = new pmtiles.PMTiles('example.pmtiles')
 pmtiles.leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'}).addTo(map)
 ````
 
- ### Vector tileset
 
- See [protomaps.js](https://github.com/protomaps/protomaps.js)
+[Live example](https://protomaps.github.io/PMTiles/examples/leaflet.html) | [Code](https://github.com/protomaps/PMTiles/blob/master/js/examples/leaflet.html)
 
- ## MapLibre GL JS
+### Vector tileset
+
+See [protomaps.js](https://github.com/protomaps/protomaps.js)
+
+## MapLibre GL JS
 
 Example of a PMTiles archive displayed in MapLibre GL JS:
 
@@ -32,4 +33,37 @@ var style = {
         "url": "pmtiles://https://example.com/example.pmtiles",
         "attribution": '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
     ...
+```
+
+[Live example](https://protomaps.github.io/PMTiles/examples/maplibre.html) | [Code](https://github.com/protomaps/PMTiles/blob/master/js/examples/maplibre.html)
+
+# CORS
+
+Reading a PMTiles archive from cloud storage requires [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) configuration if your web page is hosted on a different domain than your storage bucket.
+
+## Amazon S3 and S3-Compatible Storage
+
+```json
+[
+    {
+        "AllowedHeaders": ["Range"],
+        "AllowedMethods": ["GET","HEAD"],
+        "AllowedOrigins": ["*","example.com"],
+        "ExposeHeaders": ["ETag"],
+        "MaxAgeSeconds": 3000
+    }
+]
+```
+
+## Google Cloud Storage
+
+```json
+[
+    {
+      "origin": ["*","example.com"],
+      "method": ["GET","HEAD"],
+      "responseHeader": ["range","etag"],
+      "maxAgeSeconds": 3000
+    }
+]
 ```

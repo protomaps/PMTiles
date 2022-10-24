@@ -24,6 +24,7 @@ jobs:
       - run: cd serverless/aws && npm install && npm run build && cp dist/lambda_function.zip ../../app/dist
       - run: cd serverless/cloudflare && npm install && npm run build && cp dist/index.js ../../app/dist
       - run: cd spec/v3 && cp *.pmtiles ../../app/dist
+      - run: cd js/examples && mkdir ../../app/dist/examples && cp *.html ../../app/dist/examples/
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}

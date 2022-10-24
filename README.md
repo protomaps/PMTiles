@@ -30,7 +30,7 @@ Download the `pmtiles` binary for your system at [go-pmtiles/Releases](https://g
 
 ### JavaScript
 
-See [js/README.md](js/README.md) for usage in Leaflet or MapLibre GL JS.
+See [js/README.md](js/README.md) and [js/examples](js/examples) for usage in Leaflet or MapLibre GL JS.
 
 ### Go
 

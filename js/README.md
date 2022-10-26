@@ -60,10 +60,39 @@ Reading a PMTiles archive from cloud storage requires [CORS](https://developer.m
 ```json
 [
     {
-      "origin": ["*","example.com"],
+      "origin": ["example.com","*"],
       "method": ["GET","HEAD"],
       "responseHeader": ["range","etag"],
       "maxAgeSeconds": 3000
     }
 ]
 ```
+
+### Setting CORS from the command line
+
+[AWS CLI](https://aws.amazon.com/cli/) is the recommended way to do this:
+
+create a file `cors_rules.json`:
+
+```json
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": ["example.com","*"],
+      "AllowedHeaders": ["range"],
+      "AllowedMethods": ["GET","HEAD"],
+      "MaxAgeSeconds": 3000,
+      "ExposeHeaders": ["ETag"]
+    }
+  ]
+}
+```
+
+Then configure your bucket with:
+```sh
+aws s3api put-bucket-cors --bucket MY_BUCKET --cors-configuration file:///home/user/cors_rules.json
+```
+Optional arguments:
+
+* `-endpoint-url https://S3_COMPATIBLE_ENDPOINT`: for non-S3 storages.
+* `--profile PROFILE`: choose credentials named in `~/.aws/credentials`

@@ -15,7 +15,7 @@ import {
 	BufferPosition,
 	Source,
 	RangeResponse,
-	VersionMismatch,
+	EtagMismatch,
 	PMTiles,
 } from "../index";
 
@@ -72,7 +72,9 @@ test("tile search for missing entry", (assertion) => {
 });
 
 test("tile search for first entry == id", (assertion) => {
-	const entries: Entry[] = [{ tileId: 100, offset: 1, length: 1, runLength: 1 }];
+	const entries: Entry[] = [
+		{ tileId: 100, offset: 1, length: 1, runLength: 1 },
+	];
 	const entry = findTile(entries, 100)!;
 	assertion.eq(entry.offset, 1);
 	assertion.eq(entry.length, 1);
@@ -104,7 +106,9 @@ test("tile search with multiple tile entries", (assertion) => {
 });
 
 test("leaf search", (assertion) => {
-	const entries: Entry[] = [{ tileId: 100, offset: 1, length: 1, runLength: 0 }];
+	const entries: Entry[] = [
+		{ tileId: 100, offset: 1, length: 1, runLength: 0 },
+	];
 	const entry = findTile(entries, 150);
 	assertion.eq(entry!.offset, 1);
 	assertion.eq(entry!.length, 1);
@@ -132,19 +136,19 @@ class TestNodeFileSource implements Source {
 		this.buffer = fs.readFileSync(path);
 	}
 
-	async getBytes(
-		offset: number,
-		length: number
-	): Promise<RangeResponse> {
+	async getBytes(offset: number, length: number): Promise<RangeResponse> {
 		const slice = new Uint8Array(this.buffer.slice(offset, offset + length))
 			.buffer;
-		return {data:slice, etag:this.etag};
+		return { data: slice, etag: this.etag };
 	}
 }
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_1.pmtiles
 test("cache getHeader", async (assertion) => {
-	const source = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "1");
+	const source = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
 	const cache = new SharedPromiseCache();
 	const header = await cache.getHeader(source);
 	assertion.eq(header.rootDirectoryOffset, 127);
@@ -194,7 +198,10 @@ test("cache check magic number", async (assertion) => {
 });
 
 test("cache getDirectory", async (assertion) => {
-	const source = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "1");
+	const source = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
 
 	let cache = new SharedPromiseCache(6400, false);
 	let header = await cache.getHeader(source);
@@ -226,8 +233,14 @@ test("cache getDirectory", async (assertion) => {
 
 test("multiple sources in a single cache", async (assertion) => {
 	const cache = new SharedPromiseCache();
-	const source1 = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "1");
-	const source2 = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "2");
+	const source1 = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
+	const source2 = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"2"
+	);
 	await cache.getHeader(source1);
 	assertion.eq(cache.cache.size, 2);
 	await cache.getHeader(source2);
@@ -236,7 +249,10 @@ test("multiple sources in a single cache", async (assertion) => {
 
 test("etags are part of key", async (assertion) => {
 	const cache = new SharedPromiseCache(6400, false);
-	const source = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "1");
+	const source = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
 	source.etag = "etag_1";
 	let header = await cache.getHeader(source);
 	assertion.eq(header.etag, "etag_1");
@@ -252,9 +268,9 @@ test("etags are part of key", async (assertion) => {
 		);
 		assertion.fail("Should have thrown");
 	} catch (e) {
-		assertion.ok(e instanceof VersionMismatch);
+		assertion.ok(e instanceof EtagMismatch);
 	}
-	cache.invalidate(source);
+	cache.invalidate(source, "etag_2");
 	header = await cache.getHeader(source);
 	assertion.ok(
 		await cache.getDirectory(
@@ -264,6 +280,37 @@ test("etags are part of key", async (assertion) => {
 			header
 		)
 	);
+});
+
+test("soft failure on etag weirdness", async (assertion) => {
+	const cache = new SharedPromiseCache(6400, false);
+	const source = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
+	source.etag = "etag_1";
+	let header = await cache.getHeader(source);
+	assertion.eq(header.etag, "etag_1");
+
+	source.etag = "etag_2";
+
+	try {
+		await cache.getDirectory(
+			source,
+			header.rootDirectoryOffset,
+			header.rootDirectoryLength,
+			header
+		);
+		assertion.fail("Should have thrown");
+	} catch (e) {
+		assertion.ok(e instanceof EtagMismatch);
+	}
+
+	source.etag = "etag_1";
+	cache.invalidate(source, "etag_2");
+
+	header = await cache.getHeader(source);
+	assertion.eq(header.etag, undefined);
 });
 
 test("cache pruning by byte size", async (assertion) => {
@@ -278,7 +325,10 @@ test("cache pruning by byte size", async (assertion) => {
 });
 
 test("pmtiles get metadata", async (assertion) => {
-	const source = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "1");
+	const source = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
 	const p = new PMTiles(source);
 	const metadata = await p.getMetadata();
 	assertion.ok(metadata.name);
@@ -286,7 +336,10 @@ test("pmtiles get metadata", async (assertion) => {
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_2.pmtiles
 test("pmtiles handle retries", async (assertion) => {
-	const source = new TestNodeFileSource("test/data/test_fixture_1.pmtiles", "1");
+	const source = new TestNodeFileSource(
+		"test/data/test_fixture_1.pmtiles",
+		"1"
+	);
 	source.etag = "1";
 	const p = new PMTiles(source);
 	const metadata = await p.getMetadata();

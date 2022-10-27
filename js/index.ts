@@ -385,10 +385,10 @@ function detectVersion(a: ArrayBuffer): number {
 	return 3;
 }
 
-export class VersionMismatch extends Error {}
+export class EtagMismatch extends Error {}
 
 export interface Cache {
-	getHeader: (source: Source) => Promise<Header>;
+	getHeader: (source: Source, current_etag?: string) => Promise<Header>;
 	getDirectory: (
 		source: Source,
 		offset: number,
@@ -401,12 +401,13 @@ export interface Cache {
 		length: number,
 		header: Header
 	) => Promise<ArrayBuffer>;
-	invalidate: (source: Source) => void;
+	invalidate: (source: Source, current_etag: string) => Promise<void>;
 }
 
 async function getHeaderAndRoot(
 	source: Source,
-	prefetch: boolean
+	prefetch: boolean,
+	current_etag?: string
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
 	const resp = await source.getBytes(0, 16384);
 
@@ -421,7 +422,17 @@ async function getHeaderAndRoot(
 	}
 
 	const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
-	const header = bytesToHeader(headerData, resp.etag);
+
+	let resp_etag = resp.etag;
+	if (current_etag && resp.etag != current_etag) {
+		console.warn(
+			"ETag conflict detected; your HTTP server might not support content-based ETag headers. ETags disabled for " +
+				source.getKey()
+		);
+		resp_etag = undefined;
+	}
+
+	const header = bytesToHeader(headerData, resp_etag);
 
 	// optimistically set the root directory
 	// TODO check root bounds
@@ -457,7 +468,7 @@ async function getDirectory(
 	const resp = await source.getBytes(offset, length);
 
 	if (header.etag && header.etag !== resp.etag) {
-		throw new VersionMismatch("ETag mismatch: " + header.etag);
+		throw new EtagMismatch(resp.etag);
 	}
 
 	const data = tryDecompress(resp.data, header.internalCompression);
@@ -490,7 +501,7 @@ export class ResolvedValueCache {
 		this.prefetch = prefetch;
 	}
 
-	async getHeader(source: Source): Promise<Header> {
+	async getHeader(source: Source, current_etag?: string): Promise<Header> {
 		const cacheKey = source.getKey();
 		if (this.cache.has(cacheKey)) {
 			this.cache.get(cacheKey)!.lastUsed = this.counter++;
@@ -498,7 +509,7 @@ export class ResolvedValueCache {
 			return data as Header;
 		}
 
-		const res = await getHeaderAndRoot(source, this.prefetch);
+		const res = await getHeaderAndRoot(source, this.prefetch, current_etag);
 		if (res[1]) {
 			this.cache.set(res[1][0], {
 				lastUsed: this.counter++,
@@ -559,7 +570,7 @@ export class ResolvedValueCache {
 
 		const resp = await source.getBytes(offset, length);
 		if (header.etag && header.etag !== resp.etag) {
-			throw new VersionMismatch("ETag mismatch: " + header.etag);
+			throw new EtagMismatch(header.etag);
 		}
 		this.cache.set(cacheKey, {
 			lastUsed: this.counter++,
@@ -588,8 +599,9 @@ export class ResolvedValueCache {
 		}
 	}
 
-	invalidate(source: Source) {
+	async invalidate(source: Source, current_etag: string) {
 		this.cache.delete(source.getKey());
+		await this.getHeader(source, current_etag);
 	}
 }
 
@@ -618,7 +630,7 @@ export class SharedPromiseCache {
 		this.prefetch = prefetch;
 	}
 
-	async getHeader(source: Source): Promise<Header> {
+	async getHeader(source: Source, current_etag?: string): Promise<Header> {
 		const cacheKey = source.getKey();
 		if (this.cache.has(cacheKey)) {
 			this.cache.get(cacheKey)!.lastUsed = this.counter++;
@@ -627,7 +639,7 @@ export class SharedPromiseCache {
 		}
 
 		const p = new Promise<Header>((resolve, reject) => {
-			getHeaderAndRoot(source, this.prefetch)
+			getHeaderAndRoot(source, this.prefetch, current_etag)
 				.then((res) => {
 					if (this.cache.has(cacheKey)) {
 						this.cache.get(cacheKey)!.size = HEADER_SIZE_BYTES;
@@ -704,7 +716,7 @@ export class SharedPromiseCache {
 				.getBytes(offset, length)
 				.then((resp) => {
 					if (header.etag && header.etag !== resp.etag) {
-						throw new VersionMismatch("ETag mismatch: " + header.etag);
+						throw new EtagMismatch(resp.etag);
 					}
 					resolve(resp.data);
 					if (this.cache.has(cacheKey)) {
@@ -740,8 +752,9 @@ export class SharedPromiseCache {
 		}
 	}
 
-	invalidate(source: Source) {
+	async invalidate(source: Source, current_etag: string) {
 		this.cache.delete(source.getKey());
+		await this.getHeader(source, current_etag);
 	}
 }
 
@@ -817,7 +830,7 @@ export class PMTiles {
 						signal
 					);
 					if (header.etag && header.etag !== resp.etag) {
-						throw new VersionMismatch("ETag mismatch: " + header.etag);
+						throw new EtagMismatch(resp.etag);
 					}
 					return {
 						data: tryDecompress(resp.data, header.tileCompression),
@@ -844,8 +857,8 @@ export class PMTiles {
 		try {
 			return await this.getZxyAttempt(z, x, y, signal);
 		} catch (e) {
-			if (e instanceof VersionMismatch) {
-				this.cache.invalidate(this.source);
+			if (e instanceof EtagMismatch) {
+				this.cache.invalidate(this.source, e.name);
 				return await this.getZxyAttempt(z, x, y, signal);
 			} else {
 				throw e;
@@ -861,7 +874,7 @@ export class PMTiles {
 			header.jsonMetadataLength
 		);
 		if (header.etag && header.etag !== resp.etag) {
-			throw new VersionMismatch("Etag mismatch: " + header.etag);
+			throw new EtagMismatch(resp.etag);
 		}
 		const decompressed = tryDecompress(resp.data, header.internalCompression);
 		const dec = new TextDecoder("utf-8");
@@ -872,8 +885,8 @@ export class PMTiles {
 		try {
 			return await this.getMetadataAttempt();
 		} catch (e) {
-			if (e instanceof VersionMismatch) {
-				this.cache.invalidate(this.source);
+			if (e instanceof EtagMismatch) {
+				this.cache.invalidate(this.source, e.name);
 				return await this.getMetadataAttempt();
 			} else {
 				throw e;

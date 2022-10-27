@@ -1,4 +1,16 @@
-the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module.
+the [PMTiles](https://www.npmjs.com/package/pmtiles) JavaScript package includes plugins for both Leaflet and MapLibre 1.15+.
+
+Load via script tag:
+
+```html
+<script src="https://unpkg.com/pmtiles@2.3.0/dist/index.js"></script>
+```
+
+As an ES6 module: ```npm add pmtiles``` and:
+
+```js
+import { PMTiles } from "pmtiles";
+```
 
 ## Leaflet
 

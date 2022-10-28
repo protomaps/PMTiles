@@ -1,8 +1,16 @@
-the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module.
+the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module:
 
-## Leaflet
+```html
+ <script src="https://unpkg.com/pmtiles@2.4.0/dist/index.js"></script>
+ ```
 
-### Raster tileset
+ As an ES6 module: `npm add pmtiles`
+
+ ```js
+ import * as pmtiles from "pmtiles";
+ ```
+
+### Leaflet: Raster tileset
 
 Example of a raster PMTiles archive displayed in Leaflet:
 
@@ -11,10 +19,9 @@ const p = new pmtiles.PMTiles('example.pmtiles')
 pmtiles.leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'}).addTo(map)
 ````
 
-
 [Live example](https://protomaps.github.io/PMTiles/examples/leaflet.html) | [Code](https://github.com/protomaps/PMTiles/blob/master/js/examples/leaflet.html)
 
-### Vector tileset
+### Leaflet: Vector tileset
 
 See [protomaps.js](https://github.com/protomaps/protomaps.js)
 

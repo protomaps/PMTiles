@@ -35,14 +35,18 @@
                 const y = +result[4];
 
                 tile.setLoader((extent, resolution, projection) => {
-                  this._p.getZxy(z,x,y).then((result) => {
-                    if (result) {
+                  tile.setState(1); // LOADING
+                  this._p.getZxy(z,x,y).then((tile_result) => {
+                    if (tile_result) {
                       const format = tile.getFormat();
-                      const features = format.readFeatures(result.data.buffer, {
+                      const features = format.readFeatures(tile_result.data.buffer, {
                         extent: extent,
                         featureProjection: projection
                       });
                       tile.setFeatures(features);
+                      tile.setState(2); // LOADED
+                    } else {
+                      tile.setState(4); // EMPTY
                     }
                   });
                 }); 
@@ -65,7 +69,7 @@
               declutter: true,
               source: new ol.source.VectorTile({
                 attributions:["© Land Information New Zealand"],
-                maxZoom: 15, // this could come from the PMTiles header (async)
+                maxZoom: 14, // this could come from the PMTiles header (async)
                 format: new ol.format.MVT(), // this could come from the PMTiles header (async)
                 url:source.url(),
                 tileLoadFunction: source.tileLoadFunction

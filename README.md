@@ -58,8 +58,8 @@ Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabu
     # use GDAL/OGR to convert SHP to GeoJSON
     ogr2ogr -t_srs EPSG:4326 cb_2018_us_zcta510_500k.json cb_2018_us_zcta510_500k.shp
     # Creates a layer in the vector tiles named "zcta"
-    tippecanoe -zg --projection=EPSG:4326 --no-tile-compression --no-feature-limit --no-tile-size-limit -o cb_2018_us_zcta510_500k_nolimit.mbtiles -l zcta cb_2018_us_zcta510_500k.json
-    pmtiles convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k_nolimit.pmtiles
+    tippecanoe -zg --projection=EPSG:4326 -o cb_2018_us_zcta510_500k_nolimit.mbtiles -l zcta cb_2018_us_zcta510_500k.json
+    pmtiles convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k.pmtiles
 ```
 
 ### Uploading to Storage

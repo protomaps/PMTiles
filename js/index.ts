@@ -282,6 +282,9 @@ export class FetchSource implements Source {
 			headers: { Range: "bytes=" + offset + "-" + (offset + length - 1) },
 		});
 
+		// can return 416, which will have a blank etag on S3.
+		// See https://github.com/protomaps/PMTiles/issues/90
+
 		if (resp.status >= 300) {
 			throw Error("404");
 			controller.abort();
@@ -858,7 +861,7 @@ export class PMTiles {
 			return await this.getZxyAttempt(z, x, y, signal);
 		} catch (e) {
 			if (e instanceof EtagMismatch) {
-				this.cache.invalidate(this.source, e.name);
+				this.cache.invalidate(this.source, e.message);
 				return await this.getZxyAttempt(z, x, y, signal);
 			} else {
 				throw e;
@@ -886,7 +889,7 @@ export class PMTiles {
 			return await this.getMetadataAttempt();
 		} catch (e) {
 			if (e instanceof EtagMismatch) {
-				this.cache.invalidate(this.source, e.name);
+				this.cache.invalidate(this.source, e.message);
 				return await this.getMetadataAttempt();
 			} else {
 				throw e;

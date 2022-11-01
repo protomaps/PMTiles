@@ -1,0 +1,75 @@
+<html>
+    <head>
+        <title>PMTiles OpenLayers Raster Example</title>
+        <meta charset="utf-8"/>
+        <script src="https://cdn.jsdelivr.net/npm/ol@v7.1.0/dist/ol.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.1.0/ol.css">
+        <script src="https://unpkg.com/pmtiles@2.4.0/dist/index.js"></script>
+        <style>
+            body, #map {
+                height:100vh;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="text/javascript">
+            class OLPMTilesSource {
+              constructor(url) {
+                  this._url = url;
+                  this._p = new pmtiles.PMTiles(url)
+              }
+
+              url = () => {
+                return "pmtiles://" + this._url + "/{z}/{x}/{y}";
+              }
+
+              rasterTileLoadFunction = (tile,url) => {
+                tile.setState(1); // LOADING
+                // the URL construction is done internally by OL, so we need to parse it 
+                // back out here using a hacky regex
+                const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
+                const result = url.match(re);
+                const z = +result[2];
+                const x = +result[3];
+                const y = +result[4];
+
+                this._p.getZxy(z,x,y).then((tile_result) => {
+                  if (tile_result) {
+                    const blob = new Blob([tile_result.data]);
+                    const imageUrl = window.URL.createObjectURL(blob);
+                    tile.getImage().src = imageUrl;
+                    tile.setState(2); // LOADED
+                  } else {
+                    tile.setState(4); // EMPTY
+                  }
+                });
+              }
+            }
+
+            const source = new OLPMTilesSource("https://pub-9288c68512ed46eca46ddcade307709b.r2.dev/us-west/terrarium_z9.pmtiles");
+
+            const rasterLayer = new ol.layer.Tile({
+              source: new ol.source.XYZ({
+                attributions:["https://github.com/tilezen/joerd/blob/master/docs/attribution.md"],
+                url:source.url(),
+                tileLoadFunction: source.rasterTileLoadFunction,
+                tileSize:[512,512],
+                maxZoom:9 // this could come from the PMTiles header (async)
+              })
+            })
+
+            ol.proj.useGeographic();
+            const map = new ol.Map({
+              layers: [rasterLayer],
+              target: 'map',
+              view: new ol.View({
+                center: [0,0],
+                zoom: 0,
+                multiWorld: true,
+              }),
+            });
+        </script>
+    </body>
+</html>

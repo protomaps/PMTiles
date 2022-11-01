@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>PMTiles OpenLayers Example</title>
+        <title>PMTiles OpenLayers Vector Example</title>
         <meta charset="utf-8"/>
         <script src="https://cdn.jsdelivr.net/npm/ol@v7.1.0/dist/ol.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.1.0/ol.css">
@@ -25,7 +25,7 @@
                 return "pmtiles://" + this._url + "/{z}/{x}/{y}";
               }
 
-              tileLoadFunction = (tile,url) => {
+              vectorTileLoadFunction = (tile,url) => {
                 // the URL construction is done internally by OL, so we need to parse it 
                 // back out here using a hacky regex
                 const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
@@ -55,7 +55,7 @@
 
             const source = new OLPMTilesSource("https://pub-9288c68512ed46eca46ddcade307709b.r2.dev/protomaps-sample-datasets/nz-buildings-v3.pmtiles");
 
-            const country = new ol.style.Style({
+            const style = new ol.style.Style({
               stroke: new ol.style.Stroke({
                 color: 'gray',
                 width: 1,
@@ -72,9 +72,9 @@
                 maxZoom: 14, // this could come from the PMTiles header (async)
                 format: new ol.format.MVT(), // this could come from the PMTiles header (async)
                 url:source.url(),
-                tileLoadFunction: source.tileLoadFunction
+                tileLoadFunction: source.vectorTileLoadFunction
               }),
-              style: country,
+              style: style,
             });
 
             ol.proj.useGeographic();

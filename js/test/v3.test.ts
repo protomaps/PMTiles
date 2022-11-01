@@ -192,7 +192,17 @@ test("cache check magic number", async (assertion) => {
 		await cache.getHeader(source);
 		assertion.fail("Should have thrown");
 	} catch (e) {
-		console.log(e);
+		assertion.ok(e instanceof Error);
+	}
+});
+
+test("cache check future spec version", async (assertion) => {
+	const source = new TestNodeFileSource("test/data/invalid_v4.pmtiles", "1");
+	const cache = new SharedPromiseCache();
+	try {
+		await cache.getHeader(source);
+		assertion.fail("Should have thrown");
+	} catch (e) {
 		assertion.ok(e instanceof Error);
 	}
 });

@@ -309,8 +309,15 @@ export class FetchSource implements Source {
 
 export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
 	const v = new DataView(bytes);
+	const spec_version = v.getUint8(7);
+	if (spec_version > 3) {
+		throw Error(
+			`Archive is spec version ${spec_version} but this library supports up to spec version 3`
+		);
+	}
+
 	return {
-		specVersion: 3,
+		specVersion: spec_version,
 		rootDirectoryOffset: Number(v.getBigUint64(8, true)),
 		rootDirectoryLength: Number(v.getBigUint64(16, true)),
 		jsonMetadataOffset: Number(v.getBigUint64(24, true)),

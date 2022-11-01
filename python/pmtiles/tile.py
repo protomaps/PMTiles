@@ -191,8 +191,19 @@ def serialize_directory(entries):
 
     return gzip.compress(b_io.getvalue())
 
+class SpecVersionUnsupported(Exception):
+    pass
+
+class MagicNumberNotFound(Exception):
+    pass
 
 def deserialize_header(buf):
+    if buf[0:7].decode() != "PMTiles":
+        raise MagicNumberNotFound()
+
+    if buf[7] != 0x3:
+        raise SpecVersionUnsupported()
+
     def read_uint64(pos):
         return int.from_bytes(buf[pos : pos + 8], byteorder="little")
 
@@ -240,7 +251,7 @@ def serialize_header(h):
         b_io.write(i.to_bytes(1, byteorder="little"))
 
     b_io.write("PMTiles".encode())
-    b_io.write(b"3")
+    b_io.write(b"\x03")
     write_uint64(h["root_offset"])
     write_uint64(h["root_length"])
     write_uint64(h["metadata_offset"])

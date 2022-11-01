@@ -3,7 +3,7 @@ from pmtiles.tile import zxy_to_tileid, tileid_to_zxy, Entry
 from pmtiles.tile import read_varint, write_varint
 from pmtiles.tile import Entry, find_tile, Compression, TileType
 from pmtiles.tile import serialize_directory, deserialize_directory
-from pmtiles.tile import serialize_header, deserialize_header
+from pmtiles.tile import serialize_header, deserialize_header, SpecVersionUnsupported, MagicNumberNotFound
 import io
 
 
@@ -160,3 +160,10 @@ class TestHeader(unittest.TestCase):
         self.assertEqual(result["center_zoom"], 3)
         self.assertEqual(result["center_lon_e7"], 3.1 * 10000000)
         self.assertEqual(result["center_lat_e7"], 3.2 * 10000000)
+
+    def test_spec_version(self):
+        with self.assertRaises(SpecVersionUnsupported):
+            result = deserialize_header(b'PMTiles\x04')
+
+        with self.assertRaises(MagicNumberNotFound):
+            result = deserialize_header(b'PM\x00\x02')

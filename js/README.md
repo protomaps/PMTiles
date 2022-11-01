@@ -1,3 +1,5 @@
+# PMTiles for Browsers + NodeJS
+
 the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module:
 
 ```html

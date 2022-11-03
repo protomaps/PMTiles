@@ -26,7 +26,6 @@
     <body>
         <div id="map"></div>
         <div id="overlay">
-            Foo bar baz
         </div>
         <script type="text/javascript">
             let protocol = new pmtiles.Protocol();
@@ -39,9 +38,6 @@
                 let length = resp.headers.get("Content-Length");
                 document.getElementById("overlay").innerHTML = `<a href="${URL}">${URL}</a> (${formatBytes(length)})`;
             })
-
-
-
 
             const map = new maplibregl.Map({
                 container: 'map',

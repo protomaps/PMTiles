@@ -1,6 +1,7 @@
 name = "pmtiles-cloudflare"
 main = "src/index.ts"
 compatibility_date = "2022-10-18"
+minify = true
 
 # Replace the bucket names with your own
 r2_buckets  = [

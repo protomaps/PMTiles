@@ -14,8 +14,10 @@ import {
 
 interface Env {
 	BUCKET: R2Bucket;
+	ALLOWED_ORIGINS?: string;
 	PMTILES_PATH?: string;
 	TILE_PATH?: string;
+	CACHE_MAX_AGE?: number;
 }
 
 class KeyNotFoundError extends Error {
@@ -101,58 +103,111 @@ export default {
 		env: Env,
 		ctx: ExecutionContext
 	): Promise<Response> {
+		if (request.method.toUpperCase() === "POST")
+			return new Response(undefined, { status: 405 });
+
 		const url = new URL(request.url);
-		const {ok, name, tile, ext} = tile_path(url.pathname, env.TILE_PATH);
+		const { ok, name, tile, ext } = tile_path(url.pathname, env.TILE_PATH);
+
+		const cache = caches.default;
 
 		if (ok) {
-			const source = new R2Source(env, name);
-			const p = new PMTiles(source, CACHE);
-
-			let header = await p.getHeader();
-
-			for (const pair of [
-				[TileType.Mvt, "mvt"],
-				[TileType.Png, "png"],
-				[TileType.Jpeg, "jpg"],
-				[TileType.Webp, "webp"],
-			]) {
-				if (header.tileType === pair[0] && ext !== pair[1]) {
-					return new Response("Bad request: archive has type ." + pair[1], {
-						status: 400,
-					});
+			let allowed_origin = "";
+			if (typeof env.ALLOWED_ORIGINS !== "undefined") {
+				for (let o of env.ALLOWED_ORIGINS.split(",")) {
+					if (o === request.headers.get("Origin") || o === "*") {
+						allowed_origin = o;
+					}
 				}
 			}
 
-			// TODO: optimize by checking header min/maxzoom
-			try {
-				const tiledata = await p.getZxy(tile[0], tile[1], tile[2]);
-				const headers = new Headers();
-				headers.set("Access-Control-Allow-Origin", "*"); // TODO: make configurable
+			let cached = await cache.match(request.url);
+			if (cached) {
+				let resp_headers = new Headers(cached.headers);
+				if (allowed_origin)
+					resp_headers.set("Access-Control-Allow-Origin", allowed_origin);
+				resp_headers.set("Vary", "Origin");
 
-				switch (header.tileType) {
-					case TileType.Mvt:
-						headers.set("Content-Type", "application/vnd.vector-tile");
-						break;
-					case TileType.Png:
-						headers.set("Content-Type", "image/png");
-						break;
-					case TileType.Jpeg:
-						headers.set("Content-Type", "image/jpeg");
-						break;
-					case TileType.Webp:
-						headers.set("Content-Type", "image/webp");
-						break;
+				return new Response(cached.body, {
+					headers: resp_headers,
+					status: cached.status,
+				});
+			}
+
+			const cacheableResponse = (
+				body: ArrayBuffer | string | undefined,
+				cacheable_headers: Headers,
+				status: number
+			) => {
+				cacheable_headers.set("Cache-Control", "max-age=" + env.CACHE_MAX_AGE);
+				let cacheable = new Response(body, {
+					headers: cacheable_headers,
+					status: status,
+				});
+
+				// normalize HEAD requests
+				ctx.waitUntil(cache.put(request.url, cacheable));
+
+				let resp_headers = new Headers(cacheable_headers);
+				if (allowed_origin)
+					resp_headers.set("Access-Control-Allow-Origin", allowed_origin);
+				resp_headers.set("Vary", "Origin");
+				return new Response(body, { headers: resp_headers, status: status });
+			};
+
+			const cacheable_headers = new Headers();
+			const source = new R2Source(env, name);
+			const p = new PMTiles(source, CACHE);
+			try {
+				const p_header = await p.getHeader();
+				if (tile[0] < p_header.minZoom || tile[0] > p_header.maxZoom) {
+					return cacheableResponse(undefined, cacheable_headers, 404);
+				}
+
+				for (const pair of [
+					[TileType.Mvt, "mvt"],
+					[TileType.Png, "png"],
+					[TileType.Jpeg, "jpg"],
+					[TileType.Webp, "webp"],
+				]) {
+					if (p_header.tileType === pair[0] && ext !== pair[1]) {
+						return cacheableResponse(
+							"Bad request: archive has type ." + pair[1],
+							cacheable_headers,
+							400
+						);
+					}
 				}
 
 				// TODO: optimize by making decompression optional
+				const tiledata = await p.getZxy(tile[0], tile[1], tile[2]);
+
+				switch (p_header.tileType) {
+					case TileType.Mvt:
+						cacheable_headers.set(
+							"Content-Type",
+							"application/vnd.vector-tile"
+						);
+						break;
+					case TileType.Png:
+						cacheable_headers.set("Content-Type", "image/png");
+						break;
+					case TileType.Jpeg:
+						cacheable_headers.set("Content-Type", "image/jpeg");
+						break;
+					case TileType.Webp:
+						cacheable_headers.set("Content-Type", "image/webp");
+						break;
+				}
+
 				if (tiledata) {
-					return new Response(tiledata.data, { headers: headers, status: 200 });
+					return cacheableResponse(tiledata.data, cacheable_headers, 200);
 				} else {
-					return new Response(undefined, { headers: headers, status: 204 });
+					return cacheableResponse(undefined, cacheable_headers, 204);
 				}
 			} catch (e) {
 				if (e instanceof KeyNotFoundError) {
-					return new Response("Archive not found", { status: 404 });
+					return cacheableResponse("Archive not found", cacheable_headers, 404);
 				} else {
 					throw e;
 				}

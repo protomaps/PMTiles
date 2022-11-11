@@ -186,7 +186,7 @@ export default {
 					case TileType.Mvt:
 						cacheable_headers.set(
 							"Content-Type",
-							"application/vnd.vector-tile"
+							"application/x-protobuf"
 						);
 						break;
 					case TileType.Png:
@@ -214,7 +214,7 @@ export default {
 			}
 		}
 
-		// TODO: metadata responses
+		// TODO: metadata responses, tileJSON
 		return new Response("Invalid URL", { status: 404 });
 	},
 };

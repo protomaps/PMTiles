@@ -19,8 +19,9 @@ import https from "https";
 import s3client from "/var/runtime/node_modules/aws-sdk/clients/s3.js";
 
 const keepAliveAgent = new https.Agent({ keepAlive: true });
+
+// the region should default to the same one as the function
 const s3 = new s3client({
-	region: process.env.BUCKET_REGION!,
 	httpOptions: { agent: keepAliveAgent },
 });
 
@@ -145,7 +146,7 @@ export const handler = async (
 	if (process.env.CORS) {
 		headers["Access-Control-Allow-Origin"] = process.env.CORS;
 	}
-	// TODO: extension enforcement and MIME types
+	// TODO: extension enforcement and MIME types, metadata and TileJSON
 
 	const source = new S3Source(name);
 	const p = new PMTiles(source, CACHE);
@@ -153,15 +154,16 @@ export const handler = async (
 		const header = await p.getHeader();
 		// TODO optimize by checking min/max zoom, return 404
 
-		headers["Content-Type"] = "application/vnd.vector-tile";
+		// part of the list of Cloudfront compressible types.
+		headers["Content-Type"] = "application/vnd.mapbox-vector-tile";
 
-		const tile = await p.getZxy(0, 0, 0);
-		if (tile) {
+		const tile_result = await p.getZxy(tile[0], tile[1], tile[2]);
+		if (tile_result) {
 			// returns uncompressed response
 			// TODO: may need to special case API gateway to return compressed response with gzip content-encoding header
 			return apiResp(
 				200,
-				Buffer.from(tile.data).toString("base64"),
+				Buffer.from(tile_result.data).toString("base64"),
 				true,
 				headers
 			);

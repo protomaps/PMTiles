@@ -12,7 +12,7 @@ Publish the worker: `npm run deploy`
 
 # Settings
 
-By default, your worker will serve tiles at path `NAME/0/0/0.pbf` using the archive at the root of your bucket `NAME.pmtiles`.
+By default, your worker will serve tiles at path `NAME/0/0/0.EXT` using the archive at the root of your bucket `NAME.pmtiles`, where EXT is one of `mvt`, `png`, `jpg` or `webp` depending on the tileset.
 
 This behavior can be customized with optional environment variables:
 

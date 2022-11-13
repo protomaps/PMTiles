@@ -4,11 +4,13 @@ Use [rclone](https://rclone.org/downloads/) to upload your PMTiles archives to a
 
 # Getting started
 
-Edit `wrangler.toml` with a new name + your development and production R2 buckets.
+* First run `npm install` in the root `PMTiles/js` directory, then `npm install` in `PMTiles/serverless/cloudflare`
 
-Test in development: `npm run start`
+* Edit `wrangler.toml` with a new name + your development and production R2 buckets.
 
-Publish the worker: `npm run deploy`
+* Test in development: `npm run start`
+
+* Publish the worker: `npm run deploy`
 
 # Settings
 
@@ -17,6 +19,11 @@ By default, your worker will serve tiles at path `NAME/0/0/0.EXT` using the arch
 This behavior can be customized with optional environment variables:
 
 `PMTILES_PATH` - A string like `folder/{name}.pmtiles` specifying the path to archives in your bucket. Default `{name}.pmtiles`
+
+`TILES_PATH` - a string like `prefix/{name}/{z}/{x}/{y}.{ext}` specifying the tile path exposed by the worker. Default `{name}/{z}/{x}/{y}.{ext}`
+
+`ALLOWED_ORIGINS` - a comma-separated list of allowed CORS origions. Default none. Examples: `https://example.com,https://localhost:3000`, `*`
+
 
 # Using the Workers web editor
 

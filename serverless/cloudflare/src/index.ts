@@ -10,6 +10,7 @@ import {
 	RangeResponse,
 	ResolvedValueCache,
 	TileType,
+	Compression,
 } from "../../../js";
 
 interface Env {
@@ -66,7 +67,22 @@ export const tile_path = (
 	return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
 };
 
-const CACHE = new ResolvedValueCache();
+async function nativeDecompress(
+	buf: ArrayBuffer,
+	compression: Compression
+): Promise<ArrayBuffer> {
+	if (compression === Compression.None || compression === Compression.Unknown) {
+		return buf;
+	} else if (compression === Compression.Gzip) {
+		let stream = new Response(buf).body!;
+		let result = stream.pipeThrough(new DecompressionStream("gzip"));
+		return new Response(result).arrayBuffer();
+	} else {
+		throw Error("Compression method not supported");
+	}
+}
+
+const CACHE = new ResolvedValueCache(undefined, undefined, nativeDecompress);
 
 class R2Source implements Source {
 	env: Env;
@@ -157,7 +173,7 @@ export default {
 
 			const cacheable_headers = new Headers();
 			const source = new R2Source(env, name);
-			const p = new PMTiles(source, CACHE);
+			const p = new PMTiles(source, CACHE, nativeDecompress);
 			try {
 				const p_header = await p.getHeader();
 				if (tile[0] < p_header.minZoom || tile[0] > p_header.maxZoom) {

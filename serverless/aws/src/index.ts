@@ -10,6 +10,7 @@ import {
 	RangeResponse,
 	Source,
 	Compression,
+	TileType,
 } from "../../../js";
 
 // @ts-ignore
@@ -68,7 +69,6 @@ export const tile_path = (
 	}
 	return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
 };
-
 
 class S3Source implements Source {
 	archive_name: string;
@@ -143,19 +143,47 @@ export const handler = async (
 	}
 
 	var headers: Headers = {};
-	if (process.env.CORS) {
-		headers["Access-Control-Allow-Origin"] = process.env.CORS;
-	}
-	// TODO: extension enforcement and MIME types, metadata and TileJSON
+	// TODO: metadata and TileJSON
 
 	const source = new S3Source(name);
 	const p = new PMTiles(source, CACHE);
 	try {
 		const header = await p.getHeader();
-		// TODO optimize by checking min/max zoom, return 404
+		if (tile[0] < header.minZoom || tile[0] > header.maxZoom) {
+			return apiResp(404, "");
+		}
 
-		// part of the list of Cloudfront compressible types.
-		headers["Content-Type"] = "application/vnd.mapbox-vector-tile";
+		for (const pair of [
+			[TileType.Mvt, "mvt"],
+			[TileType.Png, "png"],
+			[TileType.Jpeg, "jpg"],
+			[TileType.Webp, "webp"],
+		]) {
+			if (header.tileType === pair[0] && ext !== pair[1]) {
+				return apiResp(
+					400,
+					"Bad request: archive has type ." + pair[1],
+					false,
+					headers
+				);
+			}
+		}
+
+		switch (header.tileType) {
+			case TileType.Mvt:
+				// part of the list of Cloudfront compressible types.
+				headers["Content-Type"] = "application/vnd.mapbox-vector-tile";
+				break;
+			case TileType.Png:
+				headers["Content-Type"] = "image/png";
+				break;
+			case TileType.Jpeg:
+				headers["Content-Type"] = "image/jpeg";
+				break;
+			case TileType.Webp:
+				headers["Content-Type"] = "image/webp";
+				break;
+		}
 
 		const tile_result = await p.getZxy(tile[0], tile[1], tile[2]);
 		if (tile_result) {

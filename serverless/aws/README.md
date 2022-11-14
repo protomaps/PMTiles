@@ -24,7 +24,6 @@ Configure these Lambda environment variables:
 * `PMTILES_PATH`: optional, define how a tileset name is translated into an S3 key. Default `{name}.pmtiles`
   * Example path setting for objects in a directory: `my_folder/{name}/file.pmtiles`
 * `TILE_PATH`: optional, define the URL route of the tiles API. Default `/{name}/{z}/{x}/{y}.pbf`
-* `CORS`: optional, the exact value of the `Access-Control-Allow-Origin` header in the Lambda response. Note that this header will be cached by CloudFront; if you need dynamic multiple-origin support with CloudFront you should use [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) instead.
 
 For API Gateway integration, your Lambda Proxy Integration route will need to specify a greedy capturing parameter called `proxy` e.g. `/{proxy+}` (the default). API Gateway responses will always be GZIP-encoded.
 

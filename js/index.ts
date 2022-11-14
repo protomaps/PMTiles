@@ -141,7 +141,7 @@ export enum Compression {
 	Zstd = 4,
 }
 
-function tryDecompress(buf: ArrayBuffer, compression: Compression) {
+async function tryDecompress(buf: ArrayBuffer, compression: Compression) {
 	if (compression === Compression.None || compression === Compression.Unknown) {
 		return buf;
 	} else if (compression === Compression.Gzip) {
@@ -461,7 +461,7 @@ async function getHeaderAndRoot(
 			header.rootDirectoryLength;
 
 		const rootDir = deserializeIndex(
-			tryDecompress(rootDirData, header.internalCompression)
+			await tryDecompress(rootDirData, header.internalCompression)
 		);
 		return [header, [dirKey, ENTRY_SIZE_BYTES * rootDir.length, rootDir]];
 	}
@@ -481,7 +481,7 @@ async function getDirectory(
 		throw new EtagMismatch(resp.etag);
 	}
 
-	const data = tryDecompress(resp.data, header.internalCompression);
+	const data = await tryDecompress(resp.data, header.internalCompression);
 	const directory = deserializeIndex(data);
 	if (directory.length === 0) {
 		throw new Error("Empty directory is invalid");
@@ -843,7 +843,7 @@ export class PMTiles {
 						throw new EtagMismatch(resp.etag);
 					}
 					return {
-						data: tryDecompress(resp.data, header.tileCompression),
+						data: await tryDecompress(resp.data, header.tileCompression),
 						cacheControl: resp.cacheControl,
 						expires: resp.expires,
 					};
@@ -886,7 +886,7 @@ export class PMTiles {
 		if (header.etag && header.etag !== resp.etag) {
 			throw new EtagMismatch(resp.etag);
 		}
-		const decompressed = tryDecompress(resp.data, header.internalCompression);
+		const decompressed = await tryDecompress(resp.data, header.internalCompression);
 		const dec = new TextDecoder("utf-8");
 		return JSON.parse(dec.decode(decompressed));
 	}

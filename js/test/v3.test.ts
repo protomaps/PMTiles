@@ -237,7 +237,6 @@ test("cache getDirectory", async (assertion) => {
 
 	for (const v of cache.cache.values()) {
 		assertion.ok(v.lastUsed > 0);
-		assertion.ok(v.size > 0);
 	}
 });
 
@@ -324,14 +323,15 @@ test("soft failure on etag weirdness", async (assertion) => {
 });
 
 test("cache pruning by byte size", async (assertion) => {
-	const cache = new SharedPromiseCache(1000, false);
-	cache.cache.set("0", { lastUsed: 0, data: Promise.resolve([]), size: 400 });
-	cache.cache.set("1", { lastUsed: 1, data: Promise.resolve([]), size: 200 });
-	cache.cache.set("2", { lastUsed: 2, data: Promise.resolve([]), size: 900 });
-	cache.sizeBytes = 900 + 200 + 400;
+	const cache = new SharedPromiseCache(2, false);
+	cache.cache.set("0", { lastUsed: 0, data: Promise.resolve([]) });
+	cache.cache.set("1", { lastUsed: 1, data: Promise.resolve([]) });
+	cache.cache.set("2", { lastUsed: 2, data: Promise.resolve([]) });
 	cache.prune();
-	assertion.eq(cache.cache.size, 1);
+	assertion.eq(cache.cache.size, 2);
 	assertion.ok(cache.cache.get("2"));
+	assertion.ok(cache.cache.get("1"));
+	assertion.notOk(cache.cache.get("0"));
 });
 
 test("pmtiles get metadata", async (assertion) => {

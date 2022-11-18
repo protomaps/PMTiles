@@ -131,8 +131,6 @@ export interface Entry {
 	runLength: number;
 }
 
-const ENTRY_SIZE_BYTES = 32;
-
 export enum Compression {
 	Unknown = 0,
 	None = 1,
@@ -472,7 +470,7 @@ async function getHeaderAndRoot(
 		const rootDir = deserializeIndex(
 			await decompress(rootDirData, header.internalCompression)
 		);
-		return [header, [dirKey, ENTRY_SIZE_BYTES * rootDir.length, rootDir]];
+		return [header, [dirKey, rootDir.length, rootDir]];
 	}
 
 	return [header, undefined];
@@ -502,26 +500,23 @@ async function getDirectory(
 
 interface ResolvedValue {
 	lastUsed: number;
-	size: number;
 	data: Header | Entry[] | ArrayBuffer;
 }
 
 export class ResolvedValueCache {
 	cache: Map<string, ResolvedValue>;
-	sizeBytes: number;
-	maxSizeBytes: number;
+	maxCacheEntries: number;
 	counter: number;
 	prefetch: boolean;
 	decompress: DecompressFunc;
 
 	constructor(
-		maxSizeBytes = 64000000,
+		maxCacheEntries = 100,
 		prefetch = true,
 		decompress: DecompressFunc = fflateDecompress
 	) {
 		this.cache = new Map<string, ResolvedValue>();
-		this.sizeBytes = 0;
-		this.maxSizeBytes = maxSizeBytes;
+		this.maxCacheEntries = maxCacheEntries;
 		this.counter = 1;
 		this.prefetch = prefetch;
 		this.decompress = decompress;
@@ -544,7 +539,6 @@ export class ResolvedValueCache {
 		if (res[1]) {
 			this.cache.set(res[1][0], {
 				lastUsed: this.counter++,
-				size: res[1][1],
 				data: res[1][2],
 			});
 		}
@@ -552,9 +546,7 @@ export class ResolvedValueCache {
 		this.cache.set(cacheKey, {
 			lastUsed: this.counter++,
 			data: res[0],
-			size: HEADER_SIZE_BYTES,
 		});
-		this.sizeBytes += HEADER_SIZE_BYTES;
 		this.prune();
 		return res[0];
 	}
@@ -583,9 +575,7 @@ export class ResolvedValueCache {
 		this.cache.set(cacheKey, {
 			lastUsed: this.counter++,
 			data: directory,
-			size: ENTRY_SIZE_BYTES * directory.length,
 		});
-		this.sizeBytes += ENTRY_SIZE_BYTES * directory.length;
 		this.prune();
 		return directory;
 	}
@@ -612,15 +602,13 @@ export class ResolvedValueCache {
 		this.cache.set(cacheKey, {
 			lastUsed: this.counter++,
 			data: resp.data,
-			size: resp.data.byteLength,
 		});
-		this.sizeBytes += resp.data.byteLength;
 		this.prune();
 		return resp.data;
 	}
 
 	prune() {
-		while (this.sizeBytes > this.maxSizeBytes) {
+		if (this.cache.size > this.maxCacheEntries) {
 			let minUsed = Infinity;
 			let minKey = undefined;
 			this.cache.forEach((cache_value: ResolvedValue, key: string) => {
@@ -630,7 +618,6 @@ export class ResolvedValueCache {
 				}
 			});
 			if (minKey) {
-				this.sizeBytes -= this.cache.get(minKey)!.size;
 				this.cache.delete(minKey);
 			}
 		}
@@ -644,7 +631,6 @@ export class ResolvedValueCache {
 
 interface SharedPromiseCacheValue {
 	lastUsed: number;
-	size: number; // 0 if the promise has not resolved
 	data: Promise<Header | Entry[] | ArrayBuffer>;
 }
 
@@ -654,20 +640,18 @@ interface SharedPromiseCacheValue {
 // (estimates) the maximum size of the cache.
 export class SharedPromiseCache {
 	cache: Map<string, SharedPromiseCacheValue>;
-	sizeBytes: number;
-	maxSizeBytes: number;
+	maxCacheEntries: number;
 	counter: number;
 	prefetch: boolean;
 	decompress: DecompressFunc;
 
 	constructor(
-		maxSizeBytes = 64000000,
+		maxCacheEntries = 100,
 		prefetch = true,
 		decompress: DecompressFunc = fflateDecompress
 	) {
 		this.cache = new Map<string, SharedPromiseCacheValue>();
-		this.sizeBytes = 0;
-		this.maxSizeBytes = maxSizeBytes;
+		this.maxCacheEntries = maxCacheEntries;
 		this.counter = 1;
 		this.prefetch = prefetch;
 		this.decompress = decompress;
@@ -684,14 +668,9 @@ export class SharedPromiseCache {
 		const p = new Promise<Header>((resolve, reject) => {
 			getHeaderAndRoot(source, this.decompress, this.prefetch, current_etag)
 				.then((res) => {
-					if (this.cache.has(cacheKey)) {
-						this.cache.get(cacheKey)!.size = HEADER_SIZE_BYTES;
-						this.sizeBytes += HEADER_SIZE_BYTES;
-					}
 					if (res[1]) {
 						this.cache.set(res[1][0], {
 							lastUsed: this.counter++,
-							size: res[1][1],
 							data: Promise.resolve(res[1][2]),
 						});
 					}
@@ -702,7 +681,7 @@ export class SharedPromiseCache {
 					reject(e);
 				});
 		});
-		this.cache.set(cacheKey, { lastUsed: this.counter++, data: p, size: 0 });
+		this.cache.set(cacheKey, { lastUsed: this.counter++, data: p });
 		return p;
 	}
 
@@ -724,18 +703,13 @@ export class SharedPromiseCache {
 			getDirectory(source, this.decompress, offset, length, header)
 				.then((directory) => {
 					resolve(directory);
-					if (this.cache.has(cacheKey)) {
-						this.cache.get(cacheKey)!.size =
-							ENTRY_SIZE_BYTES * directory.length;
-						this.sizeBytes += ENTRY_SIZE_BYTES * directory.length;
-					}
 					this.prune();
 				})
 				.catch((e) => {
 					reject(e);
 				});
 		});
-		this.cache.set(cacheKey, { lastUsed: this.counter++, data: p, size: 0 });
+		this.cache.set(cacheKey, { lastUsed: this.counter++, data: p });
 		return p;
 	}
 
@@ -763,8 +737,6 @@ export class SharedPromiseCache {
 					}
 					resolve(resp.data);
 					if (this.cache.has(cacheKey)) {
-						this.cache.get(cacheKey)!.size = resp.data.byteLength;
-						this.sizeBytes += resp.data.byteLength;
 					}
 					this.prune();
 				})
@@ -772,12 +744,12 @@ export class SharedPromiseCache {
 					reject(e);
 				});
 		});
-		this.cache.set(cacheKey, { lastUsed: this.counter++, data: p, size: 0 });
+		this.cache.set(cacheKey, { lastUsed: this.counter++, data: p });
 		return p;
 	}
 
 	prune() {
-		while (this.sizeBytes > this.maxSizeBytes) {
+		if (this.cache.size >= this.maxCacheEntries) {
 			let minUsed = Infinity;
 			let minKey = undefined;
 			this.cache.forEach(
@@ -789,7 +761,6 @@ export class SharedPromiseCache {
 				}
 			);
 			if (minKey) {
-				this.sizeBytes -= this.cache.get(minKey)!.size;
 				this.cache.delete(minKey);
 			}
 		}

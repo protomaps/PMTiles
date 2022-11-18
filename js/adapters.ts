@@ -1,4 +1,7 @@
 declare const L: any;
+declare const window: any;
+declare const document: any;
+
 import { PMTiles, Source, TileType } from "./index";
 
 export const leafletRasterLayer = (source: PMTiles, options: any) => {

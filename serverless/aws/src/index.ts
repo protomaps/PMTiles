@@ -11,7 +11,7 @@ import {
 	Source,
 	Compression,
 	TileType,
-} from "../../../js";
+} from "../../../js/index";
 
 import https from "https";
 import zlib from "zlib";

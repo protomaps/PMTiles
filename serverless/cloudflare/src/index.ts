@@ -11,7 +11,7 @@ import {
 	ResolvedValueCache,
 	TileType,
 	Compression,
-} from "../../../js";
+} from "../../../js/index";
 
 interface Env {
 	BUCKET: R2Bucket;

@@ -13,21 +13,36 @@ import {
 	TileType,
 } from "../../../js";
 
-// @ts-ignore
 import https from "https";
+import zlib from "zlib";
 
 // @ts-ignore
 import s3client from "/var/runtime/node_modules/aws-sdk/clients/s3.js";
 
-const keepAliveAgent = new https.Agent({ keepAlive: true });
+const keepAliveAgent = new https.Agent({ keepAlive: true, maxSockets: 1 });
+
+var start;
 
 // the region should default to the same one as the function
 const s3 = new s3client({
 	httpOptions: { agent: keepAliveAgent },
 });
 
-// TODO: figure out how much memory to allocate
-const CACHE = new ResolvedValueCache();
+async function nativeDecompress(
+	buf: ArrayBuffer,
+	compression: Compression
+): Promise<ArrayBuffer> {
+	if (compression === Compression.None || compression === Compression.Unknown) {
+		return buf;
+	} else if (compression === Compression.Gzip) {
+		return zlib.gunzipSync(buf);
+	} else {
+		throw Error("Compression method not supported");
+	}
+}
+
+// Lambda needs to run with 512MB, empty function takes about 70
+const CACHE = new ResolvedValueCache(256000000, undefined, nativeDecompress);
 
 // duplicated code below
 export const pmtiles_path = (name: string, setting?: string): string => {
@@ -146,7 +161,7 @@ export const handler = async (
 	// TODO: metadata and TileJSON
 
 	const source = new S3Source(name);
-	const p = new PMTiles(source, CACHE);
+	const p = new PMTiles(source, CACHE, nativeDecompress);
 	try {
 		const header = await p.getHeader();
 		if (tile[0] < header.minZoom || tile[0] > header.maxZoom) {

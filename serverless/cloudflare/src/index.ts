@@ -82,7 +82,7 @@ async function nativeDecompress(
 	}
 }
 
-const CACHE = new ResolvedValueCache(undefined, undefined, nativeDecompress);
+const CACHE = new ResolvedValueCache(25, undefined, nativeDecompress);
 
 class R2Source implements Source {
 	env: Env;
@@ -195,15 +195,11 @@ export default {
 					}
 				}
 
-				// TODO: optimize by making decompression optional
 				const tiledata = await p.getZxy(tile[0], tile[1], tile[2]);
 
 				switch (p_header.tileType) {
 					case TileType.Mvt:
-						cacheable_headers.set(
-							"Content-Type",
-							"application/x-protobuf"
-						);
+						cacheable_headers.set("Content-Type", "application/x-protobuf");
 						break;
 					case TileType.Png:
 						cacheable_headers.set("Content-Type", "image/png");

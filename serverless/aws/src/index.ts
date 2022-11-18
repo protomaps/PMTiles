@@ -21,8 +21,6 @@ import s3client from "/var/runtime/node_modules/aws-sdk/clients/s3.js";
 
 const keepAliveAgent = new https.Agent({ keepAlive: true, maxSockets: 1 });
 
-var start;
-
 // the region should default to the same one as the function
 const s3 = new s3client({
 	httpOptions: { agent: keepAliveAgent },
@@ -42,7 +40,7 @@ async function nativeDecompress(
 }
 
 // Lambda needs to run with 512MB, empty function takes about 70
-const CACHE = new ResolvedValueCache(256000000, undefined, nativeDecompress);
+const CACHE = new ResolvedValueCache(undefined, undefined, nativeDecompress);
 
 // duplicated code below
 export const pmtiles_path = (name: string, setting?: string): string => {

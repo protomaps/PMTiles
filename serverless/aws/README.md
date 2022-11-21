@@ -26,6 +26,7 @@ Configure these Lambda environment variables:
 * `PMTILES_PATH`: optional, define how a tileset name is translated into an S3 key. Default `{name}.pmtiles`
   * Example path setting for objects in a directory: `my_folder/{name}/file.pmtiles`
 * `TILE_PATH`: optional, define the URL route of the tiles API. Default `/{name}/{z}/{x}/{y}.pbf`
+* `CORS`: optional, set the value of the `Access-Control-Allow-Origin` response header. Examples: `https://example.com`, `*`. Only supports one origin, so useful for development or staging environments only. For production use you should use CloudFront CORS configuration.
 
 ## Test Event
 

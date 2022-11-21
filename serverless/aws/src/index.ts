@@ -155,6 +155,10 @@ export const handler = async (
 	var headers: Headers = {};
 	// TODO: metadata and TileJSON
 
+	if (process.env.CORS) {
+		headers['Access-Control-Allow-Origin'] = process.env.CORS;
+	}
+
 	const source = new S3Source(name);
 	const p = new PMTiles(source, CACHE, nativeDecompress);
 	try {

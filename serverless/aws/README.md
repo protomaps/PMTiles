@@ -33,7 +33,7 @@ Lambda Function URLs:
 
 ```json
 {
-  "rawPath": "/my-tileset-name/0/0/0.pbf"
+  "rawPath": "/my-tileset-name/0/0/0.mvt"
 }
 ```
 
@@ -42,7 +42,7 @@ API Gateway (HTTP or REST):
 ```json
 {
   "pathParameters": {
-   "proxy": "my-tileset-name/0/0/0.pbf"
+   "proxy": "my-tileset-name/0/0/0.mvt"
   }
 }
 ```

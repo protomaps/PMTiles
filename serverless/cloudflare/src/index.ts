@@ -187,6 +187,10 @@ export default {
 					[TileType.Webp, "webp"],
 				]) {
 					if (p_header.tileType === pair[0] && ext !== pair[1]) {
+						if (p_header.tileType == TileType.Mvt && ext === "pbf") {
+							// allow this for now. Eventually we will delete this in favor of .mvt
+							continue;
+						}
 						return cacheableResponse(
 							"Bad request: archive has type ." + pair[1],
 							cacheable_headers,

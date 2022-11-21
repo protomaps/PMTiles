@@ -170,6 +170,10 @@ export const handler = async (
 			[TileType.Webp, "webp"],
 		]) {
 			if (header.tileType === pair[0] && ext !== pair[1]) {
+				if (header.tileType == TileType.Mvt && ext === "pbf") {
+					// allow this for now. Eventually we will delete this in favor of .mvt
+					continue;
+				}
 				return apiResp(
 					400,
 					"Bad request: archive has type ." + pair[1],

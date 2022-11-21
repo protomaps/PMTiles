@@ -16,15 +16,10 @@ import {
 import https from "https";
 import zlib from "zlib";
 
-// @ts-ignore
-import s3client from "/var/runtime/node_modules/aws-sdk/clients/s3.js";
-
-const keepAliveAgent = new https.Agent({ keepAlive: true, maxSockets: 1 });
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 // the region should default to the same one as the function
-const s3 = new s3client({
-	httpOptions: { agent: keepAliveAgent },
-});
+const s3client = new S3Client({});
 
 async function nativeDecompress(
 	buf: ArrayBuffer,
@@ -95,15 +90,17 @@ class S3Source implements Source {
 	}
 
 	async getBytes(offset: number, length: number): Promise<RangeResponse> {
-		const resp = await s3
-			.getObject({
+		const resp = await s3client.send(
+			new GetObjectCommand({
 				Bucket: process.env.BUCKET!,
 				Key: pmtiles_path(this.archive_name, process.env.PMTILES_PATH),
 				Range: "bytes=" + offset + "-" + (offset + length - 1),
 			})
-			.promise();
+		);
 
-		return { data: resp!.Body.buffer };
+		const arr = await resp.Body!.transformToByteArray();
+
+		return { data: arr.buffer };
 	}
 }
 

@@ -10,6 +10,9 @@
   "private": true,
   "scripts": {
     "tsc": "tsc --noEmit --watch",
-    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.js --format=cjs --bundle --platform=node --target=node16 --external:/var/runtime/node_modules/aws-sdk/clients/s3.js --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.js"
+    "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.mjs --format=esm --bundle --platform=node --target=node18 --external:@aws-sdk/client-s3 --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.213.0"
   }
 }

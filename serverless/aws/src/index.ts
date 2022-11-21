@@ -201,14 +201,26 @@ export const handler = async (
 
 		const tile_result = await p.getZxy(tile[0], tile[1], tile[2]);
 		if (tile_result) {
-			// returns uncompressed response
-			// TODO: may need to special case API gateway to return compressed response with gzip content-encoding header
-			return apiResp(
-				200,
-				Buffer.from(tile_result.data).toString("base64"),
-				true,
-				headers
-			);
+			if (is_api_gateway) {
+				// this is wasted work, but we need to force API Gateway to interpret the Lambda response as binary
+				// without depending on clients sending matching Accept: headers in the request.
+				const recompressed_data = zlib.gzipSync(tile_result.data);
+				headers["Content-Encoding"] = "gzip";
+				return apiResp(
+					200,
+					Buffer.from(recompressed_data).toString("base64"),
+					true,
+					headers
+				);
+			} else {
+				// returns uncompressed response
+				return apiResp(
+					200,
+					Buffer.from(tile_result.data).toString("base64"),
+					true,
+					headers
+				);
+			}
 		} else {
 			return apiResp(204, "", false, headers);
 		}

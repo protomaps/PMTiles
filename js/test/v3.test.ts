@@ -1,8 +1,5 @@
-import { test } from "zora";
-
-// tests run in node, for convenience
-// we don't need to typecheck all of it
-// @ts-ignore
+import { test } from "node:test";
+import assert from "node:assert";
 import fs from "fs";
 
 import {
@@ -19,81 +16,81 @@ import {
 	PMTiles,
 } from "../index";
 
-test("varint", (assertion) => {
+test("varint", () => {
 	let b: BufferPosition = {
 		buf: new Uint8Array([0, 1, 127, 0xe5, 0x8e, 0x26]),
 		pos: 0,
 	};
-	assertion.eq(readVarint(b), 0);
-	assertion.eq(readVarint(b), 1);
-	assertion.eq(readVarint(b), 127);
-	assertion.eq(readVarint(b), 624485);
+	assert.strictEqual(readVarint(b), 0);
+	assert.strictEqual(readVarint(b), 1);
+	assert.strictEqual(readVarint(b), 127);
+	assert.strictEqual(readVarint(b), 624485);
 	b = {
 		buf: new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]),
 		pos: 0,
 	};
-	assertion.eq(readVarint(b), 9007199254740991);
+	assert.strictEqual(readVarint(b), 9007199254740991);
 });
 
-test("zxy to tile id", (assertion) => {
-	assertion.eq(zxyToTileId(0, 0, 0), 0);
-	assertion.eq(zxyToTileId(1, 0, 0), 1);
-	assertion.eq(zxyToTileId(1, 0, 1), 2);
-	assertion.eq(zxyToTileId(1, 1, 1), 3);
-	assertion.eq(zxyToTileId(1, 1, 0), 4);
-	assertion.eq(zxyToTileId(2, 0, 0), 5);
+test("zxy to tile id", () => {
+	assert.strictEqual(zxyToTileId(0, 0, 0), 0);
+	assert.strictEqual(zxyToTileId(1, 0, 0), 1);
+	assert.strictEqual(zxyToTileId(1, 0, 1), 2);
+	assert.strictEqual(zxyToTileId(1, 1, 1), 3);
+	assert.strictEqual(zxyToTileId(1, 1, 0), 4);
+	assert.strictEqual(zxyToTileId(2, 0, 0), 5);
 });
 
-test("tile id to zxy", (assertion) => {
-	assertion.eq(tileIdToZxy(0), [0, 0, 0]);
-	assertion.eq(tileIdToZxy(1), [1, 0, 0]);
-	assertion.eq(tileIdToZxy(2), [1, 0, 1]);
-	assertion.eq(tileIdToZxy(3), [1, 1, 1]);
-	assertion.eq(tileIdToZxy(4), [1, 1, 0]);
-	assertion.eq(tileIdToZxy(5), [2, 0, 0]);
+test("tile id to zxy", () => {
+	assert.deepEqual(tileIdToZxy(0), [0, 0, 0]);
+	assert.deepEqual(tileIdToZxy(1), [1, 0, 0]);
+	assert.deepEqual(tileIdToZxy(2), [1, 0, 1]);
+	assert.deepEqual(tileIdToZxy(3), [1, 1, 1]);
+	assert.deepEqual(tileIdToZxy(4), [1, 1, 0]);
+	assert.deepEqual(tileIdToZxy(5), [2, 0, 0]);
 });
 
-test("a lot of tiles", (assertion) => {
+test("a lot of tiles", () => {
 	for (let z = 0; z < 9; z++) {
 		for (let x = 0; x < 1 << z; x++) {
 			for (let y = 0; y < 1 << z; y++) {
 				const result = tileIdToZxy(zxyToTileId(z, x, y));
 				if (result[0] !== z || result[1] !== x || result[2] !== y) {
-					assertion.fail("roundtrip failed");
+					assert.fail("roundtrip failed");
 				}
 			}
 		}
 	}
 });
 
-test("tile search for missing entry", (assertion) => {
+test("tile search for missing entry", () => {
 	const entries: Entry[] = [];
-	assertion.eq(findTile(entries, 101), null);
+	assert.strictEqual(findTile(entries, 101), null);
 });
 
-test("tile search for first entry == id", (assertion) => {
+test("tile search for first entry == id", () => {
 	const entries: Entry[] = [
 		{ tileId: 100, offset: 1, length: 1, runLength: 1 },
 	];
 	const entry = findTile(entries, 100)!;
-	assertion.eq(entry.offset, 1);
-	assertion.eq(entry.length, 1);
-	assertion.eq(findTile(entries, 101), null);
+	assert.strictEqual(entry.offset, 1);
+	assert.strictEqual(entry.length, 1);
+	assert.strictEqual(findTile(entries, 101), null);
 });
 
-test("tile search with multiple tile entries", (assertion) => {
+test("tile search with multiple tile entries", () => {
 	let entries: Entry[] = [{ tileId: 100, offset: 1, length: 1, runLength: 2 }];
 	let entry = findTile(entries, 101)!;
-	assertion.eq(entry.offset, 1);
-	assertion.eq(entry.length, 1);
+	assert.strictEqual(entry.offset, 1);
+	assert.strictEqual(entry.length, 1);
 
 	entries = [
 		{ tileId: 100, offset: 1, length: 1, runLength: 1 },
 		{ tileId: 150, offset: 2, length: 2, runLength: 2 },
 	];
 	entry = findTile(entries, 151)!;
-	assertion.eq(entry.offset, 2);
-	assertion.eq(entry.length, 2);
+	assert.strictEqual(entry.offset, 2);
+	assert.strictEqual(entry.length, 2);
 
 	entries = [
 		{ tileId: 50, offset: 1, length: 1, runLength: 2 },
@@ -101,17 +98,17 @@ test("tile search with multiple tile entries", (assertion) => {
 		{ tileId: 150, offset: 3, length: 3, runLength: 1 },
 	];
 	entry = findTile(entries, 51)!;
-	assertion.eq(entry.offset, 1);
-	assertion.eq(entry.length, 1);
+	assert.strictEqual(entry.offset, 1);
+	assert.strictEqual(entry.length, 1);
 });
 
-test("leaf search", (assertion) => {
+test("leaf search", () => {
 	const entries: Entry[] = [
 		{ tileId: 100, offset: 1, length: 1, runLength: 0 },
 	];
 	const entry = findTile(entries, 150);
-	assertion.eq(entry!.offset, 1);
-	assertion.eq(entry!.length, 1);
+	assert.strictEqual(entry!.offset, 1);
+	assert.strictEqual(entry!.length, 1);
 });
 
 // inefficient method only for testing
@@ -144,70 +141,70 @@ class TestNodeFileSource implements Source {
 }
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_1.pmtiles
-test("cache getHeader", async (assertion) => {
+test("cache getHeader", async () => {
 	const source = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
 		"1"
 	);
 	const cache = new SharedPromiseCache();
 	const header = await cache.getHeader(source);
-	assertion.eq(header.rootDirectoryOffset, 127);
-	assertion.eq(header.rootDirectoryLength, 25);
-	assertion.eq(header.jsonMetadataOffset, 152);
-	assertion.eq(header.jsonMetadataLength, 247);
-	assertion.eq(header.leafDirectoryOffset, 0);
-	assertion.eq(header.leafDirectoryLength, 0);
-	assertion.eq(header.tileDataOffset, 399);
-	assertion.eq(header.tileDataLength, 69);
-	assertion.eq(header.numAddressedTiles, 1);
-	assertion.eq(header.numTileEntries, 1);
-	assertion.eq(header.numTileContents, 1);
-	assertion.eq(header.clustered, false);
-	assertion.eq(header.internalCompression, 2);
-	assertion.eq(header.tileCompression, 2);
-	assertion.eq(header.tileType, 1);
-	assertion.eq(header.minZoom, 0);
-	assertion.eq(header.maxZoom, 0);
-	assertion.eq(header.minLon, 0);
-	assertion.eq(header.minLat, 0);
-	// assertion.eq(header.maxLon,1); // TODO fix me
-	assertion.eq(header.maxLat, 1);
+	assert.strictEqual(header.rootDirectoryOffset, 127);
+	assert.strictEqual(header.rootDirectoryLength, 25);
+	assert.strictEqual(header.jsonMetadataOffset, 152);
+	assert.strictEqual(header.jsonMetadataLength, 247);
+	assert.strictEqual(header.leafDirectoryOffset, 0);
+	assert.strictEqual(header.leafDirectoryLength, 0);
+	assert.strictEqual(header.tileDataOffset, 399);
+	assert.strictEqual(header.tileDataLength, 69);
+	assert.strictEqual(header.numAddressedTiles, 1);
+	assert.strictEqual(header.numTileEntries, 1);
+	assert.strictEqual(header.numTileContents, 1);
+	assert.strictEqual(header.clustered, false);
+	assert.strictEqual(header.internalCompression, 2);
+	assert.strictEqual(header.tileCompression, 2);
+	assert.strictEqual(header.tileType, 1);
+	assert.strictEqual(header.minZoom, 0);
+	assert.strictEqual(header.maxZoom, 0);
+	assert.strictEqual(header.minLon, 0);
+	assert.strictEqual(header.minLat, 0);
+	// assert.strictEqual(header.maxLon,1); // TODO fix me
+	assert.strictEqual(header.maxLat, 1);
 });
 
-test("cache check against empty", async (assertion) => {
+test("cache check against empty", async () => {
 	const source = new TestNodeFileSource("test/data/empty.pmtiles", "1");
 	const cache = new SharedPromiseCache();
 	try {
 		await cache.getHeader(source);
-		assertion.fail("Should have thrown");
+		assert.fail("Should have thrown");
 	} catch (e) {
-		assertion.ok(e instanceof Error);
+		assert.ok(e instanceof Error);
 	}
 });
 
-test("cache check magic number", async (assertion) => {
+test("cache check magic number", async () => {
 	const source = new TestNodeFileSource("test/data/invalid.pmtiles", "1");
 	const cache = new SharedPromiseCache();
 	try {
 		await cache.getHeader(source);
-		assertion.fail("Should have thrown");
+		assert.fail("Should have thrown");
 	} catch (e) {
-		assertion.ok(e instanceof Error);
+		assert.ok(e instanceof Error);
 	}
 });
 
-test("cache check future spec version", async (assertion) => {
+test("cache check future spec version", async () => {
 	const source = new TestNodeFileSource("test/data/invalid_v4.pmtiles", "1");
 	const cache = new SharedPromiseCache();
 	try {
 		await cache.getHeader(source);
-		assertion.fail("Should have thrown");
+		assert.fail("Should have thrown");
 	} catch (e) {
-		assertion.ok(e instanceof Error);
+		assert.ok(e instanceof Error);
 	}
 });
 
-test("cache getDirectory", async (assertion) => {
+test("cache getDirectory", async () => {
 	const source = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
 		"1"
@@ -215,13 +212,13 @@ test("cache getDirectory", async (assertion) => {
 
 	let cache = new SharedPromiseCache(6400, false);
 	let header = await cache.getHeader(source);
-	assertion.eq(cache.cache.size, 1);
+	assert.strictEqual(cache.cache.size, 1);
 
 	cache = new SharedPromiseCache(6400, true);
 	header = await cache.getHeader(source);
 
 	// prepopulates the root directory
-	assertion.eq(cache.cache.size, 2);
+	assert.strictEqual(cache.cache.size, 2);
 
 	const directory = await cache.getDirectory(
 		source,
@@ -229,18 +226,18 @@ test("cache getDirectory", async (assertion) => {
 		header.rootDirectoryLength,
 		header
 	);
-	assertion.eq(directory.length, 1);
-	assertion.eq(directory[0].tileId, 0);
-	assertion.eq(directory[0].offset, 0);
-	assertion.eq(directory[0].length, 69);
-	assertion.eq(directory[0].runLength, 1);
+	assert.strictEqual(directory.length, 1);
+	assert.strictEqual(directory[0].tileId, 0);
+	assert.strictEqual(directory[0].offset, 0);
+	assert.strictEqual(directory[0].length, 69);
+	assert.strictEqual(directory[0].runLength, 1);
 
 	for (const v of cache.cache.values()) {
-		assertion.ok(v.lastUsed > 0);
+		assert.ok(v.lastUsed > 0);
 	}
 });
 
-test("multiple sources in a single cache", async (assertion) => {
+test("multiple sources in a single cache", async () => {
 	const cache = new SharedPromiseCache();
 	const source1 = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
@@ -251,12 +248,12 @@ test("multiple sources in a single cache", async (assertion) => {
 		"2"
 	);
 	await cache.getHeader(source1);
-	assertion.eq(cache.cache.size, 2);
+	assert.strictEqual(cache.cache.size, 2);
 	await cache.getHeader(source2);
-	assertion.eq(cache.cache.size, 4);
+	assert.strictEqual(cache.cache.size, 4);
 });
 
-test("etags are part of key", async (assertion) => {
+test("etags are part of key", async () => {
 	const cache = new SharedPromiseCache(6400, false);
 	const source = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
@@ -264,7 +261,7 @@ test("etags are part of key", async (assertion) => {
 	);
 	source.etag = "etag_1";
 	let header = await cache.getHeader(source);
-	assertion.eq(header.etag, "etag_1");
+	assert.strictEqual(header.etag, "etag_1");
 
 	source.etag = "etag_2";
 
@@ -275,13 +272,13 @@ test("etags are part of key", async (assertion) => {
 			header.rootDirectoryLength,
 			header
 		);
-		assertion.fail("Should have thrown");
+		assert.fail("Should have thrown");
 	} catch (e) {
-		assertion.ok(e instanceof EtagMismatch);
+		assert.ok(e instanceof EtagMismatch);
 	}
 	cache.invalidate(source, "etag_2");
 	header = await cache.getHeader(source);
-	assertion.ok(
+	assert.ok(
 		await cache.getDirectory(
 			source,
 			header.rootDirectoryOffset,
@@ -291,7 +288,7 @@ test("etags are part of key", async (assertion) => {
 	);
 });
 
-test("soft failure on etag weirdness", async (assertion) => {
+test("soft failure on etag weirdness", async () => {
 	const cache = new SharedPromiseCache(6400, false);
 	const source = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
@@ -299,7 +296,7 @@ test("soft failure on etag weirdness", async (assertion) => {
 	);
 	source.etag = "etag_1";
 	let header = await cache.getHeader(source);
-	assertion.eq(header.etag, "etag_1");
+	assert.strictEqual(header.etag, "etag_1");
 
 	source.etag = "etag_2";
 
@@ -310,42 +307,42 @@ test("soft failure on etag weirdness", async (assertion) => {
 			header.rootDirectoryLength,
 			header
 		);
-		assertion.fail("Should have thrown");
+		assert.fail("Should have thrown");
 	} catch (e) {
-		assertion.ok(e instanceof EtagMismatch);
+		assert.ok(e instanceof EtagMismatch);
 	}
 
 	source.etag = "etag_1";
 	cache.invalidate(source, "etag_2");
 
 	header = await cache.getHeader(source);
-	assertion.eq(header.etag, undefined);
+	assert.strictEqual(header.etag, undefined);
 });
 
-test("cache pruning by byte size", async (assertion) => {
+test("cache pruning by byte size", async () => {
 	const cache = new SharedPromiseCache(2, false);
 	cache.cache.set("0", { lastUsed: 0, data: Promise.resolve([]) });
 	cache.cache.set("1", { lastUsed: 1, data: Promise.resolve([]) });
 	cache.cache.set("2", { lastUsed: 2, data: Promise.resolve([]) });
 	cache.prune();
-	assertion.eq(cache.cache.size, 2);
-	assertion.ok(cache.cache.get("2"));
-	assertion.ok(cache.cache.get("1"));
-	assertion.notOk(cache.cache.get("0"));
+	assert.strictEqual(cache.cache.size, 2);
+	assert.ok(cache.cache.get("2"));
+	assert.ok(cache.cache.get("1"));
+	assert.ok(!cache.cache.get("0"));
 });
 
-test("pmtiles get metadata", async (assertion) => {
+test("pmtiles get metadata", async () => {
 	const source = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
 		"1"
 	);
 	const p = new PMTiles(source);
 	const metadata = await p.getMetadata();
-	assertion.ok(metadata.name);
+	assert.ok(metadata.name);
 });
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_2.pmtiles
-test("pmtiles handle retries", async (assertion) => {
+test("pmtiles handle retries", async () => {
 	const source = new TestNodeFileSource(
 		"test/data/test_fixture_1.pmtiles",
 		"1"
@@ -353,8 +350,8 @@ test("pmtiles handle retries", async (assertion) => {
 	source.etag = "1";
 	const p = new PMTiles(source);
 	const metadata = await p.getMetadata();
-	assertion.ok(metadata.name);
+	assert.ok(metadata.name);
 	source.etag = "2";
 	source.replaceData("test/data/test_fixture_2.pmtiles");
-	assertion.ok(await p.getZxy(0, 0, 0));
+	assert.ok(await p.getZxy(0, 0, 0));
 });

@@ -6,7 +6,8 @@
     "moduleResolution": "node",
     "paths": {
     },
-    "types": []
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true
   },
   "include": ["*.ts","test/*.ts"]
 }

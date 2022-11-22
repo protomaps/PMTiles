@@ -29,7 +29,7 @@ class KeyNotFoundError extends Error {
 
 export const pmtiles_path = (name: string, setting?: string): string => {
 	if (setting) {
-		return setting.replace("{name}", name);
+		return setting.replaceAll("{name}", name);
 	}
 	return name + ".pmtiles";
 };

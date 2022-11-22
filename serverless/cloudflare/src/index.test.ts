@@ -16,6 +16,13 @@ test("pmtiles path with slash", (assertion) => {
   assertion.equal(result, "folder/foo/bar/file.pmtiles");
 });
 
+test("pmtiles path with multiple names", (assertion) => {
+  let result = pmtiles_path("slug","folder/{name}/{name}.pmtiles");
+  assertion.equal(result, "folder/slug/slug.pmtiles");
+  result = pmtiles_path("foo/bar","folder/{name}/{name}.pmtiles");
+  assertion.equal(result, "folder/foo/bar/foo/bar.pmtiles");
+});
+
 test("parse tile default", (assertion) => {
   let {ok, name, tile, ext} = tile_path("abcd");
   assertion.equal(ok, false);

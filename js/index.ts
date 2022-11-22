@@ -866,6 +866,8 @@ export class PMTiles {
 					d_l = entry.length;
 				}
 			} else {
+				// TODO: We should in fact return a valid RangeResponse
+				// with empty data, but filled in cache control / expires headers
 				return undefined;
 			}
 		}

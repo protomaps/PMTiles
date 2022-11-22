@@ -109,7 +109,12 @@ class R2Source implements Source {
 		}
 		const o = resp as R2ObjectBody;
 		const a = await o.arrayBuffer();
-		return { data: a, etag: o.etag };
+		return {
+			data: a,
+			etag: o.etag,
+			cacheControl: o.httpMetadata?.cacheControl,
+			expires: o.httpMetadata?.cacheExpiry?.toISOString(),
+		};
 	}
 }
 

@@ -100,7 +100,12 @@ class S3Source implements Source {
 
 		const arr = await resp.Body!.transformToByteArray();
 
-		return { data: arr.buffer };
+		return {
+			data: arr.buffer,
+			etag: resp.ETag,
+			expires: resp.Expires?.toISOString(),
+			cacheControl: resp.CacheControl,
+		};
 	}
 }
 
@@ -156,7 +161,7 @@ export const handler = async (
 	// TODO: metadata and TileJSON
 
 	if (process.env.CORS) {
-		headers['Access-Control-Allow-Origin'] = process.env.CORS;
+		headers["Access-Control-Allow-Origin"] = process.env.CORS;
 	}
 
 	const source = new S3Source(name);

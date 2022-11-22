@@ -18,7 +18,7 @@ Building the Lambda ZIP yourself:
 npm run build
 ```
 
-Upload the resulting `dist/lambda_function.zip` using the Lambda console or paste `dist/index.js`.
+Upload the resulting `dist/lambda_function.zip` using the Lambda console or paste `dist/index.mjs`.
 
 Configure these Lambda environment variables:
 
@@ -47,10 +47,6 @@ API Gateway (HTTP or REST):
   }
 }
 ```
-
-### Monitoring
-
-TBD
 
 ### Lambda@Edge
 

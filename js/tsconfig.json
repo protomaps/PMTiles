@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["es2020", "dom"],
+    "target": "es2021",
+    "lib": ["es2021", "dom"],
     "strict": true,
     "moduleResolution": "node",
     "paths": {

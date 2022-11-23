@@ -160,7 +160,10 @@ export default {
 				cacheable_headers: Headers,
 				status: number
 			) => {
-				cacheable_headers.set("Cache-Control", "max-age=" + env.CACHE_MAX_AGE);
+				cacheable_headers.set(
+					"Cache-Control",
+					"max-age=" + (env.CACHE_MAX_AGE | 86400)
+				);
 				let cacheable = new Response(body, {
 					headers: cacheable_headers,
 					status: status,

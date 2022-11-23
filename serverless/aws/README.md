@@ -1,4 +1,4 @@
-# Installation
+# Protomaps on AWS
 
 See installation and configuration instructions at [Protomaps Docs: Deploy on AWS](https://protomaps.com/docs/cdn/aws)
 
@@ -14,7 +14,7 @@ Upload the resulting `dist/lambda_function.zip` using the Lambda console or copy
 
 ## Test Events
 
-Simulate tile requests in the Lambda development console with these JSON events:
+JSON for simulating tile requests in the Lambda development console.
 
 Lambda Function URLs:
 

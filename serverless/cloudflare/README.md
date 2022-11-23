@@ -4,6 +4,10 @@ See installation and configuration instructions at [Protomaps Docs: Deploy on Cl
 
 ## Development
 
-Option 1: with Wrangler, run `npm run start` to serve your Worker on http://localhost:8787. The cache will not be active in development.
+### Web Console (basic)
 
-Option 2: Generate the Workers script using `npm run build` and copy `dist/index.js` to the editor.
+Generate the Workers script using `npm run build` and copy `dist/index.js` to the editor.
+
+### Wrangler (advanced)
+
+with Wrangler, run `npm run start` to serve your Worker on http://localhost:8787. The cache will not be active in development.

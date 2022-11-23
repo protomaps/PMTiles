@@ -94,7 +94,7 @@ class R2Source implements Source {
 	}
 
 	getKey() {
-		return "";
+		return this.archive_name;
 	}
 
 	async getBytes(offset: number, length: number): Promise<RangeResponse> {

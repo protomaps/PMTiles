@@ -10,4 +10,6 @@ Generate the Workers script using `npm run build` and copy `dist/index.js` to th
 
 ### Wrangler (advanced)
 
-with Wrangler, run `npm run start` to serve your Worker on http://localhost:8787. The cache will not be active in development.
+The `preview_bucket_name` value in `wrangler.toml` should be changed to your bucket used for development.
+
+Run `npm run start` to serve your Worker at http://localhost:8787. The cache will not be active in development.

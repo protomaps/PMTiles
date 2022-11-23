@@ -2,6 +2,8 @@ import json
 import glob
 import re
 
+fail = 0
+
 for package in glob.glob("**/package.json",recursive=True):
 	if "node_modules" in package:
 		continue
@@ -20,4 +22,6 @@ for package in glob.glob("**/package.json",recursive=True):
 			for match in matches:
 				if matches[0] == "latest" or matches[0] != version:
 					print(html,"should be",version,"was",matches)
-					exit(1)
+					fail = 1
+
+exit(fail)

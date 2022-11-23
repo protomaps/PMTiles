@@ -42,6 +42,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
+      - run: python .github/check_examples.py
       - run: cd js && npm install && npm test
       - run: cd python && python -m unittest test/test_*
       - run: cd cpp && make

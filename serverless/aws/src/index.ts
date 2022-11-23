@@ -17,9 +17,13 @@ import https from "https";
 import zlib from "zlib";
 
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 
 // the region should default to the same one as the function
-const s3client = new S3Client({});
+const s3client = new S3Client({requestHandler:new NodeHttpHandler({
+	connectionTimeout: 500,
+	socketTimeout: 500
+})});
 
 async function nativeDecompress(
 	buf: ArrayBuffer,

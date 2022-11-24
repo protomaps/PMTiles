@@ -20,10 +20,12 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 
 // the region should default to the same one as the function
-const s3client = new S3Client({requestHandler:new NodeHttpHandler({
-	connectionTimeout: 500,
-	socketTimeout: 500
-})});
+const s3client = new S3Client({
+	requestHandler: new NodeHttpHandler({
+		connectionTimeout: 500,
+		socketTimeout: 500,
+	}),
+});
 
 async function nativeDecompress(
 	buf: ArrayBuffer,
@@ -155,12 +157,6 @@ export const handler = async (
 		return apiResp(500, "Invalid event configuration");
 	}
 
-	const { ok, name, tile, ext } = tile_path(path, process.env.TILE_PATH);
-
-	if (!ok) {
-		return apiResp(400, "Invalid tile URL");
-	}
-
 	var headers: Headers = {};
 	// TODO: metadata and TileJSON
 
@@ -168,12 +164,18 @@ export const handler = async (
 		headers["Access-Control-Allow-Origin"] = process.env.CORS;
 	}
 
+	const { ok, name, tile, ext } = tile_path(path, process.env.TILE_PATH);
+
+	if (!ok) {
+		return apiResp(400, "Invalid tile URL", false, headers);
+	}
+
 	const source = new S3Source(name);
 	const p = new PMTiles(source, CACHE, nativeDecompress);
 	try {
 		const header = await p.getHeader();
 		if (tile[0] < header.minZoom || tile[0] > header.maxZoom) {
-			return apiResp(404, "");
+			return apiResp(404, "", false, headers);
 		}
 
 		for (const pair of [
@@ -196,24 +198,24 @@ export const handler = async (
 			}
 		}
 
-		switch (header.tileType) {
-			case TileType.Mvt:
-				// part of the list of Cloudfront compressible types.
-				headers["Content-Type"] = "application/vnd.mapbox-vector-tile";
-				break;
-			case TileType.Png:
-				headers["Content-Type"] = "image/png";
-				break;
-			case TileType.Jpeg:
-				headers["Content-Type"] = "image/jpeg";
-				break;
-			case TileType.Webp:
-				headers["Content-Type"] = "image/webp";
-				break;
-		}
-
 		const tile_result = await p.getZxy(tile[0], tile[1], tile[2]);
 		if (tile_result) {
+			switch (header.tileType) {
+				case TileType.Mvt:
+					// part of the list of Cloudfront compressible types.
+					headers["Content-Type"] = "application/vnd.mapbox-vector-tile";
+					break;
+				case TileType.Png:
+					headers["Content-Type"] = "image/png";
+					break;
+				case TileType.Jpeg:
+					headers["Content-Type"] = "image/jpeg";
+					break;
+				case TileType.Webp:
+					headers["Content-Type"] = "image/webp";
+					break;
+			}
+
 			if (is_api_gateway) {
 				// this is wasted work, but we need to force API Gateway to interpret the Lambda response as binary
 				// without depending on clients sending matching Accept: headers in the request.
@@ -239,9 +241,9 @@ export const handler = async (
 		}
 	} catch (e) {
 		if ((e as Error).name === "AccessDenied") {
-			return apiResp(403, "Bucket access unauthorized");
+			return apiResp(403, "Bucket access unauthorized", false, headers);
 		}
 		throw e;
 	}
-	return apiResp(404, "Invalid URL");
+	return apiResp(404, "Invalid URL", false, headers);
 };

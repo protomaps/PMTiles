@@ -173,7 +173,7 @@ namespace detail {
     }
   }
 
-  zxy t_on_level(uint8_t z, uint64_t pos) {
+  inline zxy t_on_level(uint8_t z, uint64_t pos) {
     int64_t n = 1 << z;
     int64_t rx, ry, s, t = pos;
     int64_t tx = 0;
@@ -204,7 +204,7 @@ inline int write_varint(std::back_insert_iterator<std::string> data, uint64_t va
   return n;
 }
 
-zxy tileid_to_zxy(uint64_t tileid) {
+inline zxy tileid_to_zxy(uint64_t tileid) {
   uint64_t acc = 0;
   uint8_t t_z = 0;
   while(true) {
@@ -217,7 +217,7 @@ zxy tileid_to_zxy(uint64_t tileid) {
   }
 }
 
-uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
+inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
   uint64_t acc = 0;
   for (uint8_t t_z = 0; t_z < z; t_z++) acc += (0x1 << t_z) * (0x1 << t_z);
   int64_t n = 1 << z;
@@ -234,7 +234,7 @@ uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 }
 
 // returns an uncompressed byte buffer
-std::string serialize_directory(const std::vector<entryv3>& entries) {
+inline std::string serialize_directory(const std::vector<entryv3>& entries) {
   std::string data;
 
   write_varint(std::back_inserter(data), entries.size());
@@ -265,7 +265,7 @@ std::string serialize_directory(const std::vector<entryv3>& entries) {
 }
 
 // takes an uncompressed byte buffer
-std::vector<entryv3> deserialize_directory(const std::string &decompressed) {
+inline std::vector<entryv3> deserialize_directory(const std::string &decompressed) {
   const char *t = decompressed.data();
   const char *end = t + decompressed.size();
 

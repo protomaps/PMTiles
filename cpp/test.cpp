@@ -67,11 +67,66 @@ MU_TEST(test_serialize_header) {
 	mu_check(len == 127);
 }
 
+MU_TEST(test_deserialize_header) {
+	headerv3 header;
+	header.root_dir_offset = 1;
+	header.root_dir_bytes = 2;
+	header.json_metadata_offset = 3;
+	header.json_metadata_bytes = 4;
+	header.leaf_dirs_offset = 5;
+	header.leaf_dirs_bytes = 6;
+	header.tile_data_offset = 7;
+	header.tile_data_bytes = 8;
+	header.addressed_tiles_count = 9;
+	header.tile_entries_count = 10;
+	header.tile_contents_count = 11;
+	header.clustered = true;
+	header.internal_compression = 0x1;
+	header.tile_compression = 0x2;
+	header.tile_type = 0x3;
+	header.min_zoom = 12;
+	header.max_zoom = 13;
+	header.min_lon_e7 = 14;
+	header.min_lat_e7 = 15;
+	header.max_lon_e7 = 16;
+	header.max_lat_e7 = 17;
+	header.center_zoom = 14;
+	header.center_lon_e7 = 18;
+	header.center_lat_e7 = 19;
+	auto serialized = header.serialize();
+	auto deserialized = deserialize_header(serialized);
+	mu_check(deserialized.root_dir_offset == 1);
+	mu_check(deserialized.root_dir_bytes == 2);
+	mu_check(deserialized.json_metadata_offset == 3);
+	mu_check(deserialized.json_metadata_bytes == 4);
+	mu_check(deserialized.leaf_dirs_offset == 5);
+	mu_check(deserialized.leaf_dirs_bytes == 6);
+	mu_check(deserialized.tile_data_offset == 7);
+	mu_check(deserialized.tile_data_bytes == 8);
+	mu_check(deserialized.addressed_tiles_count == 9);
+	mu_check(deserialized.tile_entries_count == 10);
+	mu_check(deserialized.tile_contents_count == 11);
+	mu_check(deserialized.clustered == true);
+	mu_check(deserialized.internal_compression == 0x1);
+	mu_check(deserialized.tile_compression == 0x2);
+	mu_check(deserialized.tile_type == 0x3);
+	mu_check(deserialized.min_zoom == 12);
+	mu_check(deserialized.max_zoom == 13);
+	mu_check(deserialized.min_lon_e7 == 14);
+	mu_check(deserialized.min_lat_e7 == 15);
+	mu_check(deserialized.max_lon_e7 == 16);
+	mu_check(deserialized.max_lat_e7 == 17);
+	mu_check(deserialized.center_zoom == 14);
+	mu_check(deserialized.center_lon_e7 == 18);
+	mu_check(deserialized.center_lat_e7 == 19);
+}
+
 MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_tileid_to_zxy);
 	MU_RUN_TEST(test_zxy_to_tileid);
 	MU_RUN_TEST(test_serialize_directory);
 	MU_RUN_TEST(test_serialize_header);
+	MU_RUN_TEST(test_deserialize_header);
 }
 
 int main(int argc, char *argv[]) {

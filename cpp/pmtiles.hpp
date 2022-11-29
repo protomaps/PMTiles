@@ -74,6 +74,57 @@ struct headerv3 {
   }
 };
 
+struct pmtiles_magic_number_exception : std::exception {
+  const char* what() const noexcept override {
+    return "pmtiles magic number exception";
+  }
+};
+
+struct pmtiles_version_exception : std::exception {
+  const char* what() const noexcept override {
+    return "pmtiles version: must be 3";
+  }
+};
+
+inline headerv3 deserialize_header(const std::string &s) {
+  if (s.substr(0,7) != "PMTiles") {
+    throw pmtiles_magic_number_exception{};
+  }
+  if (s.size() != 127 || s[7] != 0x3) {
+    throw pmtiles_version_exception{};
+  }
+  headerv3 h;
+  s.copy((char *)&h.root_dir_offset,8,8);
+  s.copy((char *)&h.root_dir_bytes,8,16);
+  s.copy((char *)&h.json_metadata_offset,8,24);
+  s.copy((char *)&h.json_metadata_bytes,8,32);
+  s.copy((char *)&h.leaf_dirs_offset,8,40);
+  s.copy((char *)&h.leaf_dirs_bytes,8,48);
+  s.copy((char *)&h.tile_data_offset,8,56);
+  s.copy((char *)&h.tile_data_bytes,8,64);
+  s.copy((char *)&h.addressed_tiles_count,8,72);
+  s.copy((char *)&h.tile_entries_count,8,80);
+  s.copy((char *)&h.tile_contents_count,8,88);
+  if (s[96] == 0x1) {
+    h.clustered = true;
+  } else {
+    h.clustered = false;
+  }
+  h.internal_compression = s[97];
+  h.tile_compression = s[98];
+  h.tile_type = s[99];
+  h.min_zoom = s[100];
+  h.max_zoom = s[101];
+  s.copy((char *)&h.min_lon_e7,4,102);
+  s.copy((char *)&h.min_lat_e7,4,106);
+  s.copy((char *)&h.max_lon_e7,4,110);
+  s.copy((char *)&h.max_lat_e7,4,114);
+  h.center_zoom = s[118];
+  s.copy((char *)&h.center_lon_e7,4,119);
+  s.copy((char *)&h.center_lat_e7,4,123);
+  return h;
+}
+
 struct zxy {
   uint8_t z;
   uint32_t x;
@@ -96,6 +147,10 @@ struct entryv3 {
     : tile_id(_tile_id), offset(_offset), length(_length), run_length(_run_length) {
   }
 };
+
+struct {
+    bool operator()(entryv3 a, entryv3 b) const { return a.tile_id < b.tile_id; }
+} entryv3_cmp;
 
 struct varint_too_long_exception : std::exception {
   const char* what() const noexcept override {

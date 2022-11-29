@@ -3,7 +3,6 @@ import { PMTiles } from "../../js";
 import { styled } from "./stitches.config";
 
 import Inspector from "./Inspector";
-import LeafletMap from "./LeafletMap";
 import MaplibreMap from "./MaplibreMap";
 
 import { MagnifyingGlassIcon, ImageIcon } from "@radix-ui/react-icons";
@@ -116,9 +115,7 @@ function Loader(props: { file: PMTiles }) {
   let [modalOpen, setModalOpen] = useState<boolean>(false);
 
   let view;
-  if (tab === "leaflet") {
-    view = <LeafletMap file={props.file} />;
-  } else if (tab === "maplibre") {
+  if (tab === "maplibre") {
     view = <MaplibreMap file={props.file} />;
   } else {
     view = <Inspector file={props.file} />;
@@ -162,11 +159,8 @@ function Loader(props: { file: PMTiles }) {
           <ToolbarToggleItem value="inspector" aria-label="Left aligned">
             <MagnifyingGlassIcon /> Tile Inspector
           </ToolbarToggleItem>
-          <ToolbarToggleItem value="leaflet" aria-label="Center aligned">
-            Leaflet
-          </ToolbarToggleItem>
           <ToolbarToggleItem value="maplibre" aria-label="Right aligned">
-            MapLibre
+            Map View
           </ToolbarToggleItem>
         </ToolbarToggleGroup>
         <ToolbarLink href="#" target="_blank" css={{ marginRight: 10 }}>

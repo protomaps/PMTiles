@@ -31,19 +31,19 @@ MU_TEST(test_tileid_to_zxy) {
 }
 
 MU_TEST(test_zxy_to_tileid) {
-	mu_check(zxy_to_tileid(0,0,0) == 0);
-	mu_check(zxy_to_tileid(1,0,0) == 1);
-	mu_check(zxy_to_tileid(1,0,1) == 2);
-	mu_check(zxy_to_tileid(1,1,1) == 3);
-	mu_check(zxy_to_tileid(1,1,0) == 4);
-	mu_check(zxy_to_tileid(2,0,0) == 5);
+	mu_check(zxy_to_tileid(0, 0, 0) == 0);
+	mu_check(zxy_to_tileid(1, 0, 0) == 1);
+	mu_check(zxy_to_tileid(1, 0, 1) == 2);
+	mu_check(zxy_to_tileid(1, 1, 1) == 3);
+	mu_check(zxy_to_tileid(1, 1, 0) == 4);
+	mu_check(zxy_to_tileid(2, 0, 0) == 5);
 }
 
 MU_TEST(test_serialize_directory) {
 	std::vector<entryv3> entries;
-	entries.push_back(entryv3(0,0,0,0));
-	entries.push_back(entryv3(1,1,1,1));
-	entries.push_back(entryv3(2,2,2,2));
+	entries.push_back(entryv3(0, 0, 0, 0));
+	entries.push_back(entryv3(1, 1, 1, 1));
+	entries.push_back(entryv3(2, 2, 2, 2));
 	auto serialized = serialize_directory(entries);
 	auto result = deserialize_directory(serialized);
 	mu_check(result.size() == 3);

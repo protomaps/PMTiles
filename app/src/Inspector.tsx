@@ -56,7 +56,7 @@ const TileRow = (props: {
       <td>{y}</td>
       <td>{props.entry.offset}</td>
       <td>{props.entry.length}</td>
-      <td>{props.entry.runLength}</td>
+      <td>{props.entry.runLength == 0 ? "directory" : "tile"}</td>
     </TableRow>
   );
 };
@@ -318,12 +318,13 @@ function Inspector(props: { file: PMTiles }) {
         <table>
           <thead>
             <tr>
+              <th>tileid</th>
               <th>z</th>
               <th>x</th>
               <th>y</th>
               <th>offset</th>
               <th>length</th>
-              <th>is directory</th>
+              <th>type</th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

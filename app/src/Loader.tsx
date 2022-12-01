@@ -163,7 +163,7 @@ function Loader(props: { file: PMTiles }) {
             <MagnifyingGlassIcon /> Tile Inspector
           </ToolbarToggleItem>
         </ToolbarToggleGroup>
-        <ToolbarLink href="#" target="_blank" css={{ marginRight: 10 }}>
+        <ToolbarLink css={{ marginRight: 10 }}>
           {props.file.source.getKey()}
         </ToolbarLink>
         <DialogPrimitive.Root open={modalOpen}>

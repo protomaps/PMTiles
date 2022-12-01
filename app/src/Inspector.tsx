@@ -43,7 +43,7 @@ const TileRow = (props: {
   entry: Entry;
   setSelectedEntry: Dispatch<SetStateAction<Entry | null>>;
 }) => {
-  let [z,x,y] = tileIdToZxy(props.entry.tileId);
+  let [z, x, y] = tileIdToZxy(props.entry.tileId);
   return (
     <TableRow
       onClick={() => {
@@ -179,14 +179,10 @@ const VectorPreview = (props: {
 
   useEffect(() => {
     let fn = async (entry: Entry) => {
-      let [z,x,y] = tileIdToZxy(entry.tileId);
-      let resp = await props.file.getZxy(z,x,y);
+      let [z, x, y] = tileIdToZxy(entry.tileId);
+      let resp = await props.file.getZxy(z, x, y);
 
-      let tile = new VectorTile(
-        new Protobuf(
-          new Uint8Array(resp!.data)
-        )
-      );
+      let tile = new VectorTile(new Protobuf(new Uint8Array(resp!.data)));
       let newLayers = [];
       for (let [name, layer] of Object.entries(tile.layers)) {
         let features: Feature[] = [];
@@ -256,8 +252,8 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
   useEffect(() => {
     let fn = async (entry: Entry) => {
       // TODO 0,0,0 is broken
-      let [z,x,y] = tileIdToZxy(entry.tileId);
-      let resp = await props.file.getZxy(z,x,y);
+      let [z, x, y] = tileIdToZxy(entry.tileId);
+      let resp = await props.file.getZxy(z, x, y);
       let blob = new Blob([resp!.data]);
       var imageUrl = window.URL.createObjectURL(blob);
       setImageSrc(imageUrl);
@@ -279,13 +275,30 @@ function Inspector(props: { file: PMTiles }) {
   useEffect(() => {
     let fn = async () => {
       let header = await props.file.getHeader();
-      let entries = await props.file.root_entries();
-      setEntryRows(entries);
       setHeader(header);
+      if (header.specVersion < 3) {
+        setEntryRows([]);
+      } else if (selectedEntry !== null && selectedEntry.runLength === 0) {
+        let entries = await props.file.cache.getDirectory(
+          props.file.source,
+          header.leafDirectoryOffset + selectedEntry.offset,
+          selectedEntry.length,
+          header
+        );
+        setEntryRows(entries);
+      } else if (selectedEntry === null) {
+        let entries = await props.file.cache.getDirectory(
+          props.file.source,
+          header.rootDirectoryOffset,
+          header.rootDirectoryLength,
+          header
+        );
+        setEntryRows(entries);
+      }
     };
 
     fn();
-  }, [props.file]);
+  }, [props.file, selectedEntry]);
 
   let rows = entryRows.map((e, i) => (
     <TileRow key={i} entry={e} setSelectedEntry={setSelectedEntry}></TileRow>
@@ -293,7 +306,9 @@ function Inspector(props: { file: PMTiles }) {
 
   let tilePreview = <div></div>;
   if (selectedEntry && header?.tileType) {
-    if (header.tileType === TileType.Mvt) {
+    if (selectedEntry.runLength === 0) {
+      console.log("Display leaf dir view");
+    } else if (header.tileType === TileType.Mvt) {
       tilePreview = (
         <VectorPreview
           file={props.file}
@@ -308,7 +323,7 @@ function Inspector(props: { file: PMTiles }) {
 
   let warning = "";
   if (header && header.specVersion < 3) {
-    warning = "Directory listing supported only for PMTiles v3 archives."
+    warning = "Directory listing supported only for PMTiles v3 archives.";
   }
 
   return (

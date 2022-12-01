@@ -110,7 +110,7 @@ const ToolbarToggleGroup = StyledToggleGroup;
 const ToolbarToggleItem = StyledToggleItem;
 
 function Loader(props: { file: PMTiles }) {
-  let [tab, setTab] = useState("inspector");
+  let [tab, setTab] = useState("maplibre");
   let [metadata, setMetadata] = useState<[string, string][]>([]);
   let [modalOpen, setModalOpen] = useState<boolean>(false);
 
@@ -156,11 +156,11 @@ function Loader(props: { file: PMTiles }) {
           value={tab}
           onValueChange={setTab}
         >
-          <ToolbarToggleItem value="inspector" aria-label="Left aligned">
-            <MagnifyingGlassIcon /> Tile Inspector
-          </ToolbarToggleItem>
           <ToolbarToggleItem value="maplibre" aria-label="Right aligned">
             Map View
+          </ToolbarToggleItem>
+          <ToolbarToggleItem value="inspector" aria-label="Left aligned">
+            <MagnifyingGlassIcon /> Tile Inspector
           </ToolbarToggleItem>
         </ToolbarToggleGroup>
         <ToolbarLink href="#" target="_blank" css={{ marginRight: 10 }}>

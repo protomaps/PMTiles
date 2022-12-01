@@ -114,6 +114,7 @@ function MaplibreMap(props: { file: PMTiles }) {
         layers: [],
       },
     });
+    map.showTileBoundaries = true;
     map.addControl(new maplibregl.NavigationControl({}));
     map.on("load", map.resize);
 

@@ -4,6 +4,7 @@ import { styled } from "./stitches.config";
 
 import Inspector from "./Inspector";
 import MaplibreMap from "./MaplibreMap";
+import Metadata from "./Metadata";
 
 import { MagnifyingGlassIcon, ImageIcon } from "@radix-ui/react-icons";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
@@ -59,13 +60,6 @@ const StyledToggleItem = styled(ToolbarPrimitive.ToggleItem, {
   "&[data-state=on]": { backgroundColor: "$primary", color: "$primaryText" },
 });
 
-const MetadataButton = styled(DialogPrimitive.Trigger, {
-  backgroundColor:"$primary",
-  color:"$primaryText",
-  padding:"$1",
-  cursor: "pointer"
-})
-
 const StyledOverlay = styled(DialogPrimitive.Overlay, {
   backgroundColor: "black",
   position: "fixed",
@@ -87,23 +81,6 @@ const StyledContent = styled(DialogPrimitive.Content, {
   "&:focus": { outline: "none" },
 });
 
-const MetadataTable = styled("table", {
-  tableLayout:"fixed",
-  width:"100%"
-});
-
-const MetadataKey = styled("td", {
-  padding: "0 $1"
-});
-
-const MetadataValue = styled("td", {
-  fontFamily:"monospace",
-});
-
-const JsonValue = styled(MetadataValue, {
-  overflowX:"scroll"
-})
-
 const Toolbar = StyledToolbar;
 const ToolbarLink = StyledLink;
 const ToolbarToggleGroup = StyledToggleGroup;
@@ -111,40 +88,15 @@ const ToolbarToggleItem = StyledToggleItem;
 
 function Loader(props: { file: PMTiles }) {
   let [tab, setTab] = useState("maplibre");
-  let [metadata, setMetadata] = useState<[string, string][]>([]);
-  let [modalOpen, setModalOpen] = useState<boolean>(false);
 
   let view;
   if (tab === "maplibre") {
     view = <MaplibreMap file={props.file} />;
-  } else {
+  } else if (tab === "inspector") {
     view = <Inspector file={props.file} />;
+  } else {
+    view = <Metadata file={props.file} />;
   }
-
-  useEffect(() => {
-    let pmtiles = props.file;
-    const fetchData = async () => {
-      let m = await pmtiles.getMetadata();
-      let tmp: [string, string][] = [];
-      for (var key in m) {
-        tmp.push([key, m[key]]);
-      }
-      setMetadata(tmp);
-    };
-    fetchData();
-  }, [props.file]);
-
-  const metadataRows = metadata.map((d, i) => {
-    let Cls = (d[0] === 'json') ? JsonValue : MetadataValue
-    return <tr key={i}>
-      <MetadataKey>{d[0]}</MetadataKey>
-      <Cls>{d[1]}</Cls>
-    </tr>
-  });
-
-  const closeModal = () => {
-    setModalOpen(false);
-  };
 
   return (
     <>
@@ -162,35 +114,13 @@ function Loader(props: { file: PMTiles }) {
           <ToolbarToggleItem value="inspector" aria-label="Left aligned">
             <MagnifyingGlassIcon /> Tile Inspector
           </ToolbarToggleItem>
+          <ToolbarToggleItem value="metadata" aria-label="Left aligned">
+            Metadata
+          </ToolbarToggleItem>
         </ToolbarToggleGroup>
         <ToolbarLink css={{ marginRight: 10 }}>
           {props.file.source.getKey()}
         </ToolbarLink>
-        <DialogPrimitive.Root open={modalOpen}>
-          <MetadataButton onClick={() => setModalOpen(true)}>
-            Metadata
-          </MetadataButton>
-          <DialogPrimitive.Portal>
-            <StyledOverlay />
-            <StyledContent
-              onEscapeKeyDown={closeModal}
-              onPointerDownOutside={closeModal}
-            >
-              <DialogPrimitive.Title />
-              <DialogPrimitive.Description />
-              <MetadataTable>
-                <thead>
-                  <tr>
-                    <th>key</th>
-                    <th>value</th>
-                  </tr>
-                </thead>
-                <tbody>{metadataRows}</tbody>
-              </MetadataTable>
-              <DialogPrimitive.Close />
-            </StyledContent>
-          </DialogPrimitive.Portal>
-        </DialogPrimitive.Root>
       </Toolbar>
 
       {view}

@@ -799,21 +799,6 @@ export class PMTiles {
 		}
 	}
 
-	async root_entries() {
-		const header = await this.cache.getHeader(this.source);
-
-		// V2 COMPATIBILITY
-		if (header.specVersion < 3) {
-			return [];
-		}
-		return await this.cache.getDirectory(
-			this.source,
-			header.rootDirectoryOffset,
-			header.rootDirectoryLength,
-			header
-		);
-	}
-
 	async getHeader() {
 		return await this.cache.getHeader(this.source);
 	}

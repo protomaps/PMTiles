@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { PMTiles, TileType } from "../../js";
-import { Protocol } from "../../js/adapters"
+import { Protocol } from "../../js/adapters";
 import { styled } from "./stitches.config";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -34,15 +34,53 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   let metadata = await file.getMetadata();
   let layers: any[] = [];
 
-  var tilestats:any;
+  var tilestats: any;
+  var vector_layers: any;
   if (metadata.json) {
     let j = JSON.parse(metadata.json);
     tilestats = j.tilestats;
+    vector_layers = j.vector_layers;
   } else {
     tilestats = metadata.tilestats;
+    vector_layers = metadata.vector_layers;
   }
 
-  if (tilestats) {
+  if (vector_layers) {
+    for (let layer of vector_layers) {
+      layers.push({
+        id: layer.id + "_fill",
+        type: "fill",
+        source: "source",
+        "source-layer": layer.id,
+        paint: {
+          "fill-color": "white",
+          "fill-opacity": 0.2,
+        },
+        filter: ["==", ["geometry-type"], "Polygon"],
+      });
+      layers.push({
+        id: layer.id + "_stroke",
+        type: "line",
+        source: "source",
+        "source-layer": layer.id,
+        paint: {
+          "line-color": "steelblue",
+          "line-width": 0.5,
+        },
+        filter: ["==", ["geometry-type"], "LineString"],
+      });
+      layers.push({
+        id: layer.id + "_point",
+        type: "circle",
+        source: "source",
+        "source-layer": layer.id,
+        paint: {
+          "circle-color": "red",
+        },
+        filter: ["==", ["geometry-type"], "Point"],
+      });
+    }
+  } else if (tilestats) {
     for (let layer of tilestats.layers) {
       if (layer.geometry === "Polygon") {
         layers.push({
@@ -52,7 +90,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
           "source-layer": layer.layer,
           paint: {
             "fill-color": "white",
-            "fill-opacity": 0.2
+            "fill-opacity": 0.2,
           },
         });
       } else if (layer.geometry === "LineString") {
@@ -87,7 +125,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         type: "vector",
         tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
         minzoom: header.minZoom,
-        maxzoom: header.maxZoom
+        maxzoom: header.maxZoom,
       },
     },
     layers: layers,
@@ -107,7 +145,7 @@ function MaplibreMap(props: { file: PMTiles }) {
       container: mapContainerRef.current!,
       hash: true,
       zoom: 0,
-      center: [0,0],
+      center: [0, 0],
       style: {
         version: 8,
         sources: {},
@@ -128,13 +166,19 @@ function MaplibreMap(props: { file: PMTiles }) {
       if (map) {
         let header = await props.file.getHeader();
 
-        map.fitBounds([
-          [header.minLon, header.minLat],
-          [header.maxLon, header.maxLat],
-        ],{animate:false});
+        map.fitBounds(
+          [
+            [header.minLon, header.minLat],
+            [header.maxLon, header.maxLat],
+          ],
+          { animate: false }
+        );
 
         let style: any; // TODO maplibre types (not any)
-        if (header.tileType === TileType.Png || header.tileType == TileType.Jpeg) {
+        if (
+          header.tileType === TileType.Png ||
+          header.tileType == TileType.Jpeg
+        ) {
           map.setStyle(rasterStyle(props.file) as any);
         } else {
           let style = await vectorStyle(props.file);

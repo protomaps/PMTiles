@@ -24,7 +24,9 @@
     "protomaps": "^1.19.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-dropzone": "^14.1.1"
+    "react-dropzone": "^14.1.1",
+    "react-svg-pan-zoom": "^3.11.0",
+    "react-use": "^17.4.0"
   },
   "devDependencies": {
     "@types/d3-path": "^3.0.0",

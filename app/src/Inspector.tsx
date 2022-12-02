@@ -1,30 +1,39 @@
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
 import { createPortal } from "react-dom";
 import { PMTiles, Entry, tileIdToZxy, TileType, Header } from "../../js";
 import { styled } from "./stitches.config";
-import { decompressSync } from "fflate";
 import Protobuf from "pbf";
 import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";
 import { path } from "d3-path";
 import { schemeSet3 } from "d3-scale-chromatic";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { useMeasure } from "react-use";
+import {
+  INITIAL_VALUE,
+  ReactSVGPanZoom,
+  TOOL_NONE,
+  fitSelection,
+  zoomOnViewerCenter,
+  fitToViewer,
+} from "react-svg-pan-zoom";
 
 const TableContainer = styled("div", {
   height: "calc(100vh - $4 - $4)",
   overflowY: "scroll",
-  width: "50%",
+  width: "calc(100%/3)",
+});
+
+const SVGContainer = styled("div", {
+  width: "100%",
+  height: "calc(100vh - $4 - $4)"
+})
+
+const Table = styled("table", {
   padding: "$2",
 });
 
 const Pane = styled("div", {
-  width: "50%",
-  backgroundColor: "black",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundSize: "20px 20px",
-  backgroundImage:
-    "linear-gradient(to right, #111 1px, transparent 1px),linear-gradient(to bottom, #111 1px, transparent 1px);",
+  width: "calc(100%/3*2)"
 });
 
 const TableRow = styled(
@@ -176,6 +185,10 @@ const VectorPreview = (props: {
 }) => {
   let [layers, setLayers] = useState<Layer[]>([]);
   let [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
+  const Viewer = useRef(null);
+  const [tool, setTool] = useState(TOOL_NONE);
+  const [value, setValue] = useState(INITIAL_VALUE);
+  const [ref, { width, height }] = useMeasure();
 
   useEffect(() => {
     let fn = async (entry: Entry) => {
@@ -237,12 +250,24 @@ const VectorPreview = (props: {
   ));
 
   return (
-    <div>
-      <svg viewBox="0 0 4096 4096" width={800} height={800}>
-        {elems}
-      </svg>
+    <SVGContainer ref={ref}>
+      <ReactSVGPanZoom
+        ref={Viewer}
+        width={width}
+        height={height}
+        tool={tool}
+        onChangeTool={setTool}
+        value={value}
+        onChangeValue={setValue}
+        detectAutoPan={false}
+        onClick={(event) =>
+          console.log("click", event.x, event.y, event.originalEvent)
+        }
+      >
+        <svg viewBox="0 0 4096 4096">{elems}</svg>
+      </ReactSVGPanZoom>
       {selectedFeature ? <FeatureProperties feature={selectedFeature} /> : null}
-    </div>
+    </SVGContainer>
   );
 };
 
@@ -330,7 +355,7 @@ function Inspector(props: { file: PMTiles }) {
     <Split>
       <TableContainer>
         {warning}
-        <table>
+        <Table>
           <thead>
             <tr>
               <th>tileid</th>
@@ -343,7 +368,7 @@ function Inspector(props: { file: PMTiles }) {
             </tr>
           </thead>
           <tbody>{rows}</tbody>
-        </table>
+        </Table>
       </TableContainer>
       <Pane>{tilePreview}</Pane>
     </Split>

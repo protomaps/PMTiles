@@ -55,8 +55,6 @@ export const globalStyles = globalCss({
 		margin: 0,
 		padding: 0,
 		border: 0,
-		fontFamily: "Inter, sans-serif",
 	},
-	body: { backgroundColor: "$black", color: "$white" },
-	"@import": ["url('https://rsms.me/inter/inter.css')"],
+	body: { backgroundColor: "$black", color: "$white", fontFamily: "sans-serif" }
 });

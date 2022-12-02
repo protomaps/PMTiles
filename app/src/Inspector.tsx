@@ -9,12 +9,7 @@ import { schemeSet3 } from "d3-scale-chromatic";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMeasure } from "react-use";
 import {
-  INITIAL_VALUE,
-  ReactSVGPanZoom,
-  TOOL_NONE,
-  fitSelection,
-  zoomOnViewerCenter,
-  fitToViewer,
+  UncontrolledReactSVGPanZoom,
 } from "react-svg-pan-zoom";
 
 const TableContainer = styled("div", {
@@ -40,6 +35,7 @@ const TableRow = styled(
   "tr",
   {
     cursor: "pointer",
+    fontFamily: "monospace"
   },
   { "&:hover": { color: "red" } }
 );
@@ -185,10 +181,12 @@ const VectorPreview = (props: {
 }) => {
   let [layers, setLayers] = useState<Layer[]>([]);
   let [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
-  const Viewer = useRef(null);
-  const [tool, setTool] = useState(TOOL_NONE);
-  const [value, setValue] = useState(INITIAL_VALUE);
-  const [ref, { width, height }] = useMeasure();
+  const Viewer = useRef<UncontrolledReactSVGPanZoom>(null);
+  const [ref, { width, height }] = useMeasure<HTMLDivElement>();
+
+  useEffect(() => {
+    Viewer.current!.zoomOnViewerCenter(0.1);
+  },[]);
 
   useEffect(() => {
     let fn = async (entry: Entry) => {
@@ -251,21 +249,17 @@ const VectorPreview = (props: {
 
   return (
     <SVGContainer ref={ref}>
-      <ReactSVGPanZoom
+      <UncontrolledReactSVGPanZoom
         ref={Viewer}
         width={width}
         height={height}
-        tool={tool}
-        onChangeTool={setTool}
-        value={value}
-        onChangeValue={setValue}
         detectAutoPan={false}
         onClick={(event) =>
           console.log("click", event.x, event.y, event.originalEvent)
         }
       >
         <svg viewBox="0 0 4096 4096">{elems}</svg>
-      </ReactSVGPanZoom>
+      </UncontrolledReactSVGPanZoom>
       {selectedFeature ? <FeatureProperties feature={selectedFeature} /> : null}
     </SVGContainer>
   );

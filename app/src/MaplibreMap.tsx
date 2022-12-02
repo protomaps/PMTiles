@@ -4,6 +4,7 @@ import { Protocol } from "../../js/adapters";
 import { styled } from "./stitches.config";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { schemeSet3 } from "d3-scale-chromatic";
 
 const MapContainer = styled("div", {
   height: "calc(100vh - $4 - $4)",
@@ -46,14 +47,14 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   }
 
   if (vector_layers) {
-    for (let layer of vector_layers) {
+    for (let [i,layer] of vector_layers.entries()) {
       layers.push({
         id: layer.id + "_fill",
         type: "fill",
         source: "source",
         "source-layer": layer.id,
         paint: {
-          "fill-color": "white",
+          "fill-color": schemeSet3[i % 12],
           "fill-opacity": 0.2,
         },
         filter: ["==", ["geometry-type"], "Polygon"],
@@ -64,7 +65,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         source: "source",
         "source-layer": layer.id,
         paint: {
-          "line-color": "steelblue",
+          "line-color": schemeSet3[i % 12],
           "line-width": 0.5,
         },
         filter: ["==", ["geometry-type"], "LineString"],
@@ -75,13 +76,13 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         source: "source",
         "source-layer": layer.id,
         paint: {
-          "circle-color": "red",
+          "circle-color": schemeSet3[i % 12],
         },
         filter: ["==", ["geometry-type"], "Point"],
       });
     }
   } else if (tilestats) {
-    for (let layer of tilestats.layers) {
+    for (let [i,layer] of tilestats.layers.entries()) {
       if (layer.geometry === "Polygon") {
         layers.push({
           id: layer.layer + "_fill",
@@ -89,7 +90,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
           source: "source",
           "source-layer": layer.layer,
           paint: {
-            "fill-color": "white",
+            "fill-color": schemeSet3[i % 12],
             "fill-opacity": 0.2,
           },
         });
@@ -100,7 +101,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
           source: "source",
           "source-layer": layer.layer,
           paint: {
-            "line-color": "steelblue",
+            "line-color": schemeSet3[i % 12],
             "line-width": 0.5,
           },
         });
@@ -111,7 +112,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
           source: "source",
           "source-layer": layer.layer,
           paint: {
-            "circle-color": "red",
+            "circle-color": schemeSet3[i % 12],
           },
         });
       }

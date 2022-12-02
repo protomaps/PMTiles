@@ -326,7 +326,7 @@ function Inspector(props: { file: PMTiles }) {
   let tilePreview = <div></div>;
   if (selectedEntry && header?.tileType) {
     if (selectedEntry.runLength === 0) {
-      console.log("Display leaf dir view");
+      // do nothing
     } else if (header.tileType === TileType.Mvt) {
       tilePreview = (
         <VectorPreview

@@ -283,24 +283,41 @@ export class FetchSource implements Source {
 			signal = controller.signal;
 		}
 
-		const resp = await fetch(this.url, {
+		let resp = await fetch(this.url, {
 			signal: signal,
 			headers: { Range: "bytes=" + offset + "-" + (offset + length - 1) },
 		});
 
-		// can return 416, which will have a blank etag on S3.
+		// TODO: can return 416 with offset > 0 if content changed, which will have a blank etag.
 		// See https://github.com/protomaps/PMTiles/issues/90
 
-		if (resp.status >= 300) {
-			throw Error("404");
-			controller.abort();
+		if (resp.status === 416 && offset === 0) {
+			// some HTTP servers don't accept ranges beyond the end of the resource.
+			// Retry with the exact length
+			const content_range = resp.headers.get("Content-Range");
+			if (!content_range || !content_range.startsWith("bytes */")) {
+				throw Error("Missing content-length on 416 response");
+			}
+			const actual_length = +content_range.substr(8);
+			resp = await fetch(this.url, {
+				signal: signal,
+				headers: { Range: "bytes=0-" + (actual_length - 1) },
+			});
 		}
-		const contentLength = resp.headers.get("Content-Length");
-		if (!contentLength || +contentLength !== length) {
-			console.error(
-				"Content-Length mismatch indicates byte serving not supported; aborting."
-			);
+
+		if (resp.status >= 300) {
+			throw Error("Bad response code: " + resp.status);
+		}
+
+		const content_length = resp.headers.get("Content-Length");
+
+		// some well-behaved backends, e.g. DigitalOcean CDN, respond with 200 instead of 206
+		// but we also need to detect no support for Byte Serving which is returning the whole file
+		if (resp.status === 200 && (!content_length || +content_length > length)) {
 			if (controller) controller.abort();
+			throw Error(
+				"Server returned no content-length header or content-length exceeding request. Check that your storage backend supports HTTP Byte Serving."
+			);
 		}
 
 		const a = await resp.arrayBuffer();

@@ -45,7 +45,7 @@ const Container = styled("div", {
 
 const Button = styled("button", {
   padding: "$1 $2",
-  marginBottom:"$1",
+  marginBottom: "$1",
   borderRadius: "$2",
   cursor: "pointer",
   variants: {
@@ -100,13 +100,12 @@ const ExampleList = styled("div", {
 const EXAMPLE_FILES = [
   "https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles",
   "https://protomaps.github.io/PMTiles/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles",
-  "https://pub-9288c68512ed46eca46ddcade307709b.r2.dev/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles"
+  "https://pub-9288c68512ed46eca46ddcade307709b.r2.dev/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles",
 ];
 
 function Start(props: {
   setFile: Dispatch<SetStateAction<PMTiles | undefined>>;
 }) {
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
     props.setFile(new PMTiles(new FileAPISource(acceptedFiles[0])));
   }, []);

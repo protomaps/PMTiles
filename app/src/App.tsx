@@ -57,14 +57,7 @@ function App() {
   globalStyles();
 
   let [errorDisplay, setErrorDisplay] = useState<string | undefined>();
-  let [file, setFileRaw] = useState<PMTiles | undefined>();
-
-  let setFile = (file: PMTiles) => {
-    setFileRaw(file);
-    file.getHeader().catch((e) => {
-      setErrorDisplay(e.message);
-    });
-  };
+  let [file, setFile] = useState<PMTiles | undefined>();
 
   // initial load
   useEffect(() => {
@@ -74,6 +67,14 @@ function App() {
       setFile(initialValue);
     }
   }, []);
+
+  useEffect(() => {
+    if (file) {
+      file.getHeader().catch((e) => {
+        setErrorDisplay(e.message);
+      });
+    }
+  }, [file]);
 
   // maintaining URL state
   useEffect(() => {
@@ -106,7 +107,7 @@ function App() {
         </GithubLink>
       </Header>
       {file ? <Loader file={file} /> : <Start setFile={setFile} />}
-      <DialogPrimitive.Root open={errorDisplay}>
+      <DialogPrimitive.Root open={errorDisplay !== undefined}>
         <DialogPrimitive.Portal>
           <StyledOverlay />
           <StyledContent

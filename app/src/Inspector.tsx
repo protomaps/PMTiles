@@ -6,7 +6,6 @@ import Protobuf from "pbf";
 import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";
 import { path } from "d3-path";
 import { schemeSet3 } from "d3-scale-chromatic";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMeasure } from "react-use";
 import {
   UncontrolledReactSVGPanZoom,

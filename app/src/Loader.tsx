@@ -8,7 +8,6 @@ import Metadata from "./Metadata";
 
 import { MagnifyingGlassIcon, ImageIcon } from "@radix-ui/react-icons";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 const StyledToolbar = styled(ToolbarPrimitive.Root, {
   display: "flex",
@@ -58,27 +57,6 @@ const StyledToggleItem = styled(ToolbarPrimitive.ToggleItem, {
   cursor: "pointer",
   "&:first-child": { marginLeft: 0 },
   "&[data-state=on]": { backgroundColor: "$primary", color: "$primaryText" },
-});
-
-const StyledOverlay = styled(DialogPrimitive.Overlay, {
-  backgroundColor: "black",
-  position: "fixed",
-  inset: 0,
-  opacity: "40%",
-  zIndex: 3,
-});
-
-const StyledContent = styled(DialogPrimitive.Content, {
-  backgroundColor: "#222",
-  padding:"$1",
-  borderRadius: 6,
-  position: "fixed",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "90vw",
-  zIndex: 4,
-  "&:focus": { outline: "none" },
 });
 
 const Toolbar = StyledToolbar;

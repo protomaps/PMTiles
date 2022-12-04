@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { styled, globalStyles } from "./stitches.config";
-import { PMTiles } from "../../js";
+import { PMTiles } from "../../js/index";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 
 import Start from "./Start";

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
 import { createPortal } from "react-dom";
-import { PMTiles, Entry, tileIdToZxy, TileType, Header } from "../../js";
+import { PMTiles, Entry, tileIdToZxy, TileType, Header } from "../../js/index";
 import { styled } from "./stitches.config";
 import Protobuf from "pbf";
 import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";

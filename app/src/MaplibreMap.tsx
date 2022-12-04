@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { PMTiles, TileType } from "../../js";
+import { PMTiles, TileType } from "../../js/index";
 import { Protocol } from "../../js/adapters";
 import { styled } from "./stitches.config";
 import maplibregl from "maplibre-gl";

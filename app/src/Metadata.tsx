@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PMTiles, Header } from "../../js";
+import { PMTiles, Header } from "../../js/index";
 import { styled } from "./stitches.config";
 import { JsonViewer } from "@textea/json-viewer";
 

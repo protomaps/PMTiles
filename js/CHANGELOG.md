@@ -1,4 +1,7 @@
+2.6.0
 
+* Show error when attempting to load a vector archive with `leafletRasterLayer`.
+* fix compatibility with servers that return 416 for < 16 kb archives on initial fetch.
 
 2.5.0
 

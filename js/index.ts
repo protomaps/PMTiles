@@ -330,6 +330,12 @@ export class FetchSource implements Source {
 	}
 }
 
+export function getUint64(v: DataView, offset: number): number {
+	const wh = v.getUint32(offset + 4, true);
+	const wl = v.getUint32(offset + 0, true);
+	return wh * Math.pow(2, 32) + wl;
+}
+
 export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
 	const v = new DataView(bytes);
 	const spec_version = v.getUint8(7);
@@ -341,17 +347,17 @@ export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
 
 	return {
 		specVersion: spec_version,
-		rootDirectoryOffset: Number(v.getBigUint64(8, true)),
-		rootDirectoryLength: Number(v.getBigUint64(16, true)),
-		jsonMetadataOffset: Number(v.getBigUint64(24, true)),
-		jsonMetadataLength: Number(v.getBigUint64(32, true)),
-		leafDirectoryOffset: Number(v.getBigUint64(40, true)),
-		leafDirectoryLength: Number(v.getBigUint64(48, true)),
-		tileDataOffset: Number(v.getBigUint64(56, true)),
-		tileDataLength: Number(v.getBigUint64(64, true)),
-		numAddressedTiles: Number(v.getBigUint64(72, true)),
-		numTileEntries: Number(v.getBigUint64(80, true)),
-		numTileContents: Number(v.getBigUint64(88, true)),
+		rootDirectoryOffset: getUint64(v, 8),
+		rootDirectoryLength: getUint64(v, 16),
+		jsonMetadataOffset: getUint64(v, 24),
+		jsonMetadataLength: getUint64(v, 32),
+		leafDirectoryOffset: getUint64(v, 40),
+		leafDirectoryLength: getUint64(v, 48),
+		tileDataOffset: getUint64(v, 56),
+		tileDataLength: getUint64(v, 64),
+		numAddressedTiles: getUint64(v, 72),
+		numTileEntries: getUint64(v, 80),
+		numTileContents: getUint64(v, 88),
 		clustered: v.getUint8(96) === 1,
 		internalCompression: v.getUint8(97),
 		tileCompression: v.getUint8(98),

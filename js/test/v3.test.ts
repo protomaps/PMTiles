@@ -14,6 +14,7 @@ import {
 	RangeResponse,
 	EtagMismatch,
 	PMTiles,
+	getUint64,
 } from "../index";
 
 test("varint", () => {
@@ -169,6 +170,16 @@ test("cache getHeader", async () => {
 	assert.strictEqual(header.minLat, 0);
 	// assert.strictEqual(header.maxLon,1); // TODO fix me
 	assert.strictEqual(header.maxLat, 1);
+});
+
+test("getUint64", async () => {
+	const view = new DataView(new ArrayBuffer(8));
+	view.setBigUint64(0, 0n, true);
+	assert.strictEqual(getUint64(view, 0), 0);
+	view.setBigUint64(0, 1n, true);
+	assert.strictEqual(getUint64(view, 0), 1);
+	view.setBigUint64(0, 9007199254740991n, true);
+	assert.strictEqual(getUint64(view, 0), 9007199254740991);
 });
 
 test("cache check against empty", async () => {

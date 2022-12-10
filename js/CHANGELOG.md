@@ -1,3 +1,7 @@
+2.6.1
+
+* Replace `BigInt` usage to support older Safari versions.
+
 2.6.0
 
 * Show error when attempting to load a vector archive with `leafletRasterLayer`.

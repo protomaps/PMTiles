@@ -7,9 +7,7 @@ import { VectorTile, VectorTileFeature } from "@mapbox/vector-tile";
 import { path } from "d3-path";
 import { schemeSet3 } from "d3-scale-chromatic";
 import { useMeasure } from "react-use";
-import {
-  UncontrolledReactSVGPanZoom,
-} from "react-svg-pan-zoom";
+import { UncontrolledReactSVGPanZoom } from "react-svg-pan-zoom";
 
 const TableContainer = styled("div", {
   height: "calc(100vh - $4 - $4)",
@@ -19,22 +17,22 @@ const TableContainer = styled("div", {
 
 const SVGContainer = styled("div", {
   width: "100%",
-  height: "calc(100vh - $4 - $4)"
-})
+  height: "calc(100vh - $4 - $4)",
+});
 
 const Table = styled("table", {
   padding: "$2",
 });
 
 const Pane = styled("div", {
-  width: "calc(100%/3*2)"
+  width: "calc(100%/3*2)",
 });
 
 const TableRow = styled(
   "tr",
   {
     cursor: "pointer",
-    fontFamily: "monospace"
+    fontFamily: "monospace",
   },
   { "&:hover": { color: "red" } }
 );
@@ -45,7 +43,7 @@ const Split = styled("div", {
 
 const TileRow = (props: {
   entry: Entry;
-  setSelectedEntry: Dispatch<SetStateAction<Entry | null>>;
+  setSelectedEntry:(val: Entry | null) => void;
 }) => {
   let [z, x, y] = tileIdToZxy(props.entry.tileId);
   return (
@@ -179,13 +177,14 @@ const VectorPreview = (props: {
   tileType: TileType;
 }) => {
   let [layers, setLayers] = useState<Layer[]>([]);
+  let [maxExtent, setMaxExtent] = useState<number>(0);
   let [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const Viewer = useRef<UncontrolledReactSVGPanZoom>(null);
   const [ref, { width, height }] = useMeasure<HTMLDivElement>();
 
   useEffect(() => {
     Viewer.current!.zoomOnViewerCenter(0.1);
-  },[]);
+  }, []);
 
   useEffect(() => {
     let fn = async (entry: Entry) => {
@@ -194,7 +193,11 @@ const VectorPreview = (props: {
 
       let tile = new VectorTile(new Protobuf(new Uint8Array(resp!.data)));
       let newLayers = [];
+      let max_extent = 0;
       for (let [name, layer] of Object.entries(tile.layers)) {
+        if (layer.extent > max_extent) {
+          max_extent = layer.extent;
+        }
         let features: Feature[] = [];
         for (var i = 0; i < layer.length; i++) {
           let feature = layer.feature(i);
@@ -228,6 +231,7 @@ const VectorPreview = (props: {
         }
         newLayers.push({ features: features, name: name });
       }
+      setMaxExtent(max_extent);
       newLayers.sort(smartCompare);
       setLayers(newLayers);
     };
@@ -285,10 +289,41 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
   return <img src={imgSrc}></img>;
 };
 
+function getHashString(entry:Entry) {
+  const [z,x,y] = tileIdToZxy(entry.tileId);
+  let hash = `${z}/${x}/${y}`;
+
+  const hashName = "inspector";
+  let found = false;
+  const parts = window.location.hash
+    .slice(1)
+    .split("&")
+    .map((part) => {
+      const key = part.split("=")[0];
+      if (key === hashName) {
+        found = true;
+        return `${key}=${hash}`;
+      }
+      return part;
+    })
+    .filter((a) => a);
+  if (!found) {
+    parts.push(`${hashName}=${hash}`);
+  }
+  return `#${parts.join("&")}`;
+}
+
 function Inspector(props: { file: PMTiles }) {
   let [entryRows, setEntryRows] = useState<Entry[]>([]);
-  let [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  let [selectedEntry, setSelectedEntryRaw] = useState<Entry | null>(null);
   let [header, setHeader] = useState<Header | null>(null);
+
+  function setSelectedEntry(val: Entry | null) {
+    if (val && val.runLength > 0) {
+      window.history.replaceState(window.history.state, "", getHashString(val));
+    }
+    setSelectedEntryRaw(val);
+  }
 
   useEffect(() => {
     let fn = async () => {

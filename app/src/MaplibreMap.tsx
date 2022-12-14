@@ -144,7 +144,7 @@ function MaplibreMap(props: { file: PMTiles }) {
 
     map = new maplibregl.Map({
       container: mapContainerRef.current!,
-      hash: true,
+      hash: "map",
       zoom: 0,
       center: [0, 0],
       style: {

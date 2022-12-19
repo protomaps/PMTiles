@@ -338,6 +338,7 @@ int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
 	return n;
 }
 
+// TMS order
 struct {
 	bool operator()(entry_zxy a, entry_zxy b) const {
 		if (a.z != b.z) {
@@ -346,7 +347,7 @@ struct {
 		if (a.x != b.x) {
 			return a.x < b.x;
 		}
-		return a.y < b.y;
+		return a.y > b.y;
 	}
 } colmajor_cmp;
 
@@ -524,14 +525,14 @@ inline std::tuple<std::string, std::string, int> make_root_leaves(const std::fun
 	}
 }
 
-inline void collect_entries_zxy(const std::function<std::string(const std::string &, uint8_t)> decompress, std::vector<entry_zxy> &tile_entries, const char *pmtiles_map, const headerv3 &h, uint64_t dir_offset, uint64_t dir_len) {
+inline void collect_entries(const std::function<std::string(const std::string &, uint8_t)> decompress, std::vector<entry_zxy> &tile_entries, const char *pmtiles_map, const headerv3 &h, uint64_t dir_offset, uint64_t dir_len) {
 	std::string dir_s{pmtiles_map + dir_offset, dir_len};
 	std::string decompressed_dir = decompress(dir_s, h.internal_compression);
 
 	auto dir_entries = pmtiles::deserialize_directory(decompressed_dir);
 	for (auto const &entry : dir_entries) {
 		if (entry.run_length == 0) {
-			collect_entries_zxy(decompress, tile_entries, pmtiles_map, h, h.leaf_dirs_offset + entry.offset, entry.length);
+			collect_entries(decompress, tile_entries, pmtiles_map, h, h.leaf_dirs_offset + entry.offset, entry.length);
 		} else {
 			for (uint64_t i = entry.tile_id; i < entry.tile_id + entry.run_length; i++) {
 				pmtiles::zxy zxy = pmtiles::tileid_to_zxy(i);
@@ -541,13 +542,13 @@ inline void collect_entries_zxy(const std::function<std::string(const std::strin
 	}
 }
 
-inline std::vector<entry_zxy> entries_zxy(const std::function<std::string(const std::string &, uint8_t)> decompress, const char *pmtiles_map) {
+inline std::vector<entry_zxy> entries_tms(const std::function<std::string(const std::string &, uint8_t)> decompress, const char *pmtiles_map) {
 	std::string header_s{pmtiles_map, 127};
 	auto header = pmtiles::deserialize_header(header_s);
 
 	std::vector<entry_zxy> tile_entries;
 
-	collect_entries_zxy(decompress, tile_entries, pmtiles_map, header, header.root_dir_offset, header.root_dir_bytes);
+	collect_entries(decompress, tile_entries, pmtiles_map, header, header.root_dir_offset, header.root_dir_bytes);
 	std::sort(tile_entries.begin(), tile_entries.end(), colmajor_cmp);
 	return tile_entries;
 }

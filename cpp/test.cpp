@@ -173,10 +173,16 @@ MU_TEST(test_build_dirs) {
 	fstat(fd, &st);
 	char *map = (char *) mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-	auto result = entries_zxy(&mydecompress, map);
+	auto result = entries_tms(&mydecompress, map);
 	mu_check(result.size() == 100000);
+	// 1 4
+	// 2 3
+	// in TMS order, 2, 1, 3, 4
 	mu_check(result[0].offset == header.tile_data_offset);
-	mu_check(result[1].offset == header.tile_data_offset);
+	mu_check(result[1].offset == header.tile_data_offset + 2);
+	mu_check(result[2].offset == header.tile_data_offset);
+	mu_check(result[3].offset == header.tile_data_offset + 2);
+	mu_check(result[4].offset == header.tile_data_offset + 4);
 
 	for (int i = 0; i < 100000; i += 31) {
 		auto zxy = tileid_to_zxy(i);

@@ -1,6 +1,12 @@
 #include "minunit.h"
 #include "pmtiles.hpp"
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <fstream>
+#include <iostream>
 
+using namespace std;
 using namespace pmtiles;
 
 MU_TEST(test_tileid_to_zxy) {
@@ -40,7 +46,7 @@ MU_TEST(test_zxy_to_tileid) {
 }
 
 MU_TEST(test_serialize_directory) {
-	std::vector<entryv3> entries;
+	vector<entryv3> entries;
 	entries.push_back(entryv3(0, 0, 0, 0));
 	entries.push_back(entryv3(1, 1, 1, 1));
 	entries.push_back(entryv3(2, 2, 2, 2));
@@ -121,12 +127,74 @@ MU_TEST(test_deserialize_header) {
 	mu_check(deserialized.center_lat_e7 == 19);
 }
 
+string mycompress(const string &input, uint8_t compression) {
+	if (compression != pmtiles::COMPRESSION_NONE)
+		throw runtime_error("Unsupported compression");
+	return input;
+}
+
+string mydecompress(const string &input, uint8_t compression) {
+	if (compression != pmtiles::COMPRESSION_NONE)
+		throw runtime_error("Unsupported compression");
+	return input;
+}
+
+MU_TEST(test_build_dirs) {
+	vector<entryv3> entries;
+	for (int i = 0; i < 100000; i += 2) {
+		entries.push_back(entryv3(i, i, 1, 2));
+	}
+	string root_bytes;
+	string leaves_bytes;
+	int num_leaves;
+	tie(root_bytes, leaves_bytes, num_leaves) = make_root_leaves(&mycompress, pmtiles::COMPRESSION_NONE, entries);
+
+	pmtiles::headerv3 header;
+	header.clustered = 0x0;
+	header.internal_compression = COMPRESSION_NONE;
+	header.root_dir_offset = 127;
+	header.root_dir_bytes = root_bytes.size();
+	header.leaf_dirs_offset = 127 + root_bytes.size();
+	header.leaf_dirs_bytes = leaves_bytes.size();
+	header.tile_data_offset = header.leaf_dirs_offset + header.leaf_dirs_bytes;
+
+	ofstream ostream;
+	ostream.open("tmp.pmtiles", ios::out | ios::binary);
+	auto header_str = header.serialize();
+	ostream.write(header_str.data(), header_str.length());
+	ostream.write(root_bytes.data(), root_bytes.length());
+	ostream.write(leaves_bytes.data(), leaves_bytes.length());
+	ostream.close();
+
+	mu_check(root_bytes.size() <= 16384);
+
+	struct stat st;
+	int fd = open("tmp.pmtiles", O_RDONLY);
+	fstat(fd, &st);
+	char *map = (char *) mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+	auto result = entries_zxy(&mydecompress, map);
+	mu_check(result.size() == 100000);
+	mu_check(result[0].offset == header.tile_data_offset);
+	mu_check(result[1].offset == header.tile_data_offset);
+
+	for (int i = 0; i < 100000; i += 31) {
+		auto zxy = tileid_to_zxy(i);
+		auto tile = get_tile(&mydecompress, map, zxy.z, zxy.x, zxy.y);
+		mu_check(get<0>(tile) == header.tile_data_offset + i - (i % 2));
+		mu_check(get<1>(tile) == 1);
+	}
+
+	unlink("tmp.pmtiles");
+}
+
 MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_tileid_to_zxy);
 	MU_RUN_TEST(test_zxy_to_tileid);
 	MU_RUN_TEST(test_serialize_directory);
 	MU_RUN_TEST(test_serialize_header);
 	MU_RUN_TEST(test_deserialize_header);
+	MU_RUN_TEST(test_build_dirs);
 }
 
 int main(int argc, char *argv[]) {

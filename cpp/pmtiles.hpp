@@ -4,8 +4,21 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <tuple>
 
 namespace pmtiles {
+
+const uint8_t TILETYPE_UNKNOWN = 0x0;
+const uint8_t TILETYPE_MVT = 0x1;
+const uint8_t TILETYPE_PNG = 0x2;
+const uint8_t TILETYPE_JPEG = 0x3;
+const uint8_t TILETYPE_WEBP = 0x4;
+
+const uint8_t COMPRESSION_UNKNOWN = 0x0;
+const uint8_t COMPRESSION_NONE = 0x1;
+const uint8_t COMPRESSION_GZIP = 0x2;
+const uint8_t COMPRESSION_BROTLI = 0x3;
+const uint8_t COMPRESSION_ZSTD = 0x4;
 
 struct headerv3 {
 	uint64_t root_dir_offset;
@@ -156,6 +169,30 @@ struct {
 	}
 } entryv3_cmp;
 
+struct entry_zxy {
+	uint8_t z;
+	uint32_t x;
+	uint32_t y;
+	uint64_t offset;
+	uint32_t length;
+
+	entry_zxy(uint8_t _z, uint32_t _x, uint32_t _y, uint64_t _offset, uint32_t _length)
+	    : z(_z), x(_x), y(_y), offset(_offset), length(_length) {
+	}
+};
+
+struct {
+	bool operator()(entry_zxy a, entry_zxy b) const {
+		if (a.z != b.z) {
+			return a.z < b.z;
+		}
+		if (a.x != b.x) {
+			return a.x < b.x;
+		}
+		return a.y < b.y;
+	}
+} entry_zxy_cmp;
+
 struct varint_too_long_exception : std::exception {
 	const char *what() const noexcept override {
 		return "varint too long exception";
@@ -168,11 +205,11 @@ struct end_of_buffer_exception : std::exception {
 	}
 };
 
-namespace detail {
+namespace {
 constexpr const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
 
 // from https://github.com/mapbox/protozero/blob/master/include/protozero/varint.hpp
-inline uint64_t decode_varint_impl(const char **data, const char *end) {
+uint64_t decode_varint_impl(const char **data, const char *end) {
 	const auto *begin = reinterpret_cast<const int8_t *>(*data);
 	const auto *iend = reinterpret_cast<const int8_t *>(end);
 	const int8_t *p = begin;
@@ -248,7 +285,7 @@ inline uint64_t decode_varint_impl(const char **data, const char *end) {
 	return val;
 }
 
-inline uint64_t decode_varint(const char **data, const char *end) {
+uint64_t decode_varint(const char **data, const char *end) {
 	// If this is a one-byte varint, decode it here.
 	if (end != *data && ((static_cast<uint64_t>(**data) & 0x80U) == 0)) {
 		const auto val = static_cast<uint64_t>(**data);
@@ -256,10 +293,10 @@ inline uint64_t decode_varint(const char **data, const char *end) {
 		return val;
 	}
 	// If this varint is more than one byte, defer to complete implementation.
-	return detail::decode_varint_impl(data, end);
+	return decode_varint_impl(data, end);
 }
 
-inline void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
+void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
 	if (ry == 0) {
 		if (rx == 1) {
 			x = n - 1 - x;
@@ -271,7 +308,7 @@ inline void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
 	}
 }
 
-inline zxy t_on_level(uint8_t z, uint64_t pos) {
+zxy t_on_level(uint8_t z, uint64_t pos) {
 	int64_t n = 1 << z;
 	int64_t rx, ry, s, t = pos;
 	int64_t tx = 0;
@@ -287,9 +324,8 @@ inline zxy t_on_level(uint8_t z, uint64_t pos) {
 	}
 	return zxy(z, tx, ty);
 }
-}  // end namespace detail
 
-inline int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
+int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
 	int n = 1;
 
 	while (value >= 0x80U) {
@@ -302,13 +338,55 @@ inline int write_varint(std::back_insert_iterator<std::string> data, uint64_t va
 	return n;
 }
 
+struct {
+	bool operator()(entry_zxy a, entry_zxy b) const {
+		if (a.z != b.z) {
+			return a.z < b.z;
+		}
+		if (a.x != b.x) {
+			return a.x < b.x;
+		}
+		return a.y < b.y;
+	}
+} colmajor_cmp;
+
+// use a 0 length entry as a null value.
+entryv3 find_tile(const std::vector<entryv3> &entries, uint64_t tile_id) {
+	int m = 0;
+	int n = entries.size() - 1;
+	while (m <= n) {
+		int k = (n + m) >> 1;
+		int cmp = tile_id - entries[k].tile_id;
+		if (cmp > 0) {
+			m = k + 1;
+		} else if (cmp < 0) {
+			n = k - 1;
+		} else {
+			return entries[k];
+		}
+	}
+
+	if (n >= 0) {
+		if (entries[n].run_length == 0) {
+			return entries[n];
+		}
+		if (tile_id - entries[n].tile_id < entries[n].run_length) {
+			return entries[n];
+		}
+	}
+
+	return entryv3{0, 0, 0, 0};
+}
+
+}  // end anonymous namespace
+
 inline zxy tileid_to_zxy(uint64_t tileid) {
 	uint64_t acc = 0;
 	uint8_t t_z = 0;
 	while (true) {
 		uint64_t num_tiles = (1 << t_z) * (1 << t_z);
 		if (acc + num_tiles > tileid) {
-			return detail::t_on_level(t_z, tileid - acc);
+			return t_on_level(t_z, tileid - acc);
 		}
 		acc += num_tiles;
 		t_z++;
@@ -326,7 +404,7 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 		rx = (tx & s) > 0;
 		ry = (ty & s) > 0;
 		d += s * s * ((3 * rx) ^ ry);
-		detail::rotate(s, tx, ty, rx, ry);
+		rotate(s, tx, ty, rx, ry);
 	}
 	return acc + d;
 }
@@ -367,28 +445,28 @@ inline std::vector<entryv3> deserialize_directory(const std::string &decompresse
 	const char *t = decompressed.data();
 	const char *end = t + decompressed.size();
 
-	uint64_t num_entries = detail::decode_varint(&t, end);
+	uint64_t num_entries = decode_varint(&t, end);
 
 	std::vector<entryv3> result;
 	result.resize(num_entries);
 
 	uint64_t last_id = 0;
 	for (size_t i = 0; i < num_entries; i++) {
-		uint64_t tile_id = last_id + detail::decode_varint(&t, end);
+		uint64_t tile_id = last_id + decode_varint(&t, end);
 		result[i].tile_id = tile_id;
 		last_id = tile_id;
 	}
 
 	for (size_t i = 0; i < num_entries; i++) {
-		result[i].run_length = detail::decode_varint(&t, end);
+		result[i].run_length = decode_varint(&t, end);
 	}
 
 	for (size_t i = 0; i < num_entries; i++) {
-		result[i].length = detail::decode_varint(&t, end);
+		result[i].length = decode_varint(&t, end);
 	}
 
 	for (size_t i = 0; i < num_entries; i++) {
-		uint64_t tmp = detail::decode_varint(&t, end);
+		uint64_t tmp = decode_varint(&t, end);
 
 		if (i > 0 && tmp == 0) {
 			result[i].offset = result[i - 1].offset + result[i - 1].length;
@@ -404,6 +482,103 @@ inline std::vector<entryv3> deserialize_directory(const std::string &decompresse
 	}
 
 	return result;
+}
+
+inline std::tuple<std::string, std::string, int> build_root_leaves(const std::function<std::string(const std::string &, uint8_t)> mycompress, uint8_t compression, const std::vector<pmtiles::entryv3> &entries, int leaf_size) {
+	std::vector<pmtiles::entryv3> root_entries;
+	std::string leaves_bytes;
+	int num_leaves = 0;
+	for (size_t i = 0; i <= entries.size(); i += leaf_size) {
+		num_leaves++;
+		int end = i + leaf_size;
+		if (i + leaf_size > entries.size()) {
+			end = entries.size();
+		}
+		std::vector<pmtiles::entryv3> subentries = {entries.begin() + i, entries.begin() + end};
+		auto uncompressed_leaf = pmtiles::serialize_directory(subentries);
+		auto compressed_leaf = mycompress(uncompressed_leaf, compression);
+		root_entries.emplace_back(entries[i].tile_id, leaves_bytes.size(), compressed_leaf.size(), 0);
+		leaves_bytes += compressed_leaf;
+	}
+	auto uncompressed_root = pmtiles::serialize_directory(root_entries);
+	auto compressed_root = mycompress(uncompressed_root, compression);
+	return std::make_tuple(compressed_root, leaves_bytes, num_leaves);
+}
+
+inline std::tuple<std::string, std::string, int> make_root_leaves(const std::function<std::string(const std::string &, uint8_t)> mycompress, uint8_t compression, const std::vector<pmtiles::entryv3> &entries) {
+	auto test_bytes = pmtiles::serialize_directory(entries);
+	auto compressed = mycompress(test_bytes, compression);
+	if (compressed.size() <= 16384 - 127) {
+		return std::make_tuple(compressed, "", 0);
+	}
+	int leaf_size = 4096;
+	while (true) {
+		std::string root_bytes;
+		std::string leaves_bytes;
+		int num_leaves;
+		std::tie(root_bytes, leaves_bytes, num_leaves) = build_root_leaves(mycompress, compression, entries, leaf_size);
+		if (root_bytes.length() < 16384 - 127) {
+			return std::make_tuple(root_bytes, leaves_bytes, num_leaves);
+		}
+		leaf_size *= 2;
+	}
+}
+
+inline void collect_entries_zxy(const std::function<std::string(const std::string &, uint8_t)> decompress, std::vector<entry_zxy> &tile_entries, const char *pmtiles_map, const headerv3 &h, uint64_t dir_offset, uint64_t dir_len) {
+	std::string dir_s{pmtiles_map + dir_offset, dir_len};
+	std::string decompressed_dir = decompress(dir_s, h.internal_compression);
+
+	auto dir_entries = pmtiles::deserialize_directory(decompressed_dir);
+	for (auto const &entry : dir_entries) {
+		if (entry.run_length == 0) {
+			collect_entries_zxy(decompress, tile_entries, pmtiles_map, h, h.leaf_dirs_offset + entry.offset, entry.length);
+		} else {
+			for (uint64_t i = entry.tile_id; i < entry.tile_id + entry.run_length; i++) {
+				pmtiles::zxy zxy = pmtiles::tileid_to_zxy(i);
+				tile_entries.emplace_back(zxy.z, zxy.x, zxy.y, h.tile_data_offset + entry.offset, entry.length);
+			}
+		}
+	}
+}
+
+inline std::vector<entry_zxy> entries_zxy(const std::function<std::string(const std::string &, uint8_t)> decompress, const char *pmtiles_map) {
+	std::string header_s{pmtiles_map, 127};
+	auto header = pmtiles::deserialize_header(header_s);
+
+	std::vector<entry_zxy> tile_entries;
+
+	collect_entries_zxy(decompress, tile_entries, pmtiles_map, header, header.root_dir_offset, header.root_dir_bytes);
+	std::sort(tile_entries.begin(), tile_entries.end(), colmajor_cmp);
+	return tile_entries;
+}
+
+inline std::tuple<uint64_t, uint32_t> get_tile(const std::function<std::string(const std::string &, uint8_t)> decompress, const char *pmtiles_map, uint8_t z, uint32_t x, uint32_t y) {
+	uint64_t tile_id = pmtiles::zxy_to_tileid(z, x, y);
+
+	std::string header_s{pmtiles_map, 127};
+	auto h = pmtiles::deserialize_header(header_s);
+
+	uint64_t dir_offset = h.root_dir_offset;
+	uint32_t dir_length = h.root_dir_bytes;
+	for (int depth = 0; depth <= 3; depth++) {
+		std::string dir_s{pmtiles_map + dir_offset, dir_length};
+		std::string decompressed_dir = decompress(dir_s, h.internal_compression);
+		auto dir_entries = pmtiles::deserialize_directory(decompressed_dir);
+		auto entry = find_tile(dir_entries, tile_id);
+
+		if (entry.length > 0) {
+			if (entry.run_length > 0) {
+				return std::make_pair(h.tile_data_offset + entry.offset, entry.length);
+			} else {
+				dir_offset = h.leaf_dirs_offset + entry.offset;
+				dir_length = entry.length;
+			}
+		} else {
+			return std::make_pair(0, 0);
+		}
+	}
+
+	return std::make_pair(0, 0);
 }
 
 }  // namespace pmtiles

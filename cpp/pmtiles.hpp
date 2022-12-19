@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 #include <tuple>
+#include <functional>
+#include <algorithm>
 
 namespace pmtiles {
 

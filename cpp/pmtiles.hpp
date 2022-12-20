@@ -555,7 +555,7 @@ inline std::vector<entry_zxy> entries_tms(const std::function<std::string(const 
 	return tile_entries;
 }
 
-inline std::tuple<uint64_t, uint32_t> get_tile(const std::function<std::string(const std::string &, uint8_t)> decompress, const char *pmtiles_map, uint8_t z, uint32_t x, uint32_t y) {
+inline std::pair<uint64_t, uint32_t> get_tile(const std::function<std::string(const std::string &, uint8_t)> decompress, const char *pmtiles_map, uint8_t z, uint32_t x, uint32_t y) {
 	uint64_t tile_id = pmtiles::zxy_to_tileid(z, x, y);
 
 	std::string header_s{pmtiles_map, 127};

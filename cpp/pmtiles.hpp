@@ -387,7 +387,7 @@ inline zxy tileid_to_zxy(uint64_t tileid) {
 	uint64_t acc = 0;
 	uint8_t t_z = 0;
 	while (true) {
-		uint64_t num_tiles = (1 << t_z) * (1 << t_z);
+		uint64_t num_tiles = (1LL << t_z) * (1LL << t_z);
 		if (acc + num_tiles > tileid) {
 			return t_on_level(t_z, tileid - acc);
 		}
@@ -398,7 +398,7 @@ inline zxy tileid_to_zxy(uint64_t tileid) {
 
 inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 	uint64_t acc = 0;
-	for (uint8_t t_z = 0; t_z < z; t_z++) acc += (0x1 << t_z) * (0x1 << t_z);
+	for (uint8_t t_z = 0; t_z < z; t_z++) acc += (1LL << t_z) * (1LL << t_z);
 	int64_t n = 1 << z;
 	int64_t rx, ry, s, d = 0;
 	int64_t tx = x;

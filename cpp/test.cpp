@@ -45,6 +45,28 @@ MU_TEST(test_zxy_to_tileid) {
 	mu_check(zxy_to_tileid(2, 0, 0) == 5);
 }
 
+MU_TEST(test_roundtrip) {
+	for (int z = 0; z < 25; z++) {
+		uint64_t dim = (1 << z) - 1;
+		auto tl = tileid_to_zxy(zxy_to_tileid(z, 0, 0));
+		mu_check(tl.z == z);
+		mu_check(tl.x == 0);
+		mu_check(tl.y == 0);
+		auto tr = tileid_to_zxy(zxy_to_tileid(z, dim, 0));
+		mu_check(tr.z == z);
+		mu_check(tr.x == dim);
+		mu_check(tr.y == 0);
+		auto bl = tileid_to_zxy(zxy_to_tileid(z, 0, dim));
+		mu_check(bl.z == z);
+		mu_check(bl.x == 0);
+		mu_check(bl.y == dim);
+		auto br = tileid_to_zxy(zxy_to_tileid(z, dim, dim));
+		mu_check(br.z == z);
+		mu_check(br.x == dim);
+		mu_check(br.y == dim);
+	}
+}
+
 MU_TEST(test_serialize_directory) {
 	vector<entryv3> entries;
 	entries.push_back(entryv3(0, 0, 0, 0));
@@ -197,6 +219,7 @@ MU_TEST(test_build_dirs) {
 MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_tileid_to_zxy);
 	MU_RUN_TEST(test_zxy_to_tileid);
+	MU_RUN_TEST(test_roundtrip);
 	MU_RUN_TEST(test_serialize_directory);
 	MU_RUN_TEST(test_serialize_header);
 	MU_RUN_TEST(test_deserialize_header);

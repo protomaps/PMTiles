@@ -58,7 +58,7 @@ const TileRow = (props: {
       <td>{y}</td>
       <td>{props.entry.offset}</td>
       <td>{props.entry.length}</td>
-      <td>{props.entry.runLength == 0 ? "directory" : "tile"}</td>
+      <td>{props.entry.runLength == 0 ? "directory" : `tile(${props.entry.runLength})`}</td>
     </TableRow>
   );
 };

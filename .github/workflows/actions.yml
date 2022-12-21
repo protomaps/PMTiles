@@ -47,3 +47,4 @@ jobs:
       - run: cd python && python -m unittest test/test_*
       - run: cd cpp && make
       - run: cd serverless/cloudflare && npm install && npm test
+      - run: cd serverless/vtfilter && npm install && npm test

@@ -136,9 +136,10 @@ const apiResp = (
 // Assumes event is a API Gateway V2 or Lambda Function URL formatted dict
 // and returns API Gateway V2 / Lambda Function dict responses
 // Does not work with CloudFront events/Lambda@Edge; see README
-export const handler = async (
+export const handlerRaw = async (
 	event: APIGatewayProxyEventV2,
-	context: Context
+	context: Context,
+	tilePostprocess?: (a: ArrayBuffer, t: TileType) => ArrayBuffer
 ): Promise<APIGatewayProxyResult> => {
 	var path;
 	var is_api_gateway;
@@ -216,10 +217,16 @@ export const handler = async (
 					break;
 			}
 
+			let data = tile_result.data;
+
+			if (tilePostprocess) {
+				data = tilePostprocess(data, header.tileType);
+			}
+
 			if (is_api_gateway) {
 				// this is wasted work, but we need to force API Gateway to interpret the Lambda response as binary
 				// without depending on clients sending matching Accept: headers in the request.
-				const recompressed_data = zlib.gzipSync(tile_result.data);
+				const recompressed_data = zlib.gzipSync(data);
 				headers["Content-Encoding"] = "gzip";
 				return apiResp(
 					200,
@@ -231,7 +238,7 @@ export const handler = async (
 				// returns uncompressed response
 				return apiResp(
 					200,
-					Buffer.from(tile_result.data).toString("base64"),
+					Buffer.from(data).toString("base64"),
 					true,
 					headers
 				);
@@ -246,4 +253,11 @@ export const handler = async (
 		throw e;
 	}
 	return apiResp(404, "Invalid URL", false, headers);
+};
+
+export const handler = async (
+	event: APIGatewayProxyEventV2,
+	context: Context
+): Promise<APIGatewayProxyResult> => {
+	return handlerRaw(event, context);
 };

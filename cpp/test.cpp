@@ -46,7 +46,7 @@ MU_TEST(test_zxy_to_tileid) {
 }
 
 MU_TEST(test_roundtrip) {
-	for (int z = 0; z < 25; z++) {
+	for (int z = 0; z < 32; z++) {
 		uint64_t dim = (1 << z) - 1;
 		auto tl = tileid_to_zxy(zxy_to_tileid(z, 0, 0));
 		mu_check(tl.z == z);
@@ -65,6 +65,41 @@ MU_TEST(test_roundtrip) {
 		mu_check(br.x == dim);
 		mu_check(br.y == dim);
 	}
+
+	bool caught = false;
+	try {
+		tileid_to_zxy(18446744073709551615ULL);
+	} catch (const std::runtime_error &e) {
+		caught = true;
+	}
+
+	mu_check(caught);
+
+	caught = false;
+	try {
+		zxy_to_tileid(32, 0, 0);
+	} catch (const std::runtime_error &e) {
+		caught = true;
+	}
+
+	mu_check(caught);
+
+	caught = false;
+	try {
+		zxy_to_tileid(0, 1, 1);
+	} catch (const std::runtime_error &e) {
+		caught = true;
+	}
+
+	mu_check(caught);
+
+	caught = false;
+	try {
+		zxy_to_tileid(31, 2147483647ULL + 1, 2147483647ULL + 1);
+	} catch (const std::runtime_error &e) {
+		caught = true;
+	}
+	mu_check(caught);
 }
 
 MU_TEST(test_serialize_directory) {

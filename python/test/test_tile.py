@@ -52,6 +52,27 @@ class TestTileId(unittest.TestCase):
                     self.assertEqual(x, rx)
                     self.assertEqual(y, ry)
 
+    def test_tile_extremes(self):
+        for z in range(0,32):
+            dim = (1 << z) - 1
+            tl = tileid_to_zxy(zxy_to_tileid(z,0,0))
+            self.assertEqual(tl,(z,0,0))
+            tr = tileid_to_zxy(zxy_to_tileid(z,dim,0))
+            self.assertEqual(tr,(z,dim,0))
+            bl = tileid_to_zxy(zxy_to_tileid(z,0,dim))
+            self.assertEqual(bl,(z,0,dim))
+            br = tileid_to_zxy(zxy_to_tileid(z,dim,dim))
+            self.assertEqual(br,(z,dim,dim))
+
+    def test_invalid_tiles(self):
+        with self.assertRaises(Exception) as context:
+            tileid_to_zxy(18446744073709551615)
+
+        with self.assertRaises(Exception) as context:
+            zxy_to_tileid(32,0,0)
+
+        with self.assertRaises(Exception) as context:
+            zxy_to_tileid(0,1,1)
 
 class TestFindTile(unittest.TestCase):
     def test_find_tile_missing(self):

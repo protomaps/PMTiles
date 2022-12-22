@@ -41,6 +41,10 @@ def t_on_level(z, pos):
 
 
 def zxy_to_tileid(z, x, y):
+    if z > 31:
+        raise OverflowError("tile zoom exceeds 64-bit limit")
+    if x > (1 << z) - 1 or y > (1 << z) - 1:
+        raise ValueError("tile x/y outside zoom level bounds")
     acc = 0
     tz = 0
     while tz < z:
@@ -70,13 +74,12 @@ def zxy_to_tileid(z, x, y):
 def tileid_to_zxy(tile_id):
     num_tiles = 0
     acc = 0
-    z = 0
-    while True:
+    for z in range(0,32):
         num_tiles = (1 << z) * (1 << z)
         if acc + num_tiles > tile_id:
             return t_on_level(z, tile_id - acc)
         acc += num_tiles
-        z += 1
+    raise OverflowError("tile zoom exceeds 64-bit limit")
 
 
 def find_tile(entries, tile_id):

@@ -70,43 +70,50 @@ function rotate(n: number, xy: number[], rx: number, ry: number): void {
 }
 
 function idOnLevel(z: number, pos: number): [number, number, number] {
-	const n = 1 << z;
+	const n = Math.pow(2, z);
 	let rx = pos;
 	let ry = pos;
 	let t = pos;
 	const xy = [0, 0];
 	let s = 1;
 	while (s < n) {
-		rx = 1 & ((t / 2) >> 0);
+		rx = 1 & (t / 2);
 		ry = 1 & (t ^ rx);
 		rotate(s, xy, rx, ry);
 		xy[0] += s * rx;
 		xy[1] += s * ry;
-		t = (t / 4) >> 0;
+		t = t / 4;
 		s *= 2;
 	}
 	return [z, xy[0], xy[1]];
 }
 
 export function zxyToTileId(z: number, x: number, y: number): number {
+	if (z > 26) {
+		throw Error("Tile zoom level exceeds max safe number limit (26)");
+	}
+	if (x > Math.pow(2, z) - 1 || y > Math.pow(2, z) - 1) {
+		throw Error("tile x/y outside zoom level bounds");
+	}
+
 	let acc = 0;
 	let tz = 0;
 	while (tz < z) {
-		acc += (0x1 << tz) * (0x1 << tz);
+		acc += Math.pow(2, tz) * Math.pow(2, tz);
 		tz++;
 	}
-	const n = 1 << z;
+	const n = Math.pow(2, z);
 	let rx = 0;
 	let ry = 0;
 	let d = 0;
 	const xy = [x, y];
-	let s = (n / 2) >> 0;
+	let s = n / 2;
 	while (s > 0) {
 		rx = (xy[0] & s) > 0 ? 1 : 0;
 		ry = (xy[1] & s) > 0 ? 1 : 0;
 		d += s * s * ((3 * rx) ^ ry);
 		rotate(s, xy, rx, ry);
-		s = (s / 2) >> 0;
+		s = s / 2;
 	}
 	return acc + d;
 }
@@ -114,14 +121,16 @@ export function zxyToTileId(z: number, x: number, y: number): number {
 export function tileIdToZxy(i: number): [number, number, number] {
 	let acc = 0;
 	let z = 0;
-	for (;;) {
+
+	for (let z = 0; z < 27; z++) {
 		const num_tiles = (0x1 << z) * (0x1 << z);
 		if (acc + num_tiles > i) {
 			return idOnLevel(z, i - acc);
 		}
 		acc += num_tiles;
-		z++;
 	}
+
+	throw Error("Tile zoom level exceeds max safe number limit (26)");
 }
 
 export interface Entry {

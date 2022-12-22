@@ -64,6 +64,34 @@ test("a lot of tiles", () => {
 	}
 });
 
+test("tile extremes", () => {
+	for (var z = 0; z < 27; z++) {
+		const dim = Math.pow(2, z) - 1;
+		const tl = tileIdToZxy(zxyToTileId(z, 0, 0));
+		assert.deepEqual([z, 0, 0], tl);
+		const tr = tileIdToZxy(zxyToTileId(z, dim, 0));
+		assert.deepEqual([z, dim, 0], tr);
+		const bl = tileIdToZxy(zxyToTileId(z, 0, dim));
+		assert.deepEqual([z, 0, dim], bl);
+		const br = tileIdToZxy(zxyToTileId(z, dim, dim));
+		assert.deepEqual([z, dim, dim], br);
+	}
+});
+
+test("invalid tiles", () => {
+	assert.throws(() => {
+		tileIdToZxy(Number.MAX_SAFE_INTEGER);
+	});
+
+	assert.throws(() => {
+		zxyToTileId(27,0,0);
+	});
+
+	assert.throws(() => {
+		zxyToTileId(0,1,1);
+	});
+});
+
 test("tile search for missing entry", () => {
 	const entries: Entry[] = [];
 	assert.strictEqual(findTile(entries, 101), null);
@@ -185,34 +213,25 @@ test("getUint64", async () => {
 test("cache check against empty", async () => {
 	const source = new TestNodeFileSource("test/data/empty.pmtiles", "1");
 	const cache = new SharedPromiseCache();
-	try {
+	assert.rejects(async () => {
 		await cache.getHeader(source);
-		assert.fail("Should have thrown");
-	} catch (e) {
-		assert.ok(e instanceof Error);
-	}
+	});
 });
 
 test("cache check magic number", async () => {
 	const source = new TestNodeFileSource("test/data/invalid.pmtiles", "1");
 	const cache = new SharedPromiseCache();
-	try {
+	assert.rejects(async () => {
 		await cache.getHeader(source);
-		assert.fail("Should have thrown");
-	} catch (e) {
-		assert.ok(e instanceof Error);
-	}
+	});
 });
 
 test("cache check future spec version", async () => {
 	const source = new TestNodeFileSource("test/data/invalid_v4.pmtiles", "1");
 	const cache = new SharedPromiseCache();
-	try {
+	assert.rejects(async () => {
 		await cache.getHeader(source);
-		assert.fail("Should have thrown");
-	} catch (e) {
-		assert.ok(e instanceof Error);
-	}
+	});
 });
 
 test("cache getDirectory", async () => {
@@ -276,17 +295,15 @@ test("etags are part of key", async () => {
 
 	source.etag = "etag_2";
 
-	try {
+	assert.rejects(async () => {
 		await cache.getDirectory(
 			source,
 			header.rootDirectoryOffset,
 			header.rootDirectoryLength,
 			header
 		);
-		assert.fail("Should have thrown");
-	} catch (e) {
-		assert.ok(e instanceof EtagMismatch);
-	}
+	})
+
 	cache.invalidate(source, "etag_2");
 	header = await cache.getHeader(source);
 	assert.ok(
@@ -311,17 +328,14 @@ test("soft failure on etag weirdness", async () => {
 
 	source.etag = "etag_2";
 
-	try {
+	assert.rejects(async () => {
 		await cache.getDirectory(
 			source,
 			header.rootDirectoryOffset,
 			header.rootDirectoryLength,
 			header
 		);
-		assert.fail("Should have thrown");
-	} catch (e) {
-		assert.ok(e instanceof EtagMismatch);
-	}
+	})
 
 	source.etag = "etag_1";
 	cache.invalidate(source, "etag_2");

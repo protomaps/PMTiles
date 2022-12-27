@@ -1,14 +1,48 @@
 import { useState, useEffect, useRef } from "react";
+import { renderToString } from "react-dom/server";
 import { PMTiles, TileType } from "../../js/index";
 import { Protocol } from "../../js/adapters";
 import { styled } from "./stitches.config";
 import maplibregl from "maplibre-gl";
+import { MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { schemeSet3 } from "d3-scale-chromatic";
 
 const MapContainer = styled("div", {
   height: "calc(100vh - $4 - $4)",
 });
+
+const PopupContainer = styled("div", {
+  color: "black",
+});
+
+const FeatureRow = styled("div", {
+  marginBottom: "0.5em",
+});
+
+const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
+  const fs = props.features.map((f, i) => {
+    let tmp: [string, string][] = [];
+    for (var key in f.properties) {
+      tmp.push([key, f.properties[key]]);
+    }
+
+    const rows = tmp.map((d, i) => (
+      <tr key={i}>
+        <td>{d[0]}</td>
+        <td>{d[1]}</td>
+      </tr>
+    ));
+
+    return (
+      <FeatureRow key={i}>
+        <div>{(f.layer as any)["source-layer"]}</div>
+        <table>{rows}</table>
+      </FeatureRow>
+    );
+  });
+  return <PopupContainer>{fs}</PopupContainer>;
+};
 
 const rasterStyle = (file: PMTiles) => {
   return {
@@ -47,7 +81,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   }
 
   if (vector_layers) {
-    for (let [i,layer] of vector_layers.entries()) {
+    for (let [i, layer] of vector_layers.entries()) {
       layers.push({
         id: layer.id + "_fill",
         type: "fill",
@@ -82,7 +116,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
       });
     }
   } else if (tilestats) {
-    for (let [i,layer] of tilestats.layers.entries()) {
+    for (let [i, layer] of tilestats.layers.entries()) {
       if (layer.geometry === "Polygon") {
         layers.push({
           id: layer.layer + "_fill",
@@ -156,6 +190,26 @@ function MaplibreMap(props: { file: PMTiles }) {
     map.showTileBoundaries = true;
     map.addControl(new maplibregl.NavigationControl({}));
     map.on("load", map.resize);
+
+    const popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+    });
+
+    map.on("mousemove", (e) => {
+      var bbox = e.point;
+      var features = map.queryRenderedFeatures(bbox);
+      map.getCanvas().style.cursor = features.length ? "pointer" : "";
+
+      let content = renderToString(<FeaturesProperties features={features} />);
+      if (!features.length) {
+        popup.remove();
+      } else {
+        popup.setHTML(content);
+        popup.setLngLat(e.lngLat);
+        popup.addTo(map);
+      }
+    });
 
     return () => {
       map.remove();

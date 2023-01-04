@@ -180,7 +180,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   }
 
   for (let layer of layers) {
-    if (layer["source-layer"] == "mask") {
+    if (layer["source-layer"] === "mask" && layer['type'] === 'fill') {
       layer.paint["fill-color"] = "black";
       layer.paint["fill-opacity"] = 0.8;
     }

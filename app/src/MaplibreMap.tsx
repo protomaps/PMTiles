@@ -18,6 +18,29 @@ const PopupContainer = styled("div", {
 
 const FeatureRow = styled("div", {
   marginBottom: "0.5em",
+  "&:not(:last-of-type)": {
+    borderBottom: "1px solid black",
+  },
+});
+
+const Hamburger = styled("div", {
+  position: "absolute",
+  top: "10px",
+  right: "10px",
+  width: 40,
+  height: 40,
+  backgroundColor: "#444",
+  cursor: "pointer",
+  zIndex: 9999,
+});
+
+const Options = styled("div", {
+  position: "absolute",
+  backgroundColor: "#444",
+  top: "50px",
+  right: "10px",
+  padding: "$1",
+  zIndex: 9999,
 });
 
 const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
@@ -36,7 +59,9 @@ const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
 
     return (
       <FeatureRow key={i}>
-        <div>{(f.layer as any)["source-layer"]}</div>
+        <div>
+          <strong>{(f.layer as any)["source-layer"]}</strong>
+        </div>
         <table>{rows}</table>
       </FeatureRow>
     );
@@ -116,6 +141,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
       });
     }
   } else if (tilestats) {
+    // TODO deprecate me...
     for (let [i, layer] of tilestats.layers.entries()) {
       if (layer.geometry === "Polygon") {
         layers.push({
@@ -153,6 +179,13 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
     }
   }
 
+  for (let layer of layers) {
+    if (layer["source-layer"] == "mask") {
+      layer.paint["fill-color"] = "black";
+      layer.paint["fill-opacity"] = 0.8;
+    }
+  }
+
   return {
     version: 8,
     sources: {
@@ -169,14 +202,36 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
 
 function MaplibreMap(props: { file: PMTiles }) {
   let mapContainerRef = useRef<HTMLDivElement>(null);
-  let map: maplibregl.Map;
+  let [hamburgerOpen, setHamburgerOpen] = useState<boolean>(true);
+  let [showAttributes, setShowAttributes] = useState<boolean>(false);
+  let [showTileBoundaries, setShowTileBoundaries] = useState<boolean>(false);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+
+  // make it accessible in hook
+  const showAttributesRef = useRef(showAttributes);
+  useEffect(() => {
+    showAttributesRef.current = showAttributes;
+  });
+
+  const toggleHamburger = () => {
+    setHamburgerOpen(!hamburgerOpen);
+  };
+
+  const toggleShowAttributes = () => {
+    setShowAttributes(!showAttributes);
+  };
+
+  const toggleShowTileBoundaries = () => {
+    setShowTileBoundaries(!showTileBoundaries);
+    mapRef.current!.showTileBoundaries = !showTileBoundaries;
+  };
 
   useEffect(() => {
     let protocol = new Protocol();
     maplibregl.addProtocol("pmtiles", protocol.tile);
     protocol.add(props.file); // this is necessary for non-HTTP sources
 
-    map = new maplibregl.Map({
+    const map = new maplibregl.Map({
       container: mapContainerRef.current!,
       hash: "map",
       zoom: 0,
@@ -187,8 +242,7 @@ function MaplibreMap(props: { file: PMTiles }) {
         layers: [],
       },
     });
-    map.showTileBoundaries = true;
-    map.addControl(new maplibregl.NavigationControl({}));
+    map.addControl(new maplibregl.NavigationControl({}), "bottom-left");
     map.on("load", map.resize);
 
     const popup = new maplibregl.Popup({
@@ -196,7 +250,13 @@ function MaplibreMap(props: { file: PMTiles }) {
       closeOnClick: false,
     });
 
+    mapRef.current = map;
+
     map.on("mousemove", (e) => {
+      if (!showAttributesRef.current) {
+        popup.remove();
+        return;
+      }
       var bbox = e.point;
       var features = map.queryRenderedFeatures(bbox);
       map.getCanvas().style.cursor = features.length ? "pointer" : "";
@@ -218,7 +278,8 @@ function MaplibreMap(props: { file: PMTiles }) {
 
   useEffect(() => {
     let initStyle = async () => {
-      if (map) {
+      if (mapRef.current) {
+        let map = mapRef.current;
         let header = await props.file.getHeader();
 
         map.fitBounds(
@@ -245,7 +306,33 @@ function MaplibreMap(props: { file: PMTiles }) {
     initStyle();
   }, []);
 
-  return <MapContainer ref={mapContainerRef}></MapContainer>;
+  return (
+    <MapContainer ref={mapContainerRef}>
+      <div ref={mapContainerRef}></div>
+      <Hamburger onClick={toggleHamburger}>menu</Hamburger>
+      {hamburgerOpen ? (
+        <Options>
+          <h4>Filter</h4>
+          <h4>Popup</h4>
+          <input
+            type="checkbox"
+            id="showAttributes"
+            checked={showAttributes}
+            onChange={toggleShowAttributes}
+          />
+          <label htmlFor="showAttributes">show attributes</label>
+          <h4>Tiles</h4>
+          <input
+            type="checkbox"
+            id="showTileBoundaries"
+            checked={showTileBoundaries}
+            onChange={toggleShowTileBoundaries}
+          />
+          <label htmlFor="showTileBoundaries">show tile boundaries</label>
+        </Options>
+      ) : null}
+    </MapContainer>
+  );
 }
 
 export default MaplibreMap;

@@ -282,13 +282,19 @@ export class FileAPISource implements Source {
 
 export class FetchSource implements Source {
   url: string;
+  customHeaders: Headers;
 
-  constructor(url: string) {
+  constructor(url: string, customHeaders: Headers = new Headers()) {
     this.url = url;
+    this.customHeaders = customHeaders;
   }
 
   getKey() {
     return this.url;
+  }
+
+  setHeaders(customHeaders:Headers) {
+    this.customHeaders = customHeaders;
   }
 
   async getBytes(
@@ -303,9 +309,15 @@ export class FetchSource implements Source {
       signal = controller.signal;
     }
 
+    const requestHeaders = new Headers(this.customHeaders);
+    requestHeaders.set(
+      "Range",
+      "bytes=" + offset + "-" + (offset + length - 1)
+    );
+
     let resp = await fetch(this.url, {
       signal: signal,
-      headers: { Range: "bytes=" + offset + "-" + (offset + length - 1) },
+      headers: requestHeaders,
     });
 
     // TODO: can return 416 with offset > 0 if content changed, which will have a blank etag.

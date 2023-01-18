@@ -140,43 +140,6 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         filter: ["==", ["geometry-type"], "Point"],
       });
     }
-  } else if (tilestats) {
-    // TODO deprecate me...
-    for (let [i, layer] of tilestats.layers.entries()) {
-      if (layer.geometry === "Polygon") {
-        layers.push({
-          id: layer.layer + "_fill",
-          type: "fill",
-          source: "source",
-          "source-layer": layer.layer,
-          paint: {
-            "fill-color": schemeSet3[i % 12],
-            "fill-opacity": 0.2,
-          },
-        });
-      } else if (layer.geometry === "LineString") {
-        layers.push({
-          id: layer.layer + "_stroke",
-          type: "line",
-          source: "source",
-          "source-layer": layer.layer,
-          paint: {
-            "line-color": schemeSet3[i % 12],
-            "line-width": 0.5,
-          },
-        });
-      } else {
-        layers.push({
-          id: layer.layer + "_point",
-          type: "circle",
-          source: "source",
-          "source-layer": layer.layer,
-          paint: {
-            "circle-color": schemeSet3[i % 12],
-          },
-        });
-      }
-    }
   }
 
   for (let layer of layers) {

@@ -22,6 +22,7 @@
     "maplibre-gl": "^2.1.9",
     "pbf": "^3.2.1",
     "protomaps": "^1.19.0",
+    "protomaps-themes-base": "1.1.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-dropzone": "^14.1.1",

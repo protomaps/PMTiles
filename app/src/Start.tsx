@@ -100,7 +100,7 @@ const ExampleList = styled("div", {
 const EXAMPLE_FILES = [
   "https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles",
   "https://protomaps.github.io/PMTiles/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles",
-  "https://pub-9288c68512ed46eca46ddcade307709b.r2.dev/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles",
+  "https://r2-public.protomaps.com/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles",
 ];
 
 function Start(props: {

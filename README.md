@@ -11,7 +11,7 @@ PMTiles is a single-file archive format for tiled data. A PMTiles archive can be
 * [PMTiles Inspector](https://protomaps.github.io/PMTiles/) - inspect and preview PMTiles local or remote PMTiles archives. 
     * Archives on cloud storage may require CORS for the origin `https://protomaps.github.io`
 
-* [Vector Tiles Example (US Zip Codes)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fpub-9288c68512ed46eca46ddcade307709b.r2.dev%2Fprotomaps-sample-datasets%2Fcb_2018_us_zcta510_500k.pmtiles)
+* [Vector Tiles Example (US Zip Codes)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fr2-public.protomaps.com%2Fprotomaps-sample-datasets%2Fcb_2018_us_zcta510_500k.pmtiles)
 
 
 Demos require MapLibre GL JS v1.14.1-rc.2 or later

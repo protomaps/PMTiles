@@ -85,7 +85,7 @@ def tileid_to_zxy(tile_id):
 def find_tile(entries, tile_id):
     m = 0
     n = len(entries) - 1
-    while m < n:
+    while m <= n:
         k = (n + m) >> 1
         c = tile_id - entries[k].tile_id
         if c > 0:

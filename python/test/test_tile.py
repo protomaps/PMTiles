@@ -86,6 +86,11 @@ class TestFindTile(unittest.TestCase):
         self.assertEqual(result.offset, 1)
         self.assertEqual(result.length, 1)
 
+    def test_find_tile_runlength(self):
+        entries = [Entry(3, 3, 1, 2),Entry(5, 5, 1, 2)]
+        result = find_tile(entries, 4)
+        self.assertEqual(result.offset, 3)
+
     def test_find_tile_multiple(self):
         entries = [Entry(100, 1, 1, 2)]
         result = find_tile(entries, 101)

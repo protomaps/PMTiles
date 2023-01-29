@@ -107,6 +107,15 @@ test("tile search for first entry == id", () => {
 	assert.strictEqual(findTile(entries, 101), null);
 });
 
+test("tile search with runlength", () => {
+	const entries: Entry[] = [
+		{ tileId: 3, offset: 3, length: 1, runLength: 2 },
+		{ tileId: 5, offset: 5, length: 1, runLength: 2 },
+	];
+	const entry = findTile(entries, 4)!;
+	assert.strictEqual(entry.offset, 3);
+});
+
 test("tile search with multiple tile entries", () => {
 	let entries: Entry[] = [{ tileId: 100, offset: 1, length: 1, runLength: 2 }];
 	let entry = findTile(entries, 101)!;

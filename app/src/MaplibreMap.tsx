@@ -102,7 +102,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   let layers: any[] = [];
 
   if (metadata.type !== "baselayer") {
-    layers = base_theme("basemap", "dark");
+    layers = base_theme("basemap", "black");
     layers[0].paint["background-color"] = "black";
   }
 

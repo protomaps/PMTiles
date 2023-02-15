@@ -126,6 +126,8 @@ def pmtiles_to_mbtiles(input, output):
                 metadata["format"] = "pbf"
 
         for k, v in metadata.items():
+            if not isinstance(v, str):
+                v = json.dumps(v, ensure_ascii=False)
             cursor.execute("INSERT INTO metadata VALUES(?,?)", (k, v))
 
         for zxy, tile_data in all_tiles(source):

@@ -2,19 +2,21 @@
 [![js minzipped size](https://img.shields.io/bundlephobia/minzip/pmtiles)](https://bundlephobia.com/package/pmtiles)
 [![pypi](https://img.shields.io/pypi/v/pmtiles)](https://pypi.org/project/pmtiles/)
 
+🔎 **PMTiles Viewer:** [https://protomaps.github.io/PMTiles/](https://protomaps.github.io/PMTiles/) 🔎
+
 # PMTiles
 
 PMTiles is a single-file archive format for tiled data. A PMTiles archive can be hosted on a commodity storage platform such as S3, and enables low-cost, zero-maintenance map applications that are "serverless" - free of a custom tile backend or third party provider.
 
 * [Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
 
-* [PMTiles Inspector](https://protomaps.github.io/PMTiles/) - inspect and preview PMTiles local or remote PMTiles archives. 
+* [PMTiles Viewer](https://protomaps.github.io/PMTiles/) - inspect and preview PMTiles local or remote PMTiles archives. 
     * Archives on cloud storage may require CORS for the origin `https://protomaps.github.io`
 
 * [Vector Tiles Example (US Zip Codes)](https://protomaps.github.io/PMTiles/?url=https%3A%2F%2Fr2-public.protomaps.com%2Fprotomaps-sample-datasets%2Fcb_2018_us_zcta510_500k.pmtiles)
 
 
-Demos require MapLibre GL JS v1.14.1-rc.2 or later
+Demos require MapLibre GL JS v1.15 or later.
 
 See also:
 * [Cloud Optimized GeoTIFFs](https://www.cogeo.org)

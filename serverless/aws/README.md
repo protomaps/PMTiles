@@ -4,7 +4,9 @@ See installation and configuration instructions at [Protomaps Docs: Deploy on AW
 
 ## Development
 
-Building the Lambda ZIP yourself:
+The code for the lambda function imports from the top level `js/` directory. You will therfore need to first run `npm install` and `npm run build` in the `js/` directory, and then run `npm run build` in the `serverless/aws` directory.
+
+You should then be able to build the Lambda ZIP:
 
 ```sh
 npm run build

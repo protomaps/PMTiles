@@ -44,7 +44,7 @@ jobs:
           node-version: 18.x
       - run: python .github/check_examples.py
       - run: cd js && npm install && npm test
-      - run: cd js && npm prettier-check
+      - run: cd js && npm run prettier-check
       - run: cd python && python -m unittest test/test_*
       - run: cd cpp && make
       - run: cd serverless/cloudflare && npm install && npm test

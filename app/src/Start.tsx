@@ -142,7 +142,7 @@ function Start(props: {
         placeholder="https://example.com/my_archive.pmtiles"
         onChange={onRemoteUrlChangeHandler}
       ></Input>
-      <Button color="gray" onClick={onSubmit}>
+      <Button color="gray" onClick={onSubmit} disabled={!remoteUrl.trim()}>
         Load URL
       </Button>
       <Label htmlFor="localFile">Select a local file</Label>

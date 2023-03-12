@@ -43,7 +43,7 @@ const Split = styled("div", {
 
 const TileRow = (props: {
   entry: Entry;
-  setSelectedEntry:(val: Entry | null) => void;
+  setSelectedEntry: (val: Entry | null) => void;
 }) => {
   let [z, x, y] = tileIdToZxy(props.entry.tileId);
   return (
@@ -58,7 +58,11 @@ const TileRow = (props: {
       <td>{y}</td>
       <td>{props.entry.offset}</td>
       <td>{props.entry.length}</td>
-      <td>{props.entry.runLength == 0 ? "directory" : `tile(${props.entry.runLength})`}</td>
+      <td>
+        {props.entry.runLength == 0
+          ? "directory"
+          : `tile(${props.entry.runLength})`}
+      </td>
     </TableRow>
   );
 };
@@ -289,8 +293,8 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
   return <img src={imgSrc}></img>;
 };
 
-function getHashString(entry:Entry) {
-  const [z,x,y] = tileIdToZxy(entry.tileId);
+function getHashString(entry: Entry) {
+  const [z, x, y] = tileIdToZxy(entry.tileId);
   let hash = `${z}/${x}/${y}`;
 
   const hashName = "inspector";

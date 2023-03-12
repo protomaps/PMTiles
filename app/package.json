@@ -1,11 +1,13 @@
 {
-  "name": "docs",
+  "name": "pmtiles-app",
   "private": true,
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",
-    "tsc": "tsc --watch"
+    "tsc": "tsc --watch",
+    "prettier": "prettier --write src/*",
+    "prettier-check": "prettier --check src/*"
   },
   "dependencies": {
     "@mapbox/vector-tile": "^1.3.1",
@@ -40,6 +42,7 @@
     "@types/react-dom": "^18.0.0",
     "@types/react-svg-pan-zoom": "^3.3.5",
     "@vitejs/plugin-react": "^1.3.0",
+    "prettier": "^2.8.4",
     "typescript": "^4.6.3",
     "vite": "^2.9.13"
   },

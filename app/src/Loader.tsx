@@ -41,7 +41,13 @@ const StyledLink = styled(
     justifyContent: "center",
     alignItems: "center",
   },
-  { "&:hover": { backgroundColor: "$hover", color:"$white", cursor: "pointer" } }
+  {
+    "&:hover": {
+      backgroundColor: "$hover",
+      color: "$white",
+      cursor: "pointer",
+    },
+  }
 );
 
 const StyledToggleGroup = styled(ToolbarPrimitive.ToggleGroup, {

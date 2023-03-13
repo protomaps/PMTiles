@@ -1,3 +1,11 @@
+2.7.1
+
+* Optimize `zxyToTileId` (via @huOp)
+
+2.7.0
+
+* Fix JS `zxyToTileId` for z > 15
+
 2.6.1
 
 * Replace `BigInt` usage to support older Safari versions.

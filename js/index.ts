@@ -88,6 +88,13 @@ function idOnLevel(z: number, pos: number): [number, number, number] {
   return [z, xy[0], xy[1]];
 }
 
+const tzValues: number[] = [
+  0, 1, 5, 21, 85, 341, 1365, 5461, 21845, 87381, 349525, 1398101, 5592405,
+  22369621, 89478485, 357913941, 1431655765, 5726623061, 22906492245,
+  91625968981, 366503875925, 1466015503701, 5864062014805, 23456248059221,
+  93824992236885, 375299968947541, 1501199875790165,
+];
+
 export function zxyToTileId(z: number, x: number, y: number): number {
   if (z > 26) {
     throw Error("Tile zoom level exceeds max safe number limit (26)");
@@ -96,12 +103,7 @@ export function zxyToTileId(z: number, x: number, y: number): number {
     throw Error("tile x/y outside zoom level bounds");
   }
 
-  let acc = 0;
-  let tz = 0;
-  while (tz < z) {
-    acc += Math.pow(2, tz) * Math.pow(2, tz);
-    tz++;
-  }
+  const acc = tzValues[z];
   const n = Math.pow(2, z);
   let rx = 0;
   let ry = 0;

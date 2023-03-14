@@ -76,7 +76,7 @@ const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
   return <PopupContainer>{fs}</PopupContainer>;
 };
 
-const rasterStyle = async (file: PMTiles) => {
+const rasterStyle = async (file: PMTiles): Promise<any> => {
   let header = await file.getHeader();
   return {
     version: 8,

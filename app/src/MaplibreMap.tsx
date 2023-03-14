@@ -76,14 +76,16 @@ const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
   return <PopupContainer>{fs}</PopupContainer>;
 };
 
-const rasterStyle = (file: PMTiles) => {
+const rasterStyle = async (file: PMTiles) => {
+  let header = await file.getHeader();
   return {
     version: 8,
     sources: {
       source: {
         type: "raster",
         tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
-        maxzoom: 4,
+        minzoom: header.minZoom,
+        maxzoom: header.maxZoom,
       },
     },
     layers: [
@@ -287,7 +289,8 @@ function MaplibreMap(props: { file: PMTiles }) {
           header.tileType === TileType.Png ||
           header.tileType == TileType.Jpeg
         ) {
-          map.setStyle(rasterStyle(props.file) as any);
+          let style = await rasterStyle(props.file);
+          map.setStyle(style);
         } else {
           let style = await vectorStyle(props.file);
           map.setStyle(style);

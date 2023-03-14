@@ -287,6 +287,7 @@ function MaplibreMap(props: { file: PMTiles }) {
         let style: any; // TODO maplibre types (not any)
         if (
           header.tileType === TileType.Png ||
+          header.tileType === TileType.Webp ||
           header.tileType == TileType.Jpeg
         ) {
           let style = await rasterStyle(props.file);

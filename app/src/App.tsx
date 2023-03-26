@@ -101,7 +101,9 @@ function App() {
   return (
     <div>
       <Header>
-        <Title href="/" onClick={clear}>PMTiles Viewer</Title>
+        <Title href="/" onClick={clear}>
+          PMTiles Viewer
+        </Title>
         <GithubLink>
           <GithubA href="https://github.com/protomaps/PMTiles" target="_blank">
             <GitHubLogoIcon /> {GIT_SHA}

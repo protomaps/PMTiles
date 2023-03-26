@@ -67,7 +67,7 @@ const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
         <FeatureRow key={i}>
           <span>
             <strong>{(f.layer as any)["source-layer"]}</strong>
-            <span style={{fontSize: "0.8em"}}> ({f.geometry.type})</span>
+            <span style={{ fontSize: "0.8em" }}> ({f.geometry.type})</span>
           </span>
           <table>
             {Object.entries(f.properties).map(([key, value], i) => (
@@ -88,11 +88,15 @@ interface LayerVisibility {
   visible: boolean;
 }
 
-const LayersVisibilityController = (props: { layers: LayerVisibility[], onChange: (layers: LayerVisibility[]) => void }) => {
-  const {layers, onChange} = props;
+const LayersVisibilityController = (props: {
+  layers: LayerVisibility[];
+  onChange: (layers: LayerVisibility[]) => void;
+}) => {
+  const { layers, onChange } = props;
   const allLayersCheckboxRef = useRef<HTMLInputElement>(null);
-  const visibleLayersCount = layers.filter(l => l.visible).length;
-  const indeterminate = visibleLayersCount > 0 && visibleLayersCount !== layers.length;
+  const visibleLayersCount = layers.filter((l) => l.visible).length;
+  const indeterminate =
+    visibleLayersCount > 0 && visibleLayersCount !== layers.length;
 
   useEffect(() => {
     if (allLayersCheckboxRef.current) {
@@ -110,13 +114,17 @@ const LayersVisibilityController = (props: { layers: LayerVisibility[], onChange
   }
 
   const toggleAllLayers = () => {
-    const someLayersAreHidden = visibleLayersCount !== layers.length;
-    onChange(layers.map(l => ({...l, visible: someLayersAreHidden})));
+    const visible = visibleLayersCount !== layers.length;
+    const newLayersVisibility = layers.map((l) => ({ ...l, visible }));
+    onChange(newLayersVisibility);
   };
 
   const toggleLayer = (event: React.ChangeEvent<HTMLInputElement>) => {
     const layerId = event.target.getAttribute("data-layer-id");
-    onChange(layers.map(l => (l.id === layerId ? {...l, visible: !l.visible} : l)));
+    const newLayersVisibility = layers.map((l) =>
+      l.id === layerId ? { ...l, visible: !l.visible } : l
+    );
+    onChange(newLayersVisibility);
   };
 
   return (
@@ -132,9 +140,9 @@ const LayersVisibilityController = (props: { layers: LayerVisibility[], onChange
         <em>All layers</em>
       </CheckboxLabel>
       <LayersVisibilityList>
-        {props.layers.map(({id, visible}) => (
+        {props.layers.map(({ id, visible }) => (
           <li key={id}>
-            <CheckboxLabel style={{paddingLeft: 8}}>
+            <CheckboxLabel style={{ paddingLeft: 8 }}>
               <input
                 type="checkbox"
                 checked={visible}
@@ -284,7 +292,10 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
       glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
       layers: layers,
     },
-    layersVisibility: vector_layers.map((l: any) => ({id: l.id, visible: true})),
+    layersVisibility: vector_layers.map((l: any) => ({
+      id: l.id,
+      visible: true,
+    })),
   };
 };
 
@@ -309,7 +320,9 @@ function MaplibreMap(props: { file: PMTiles }) {
 
   const toggleShowAttributes = () => {
     setShowAttributes(!showAttributes);
-    mapRef.current!.getCanvas().style.cursor = !showAttributes ? "crosshair" : "";
+    mapRef.current!.getCanvas().style.cursor = !showAttributes
+      ? "crosshair"
+      : "";
   };
 
   const toggleShowTileBoundaries = () => {
@@ -317,14 +330,18 @@ function MaplibreMap(props: { file: PMTiles }) {
     mapRef.current!.showTileBoundaries = !showTileBoundaries;
   };
 
-  const handleLayersVisibilityChange = (layersVisibility: LayerVisibility[]) => {
+  const handleLayersVisibilityChange = (
+    layersVisibility: LayerVisibility[]
+  ) => {
     setLayersVisibility(layersVisibility);
-    for (const {id, visible} of layersVisibility) {
-      mapRef.current!.setLayoutProperty(`${id}_fill`, "visibility", visible ? "visible" : "none");
-      mapRef.current!.setLayoutProperty(`${id}_stroke`, "visibility", visible ? "visible" : "none");
-      mapRef.current!.setLayoutProperty(`${id}_point`, "visibility", visible ? "visible" : "none");
+    const map = mapRef.current!;
+    for (const { id, visible } of layersVisibility) {
+      const visibility = visible ? "visible" : "none";
+      map.setLayoutProperty(`${id}_fill`, "visibility", visibility);
+      map.setLayoutProperty(`${id}_stroke`, "visibility", visibility);
+      map.setLayoutProperty(`${id}_point`, "visibility", visibility);
     }
-  }
+  };
 
   useEffect(() => {
     let protocol = new Protocol();
@@ -355,7 +372,7 @@ function MaplibreMap(props: { file: PMTiles }) {
     map.on("mousemove", (e) => {
       const hoveredFeatures = hoveredFeaturesRef.current;
       for (const feature of hoveredFeatures) {
-        map.setFeatureState(feature, {hover: false});
+        map.setFeatureState(feature, { hover: false });
         hoveredFeatures.delete(feature);
       }
 
@@ -364,15 +381,18 @@ function MaplibreMap(props: { file: PMTiles }) {
         return;
       }
 
-      const {x, y} = e.point;
+      const { x, y } = e.point;
       const r = 2; // radius around the point
-      var features = map.queryRenderedFeatures([[x-r, y-r], [x+r,y+r]]);
+      var features = map.queryRenderedFeatures([
+        [x - r, y - r],
+        [x + r, y + r],
+      ]);
 
       // ignore the basemap
       features = features.filter((feature) => feature.source === "source");
 
       for (const feature of features) {
-        map.setFeatureState(feature, {hover: true});
+        map.setFeatureState(feature, { hover: true });
         hoveredFeatures.add(feature);
       }
 
@@ -414,7 +434,7 @@ function MaplibreMap(props: { file: PMTiles }) {
           let style = await rasterStyle(props.file);
           map.setStyle(style);
         } else {
-          let {style, layersVisibility} = await vectorStyle(props.file);
+          let { style, layersVisibility } = await vectorStyle(props.file);
           map.setStyle(style);
           setLayersVisibility(layersVisibility);
         }

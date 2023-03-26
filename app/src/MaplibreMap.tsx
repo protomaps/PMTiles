@@ -128,7 +128,18 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         "source-layer": layer.id,
         paint: {
           "fill-color": schemeSet3[i % 12],
-          "fill-opacity": 0.2,
+          "fill-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            0.35,
+            0.2,
+          ],
+          "fill-outline-color": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            "hsl(0,100%,90%)",
+            "rgba(0,0,0,0)",
+          ],
         },
         filter: ["==", ["geometry-type"], "Polygon"],
       });
@@ -139,7 +150,12 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         "source-layer": layer.id,
         paint: {
           "line-color": schemeSet3[i % 12],
-          "line-width": 0.5,
+          "line-width": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            2,
+            0.5,
+          ],
         },
         filter: ["==", ["geometry-type"], "LineString"],
       });
@@ -150,6 +166,12 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         "source-layer": layer.id,
         paint: {
           "circle-color": schemeSet3[i % 12],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            6,
+            5,
+          ],
         },
         filter: ["==", ["geometry-type"], "Point"],
       });
@@ -195,12 +217,13 @@ function MaplibreMap(props: { file: PMTiles }) {
   let [showAttributes, setShowAttributes] = useState<boolean>(false);
   let [showTileBoundaries, setShowTileBoundaries] = useState<boolean>(false);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const hoveredFeaturesRef = useRef<Set<MapGeoJSONFeature>>(new Set());
 
   // make it accessible in hook
   const showAttributesRef = useRef(showAttributes);
   useEffect(() => {
     showAttributesRef.current = showAttributes;
-  });
+  }, [showAttributes]);
 
   const toggleHamburger = () => {
     setHamburgerOpen(!hamburgerOpen);
@@ -208,6 +231,7 @@ function MaplibreMap(props: { file: PMTiles }) {
 
   const toggleShowAttributes = () => {
     setShowAttributes(!showAttributes);
+    mapRef.current!.getCanvas().style.cursor = !showAttributes ? "crosshair" : "";
   };
 
   const toggleShowTileBoundaries = () => {
@@ -242,18 +266,28 @@ function MaplibreMap(props: { file: PMTiles }) {
     mapRef.current = map;
 
     map.on("mousemove", (e) => {
+      const hoveredFeatures = hoveredFeaturesRef.current;
+      for (const feature of hoveredFeatures) {
+        map.setFeatureState(feature, {hover: false});
+        hoveredFeatures.delete(feature);
+      }
+
       if (!showAttributesRef.current) {
         popup.remove();
         return;
       }
-      var bbox = e.point;
 
-      var features = map.queryRenderedFeatures(bbox);
+      const {x, y} = e.point;
+      const r = 2; // radius around the point
+      var features = map.queryRenderedFeatures([[x-r, y-r], [x+r,y+r]]);
 
       // ignore the basemap
       features = features.filter((feature) => feature.source === "source");
 
-      map.getCanvas().style.cursor = features.length ? "pointer" : "";
+      for (const feature of features) {
+        map.setFeatureState(feature, {hover: true});
+        hoveredFeatures.add(feature);
+      }
 
       let content = renderToString(<FeaturesProperties features={features} />);
       if (!features.length) {

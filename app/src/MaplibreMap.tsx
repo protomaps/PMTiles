@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { renderToString } from "react-dom/server";
 import { PMTiles, TileType } from "../../js/index";
 import { Protocol } from "../../js/adapters";
@@ -50,30 +50,104 @@ const Options = styled("div", {
   zIndex: 9999,
 });
 
+const CheckboxLabel = styled("label", {
+  display: "flex",
+  gap: 6,
+  cursor: "pointer",
+});
+
+const LayersVisibilityList = styled("ul", {
+  listStyleType: "none",
+});
+
 const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
-  const fs = props.features.map((f, i) => {
-    let tmp: [string, string][] = [];
-    for (var key in f.properties) {
-      tmp.push([key, f.properties[key]]);
+  return (
+    <PopupContainer>
+      {props.features.map((f, i) => (
+        <FeatureRow key={i}>
+          <span>
+            <strong>{(f.layer as any)["source-layer"]}</strong>
+            <span style={{fontSize: "0.8em"}}> ({f.geometry.type})</span>
+          </span>
+          <table>
+            {Object.entries(f.properties).map(([key, value], i) => (
+              <tr key={i}>
+                <td>{key}</td>
+                <td>{value}</td>
+              </tr>
+            ))}
+          </table>
+        </FeatureRow>
+      ))}
+    </PopupContainer>
+  );
+};
+
+interface LayerVisibility {
+  id: string;
+  visible: boolean;
+}
+
+const LayersVisibilityController = (props: { layers: LayerVisibility[], onChange: (layers: LayerVisibility[]) => void }) => {
+  const {layers, onChange} = props;
+  const allLayersCheckboxRef = useRef<HTMLInputElement>(null);
+  const visibleLayersCount = layers.filter(l => l.visible).length;
+  const indeterminate = visibleLayersCount > 0 && visibleLayersCount !== layers.length;
+
+  useEffect(() => {
+    if (allLayersCheckboxRef.current) {
+      allLayersCheckboxRef.current.indeterminate = indeterminate;
     }
+  }, [indeterminate]);
 
-    const rows = tmp.map((d, i) => (
-      <tr key={i}>
-        <td>{d[0]}</td>
-        <td>{d[1]}</td>
-      </tr>
-    ));
-
+  if (!props.layers.length) {
     return (
-      <FeatureRow key={i}>
-        <div>
-          <strong>{(f.layer as any)["source-layer"]}</strong>
-        </div>
-        <table>{rows}</table>
-      </FeatureRow>
+      <>
+        <h4>Layers</h4>
+        <span>No vector layers found</span>
+      </>
     );
-  });
-  return <PopupContainer>{fs}</PopupContainer>;
+  }
+
+  const toggleAllLayers = () => {
+    const someLayersAreHidden = visibleLayersCount !== layers.length;
+    onChange(layers.map(l => ({...l, visible: someLayersAreHidden})));
+  };
+
+  const toggleLayer = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const layerId = event.target.getAttribute("data-layer-id");
+    onChange(layers.map(l => (l.id === layerId ? {...l, visible: !l.visible} : l)));
+  };
+
+  return (
+    <>
+      <h4>Layers</h4>
+      <CheckboxLabel>
+        <input
+          ref={allLayersCheckboxRef}
+          type="checkbox"
+          checked={visibleLayersCount === layers.length}
+          onChange={toggleAllLayers}
+        />
+        <em>All layers</em>
+      </CheckboxLabel>
+      <LayersVisibilityList>
+        {props.layers.map(({id, visible}) => (
+          <li key={id}>
+            <CheckboxLabel style={{paddingLeft: 8}}>
+              <input
+                type="checkbox"
+                checked={visible}
+                onChange={toggleLayer}
+                data-layer-id={id}
+              />
+              {id}
+            </CheckboxLabel>
+          </li>
+        ))}
+      </LayersVisibilityList>
+    </>
+  );
 };
 
 const rasterStyle = async (file: PMTiles): Promise<any> => {
@@ -188,26 +262,29 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   const bounds = [header.minLon, header.minLat, header.maxLon, header.maxLat];
 
   return {
-    version: 8,
-    sources: {
-      source: {
-        type: "vector",
-        tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
-        minzoom: header.minZoom,
-        maxzoom: header.maxZoom,
-        bounds: bounds,
+    style: {
+      version: 8,
+      sources: {
+        source: {
+          type: "vector",
+          tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
+          minzoom: header.minZoom,
+          maxzoom: header.maxZoom,
+          bounds: bounds,
+        },
+        basemap: {
+          type: "vector",
+          tiles: [
+            "https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=1003762824b9687f",
+          ],
+          maxzoom: 14,
+          bounds: bounds,
+        },
       },
-      basemap: {
-        type: "vector",
-        tiles: [
-          "https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=1003762824b9687f",
-        ],
-        maxzoom: 14,
-        bounds: bounds,
-      },
+      glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
+      layers: layers,
     },
-    glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
-    layers: layers,
+    layersVisibility: vector_layers.map((l: any) => ({id: l.id, visible: true})),
   };
 };
 
@@ -216,6 +293,7 @@ function MaplibreMap(props: { file: PMTiles }) {
   let [hamburgerOpen, setHamburgerOpen] = useState<boolean>(true);
   let [showAttributes, setShowAttributes] = useState<boolean>(false);
   let [showTileBoundaries, setShowTileBoundaries] = useState<boolean>(false);
+  let [layersVisibility, setLayersVisibility] = useState<LayerVisibility[]>([]);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const hoveredFeaturesRef = useRef<Set<MapGeoJSONFeature>>(new Set());
 
@@ -238,6 +316,15 @@ function MaplibreMap(props: { file: PMTiles }) {
     setShowTileBoundaries(!showTileBoundaries);
     mapRef.current!.showTileBoundaries = !showTileBoundaries;
   };
+
+  const handleLayersVisibilityChange = (layersVisibility: LayerVisibility[]) => {
+    setLayersVisibility(layersVisibility);
+    for (const {id, visible} of layersVisibility) {
+      mapRef.current!.setLayoutProperty(`${id}_fill`, "visibility", visible ? "visible" : "none");
+      mapRef.current!.setLayoutProperty(`${id}_stroke`, "visibility", visible ? "visible" : "none");
+      mapRef.current!.setLayoutProperty(`${id}_point`, "visibility", visible ? "visible" : "none");
+    }
+  }
 
   useEffect(() => {
     let protocol = new Protocol();
@@ -327,8 +414,9 @@ function MaplibreMap(props: { file: PMTiles }) {
           let style = await rasterStyle(props.file);
           map.setStyle(style);
         } else {
-          let style = await vectorStyle(props.file);
+          let {style, layersVisibility} = await vectorStyle(props.file);
           map.setStyle(style);
+          setLayersVisibility(layersVisibility);
         }
       }
     };
@@ -344,21 +432,27 @@ function MaplibreMap(props: { file: PMTiles }) {
         <Options>
           <h4>Filter</h4>
           <h4>Popup</h4>
-          <input
-            type="checkbox"
-            id="showAttributes"
-            checked={showAttributes}
-            onChange={toggleShowAttributes}
-          />
-          <label htmlFor="showAttributes">show attributes</label>
+          <CheckboxLabel>
+            <input
+              type="checkbox"
+              checked={showAttributes}
+              onChange={toggleShowAttributes}
+            />
+            show attributes
+          </CheckboxLabel>
           <h4>Tiles</h4>
-          <input
-            type="checkbox"
-            id="showTileBoundaries"
-            checked={showTileBoundaries}
-            onChange={toggleShowTileBoundaries}
+          <CheckboxLabel>
+            <input
+              type="checkbox"
+              checked={showTileBoundaries}
+              onChange={toggleShowTileBoundaries}
+            />
+            show tile boundaries
+          </CheckboxLabel>
+          <LayersVisibilityController
+            layers={layersVisibility}
+            onChange={handleLayersVisibilityChange}
           />
-          <label htmlFor="showTileBoundaries">show tile boundaries</label>
         </Options>
       ) : null}
     </MapContainer>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { styled, globalStyles } from "./stitches.config";
 import { PMTiles } from "../../js/index";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
@@ -14,9 +14,10 @@ const Header = styled("div", {
   padding: "0 $2 0 $2",
 });
 
-const Title = styled("span", {
+const Title = styled("a", {
   fontWeight: 500,
-  cursor: "pointer",
+  color: "unset",
+  textDecoration: "none",
 });
 
 const GithubA = styled("a", {
@@ -88,7 +89,8 @@ function App() {
     }
   }, [file]);
 
-  let clear = () => {
+  let clear = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
     setFile(undefined);
   };
 
@@ -99,7 +101,7 @@ function App() {
   return (
     <div>
       <Header>
-        <Title onClick={clear}>PMTiles Viewer</Title>
+        <Title href="/" onClick={clear}>PMTiles Viewer</Title>
         <GithubLink>
           <GithubA href="https://github.com/protomaps/PMTiles" target="_blank">
             <GitHubLogoIcon /> {GIT_SHA}

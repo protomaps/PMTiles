@@ -101,7 +101,7 @@ function App() {
   return (
     <div>
       <Header>
-        <Title href="/" onClick={clear}>
+        <Title href="/PMTiles/" onClick={clear}>
           PMTiles Viewer
         </Title>
         <GithubLink>

@@ -46,6 +46,7 @@
                       tile.setFeatures(features);
                       tile.setState(2); // LOADED
                     } else {
+                      tile.setFeatures([]);
                       tile.setState(4); // EMPTY
                     }
                   });

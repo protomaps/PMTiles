@@ -183,18 +183,6 @@ struct entry_zxy {
 	}
 };
 
-struct {
-	bool operator()(entry_zxy a, entry_zxy b) const {
-		if (a.z != b.z) {
-			return a.z < b.z;
-		}
-		if (a.x != b.x) {
-			return a.x < b.x;
-		}
-		return a.y < b.y;
-	}
-} entry_zxy_cmp;
-
 struct varint_too_long_exception : std::exception {
 	const char *what() const noexcept override {
 		return "varint too long exception";

@@ -6,6 +6,7 @@ import { PMTiles, Source, TileType } from "./index";
 
 export const leafletRasterLayer = (source: PMTiles, options: any) => {
   let loaded = false;
+  let mimeType: string = "";
   const cls = L.GridLayer.extend({
     createTile: function (coord: any, done: any) {
       const el: any = document.createElement("img");
@@ -20,6 +21,12 @@ export const leafletRasterLayer = (source: PMTiles, options: any) => {
             console.error(
               "Error: archive contains MVT vector tiles, but leafletRasterLayer is for displaying raster tiles. See https://github.com/protomaps/PMTiles/tree/main/js for details."
             );
+          } else if (header.tileType == 2) {
+            mimeType = "image/png";
+          } else if (header.tileType == 3) {
+            mimeType = "image/jpeg";
+          } else if (header.tileType == 4) {
+            mimeType = "image/webp";
           }
         });
         loaded = true;
@@ -28,7 +35,7 @@ export const leafletRasterLayer = (source: PMTiles, options: any) => {
         .getZxy(coord.z, coord.x, coord.y, signal)
         .then((arr) => {
           if (arr) {
-            const blob = new Blob([arr.data]);
+            const blob = new Blob([arr.data], { type: mimeType });
             const imageUrl = window.URL.createObjectURL(blob);
             el.src = imageUrl;
             el.cancel = null;

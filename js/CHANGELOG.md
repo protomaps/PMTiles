@@ -1,3 +1,7 @@
+2.7.2
+
+* `leafletRasterLayer` sets correct MIME types (via @bmcbride)
+
 2.7.1
 
 * Optimize `zxyToTileId` (via @huOp)

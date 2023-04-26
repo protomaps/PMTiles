@@ -28,7 +28,8 @@
             constructor(options) {
               super({
                 state: "loading",
-                attributions: options.attributions
+                attributions: options.attributions,
+                tileSize: options.tileSize
               });
 
               const p = new pmtiles.PMTiles(options.url);
@@ -41,7 +42,6 @@
                   const blob = new Blob([response.data]);
                   const src = URL.createObjectURL(blob);
                   const image = await this.loadImage(src);
-                  image.width = 512;
                   URL.revokeObjectURL(src);
                   return image;
                 });
@@ -50,11 +50,11 @@
             }
           }
 
-          // TODO: tile size 512,512
           const rasterLayer = new ol.layer.WebGLTile({
             source: new RasterPMTilesSource({
               url:"https://r2-public.protomaps.com/protomaps-sample-datasets/terrarium_z9.pmtiles",
-              attributions:["https://github.com/tilezen/joerd/blob/master/docs/attribution.md"]
+              attributions:["https://github.com/tilezen/joerd/blob/master/docs/attribution.md"],
+              tileSize: [512,512]
             })
           });
 
@@ -64,7 +64,7 @@
             target: 'map',
             view: new ol.View({
               center: [0,0],
-              zoom: 0,
+              zoom: 1,
               multiWorld: true
             }),
           });

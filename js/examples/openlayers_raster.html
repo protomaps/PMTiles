@@ -34,7 +34,9 @@
 
               const p = new pmtiles.PMTiles(options.url);
               p.getHeader().then(h => {
-                // TODO: set extent based on header
+                if (h.tileType !== pmtiles.TileType.Jpeg && h.tileType !== pmtiles.TileType.Png && h.tileType !== pmtiles.TileType.Webp) {
+                  console.warn("Warning: pmtiles tile type is not jpeg, png, or webp");
+                }
                 this.tileGrid.minZoom = h.minZoom;
                 this.tileGrid.maxZoom = h.maxZoom;
                 this.setLoader(async (z,x,y) => {

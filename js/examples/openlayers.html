@@ -54,7 +54,9 @@
 
               this._p = new pmtiles.PMTiles(options.url);
               this._p.getHeader().then(h => {
-                // TODO: set extent based on header
+                if (h.tileType !== pmtiles.TileType.Mvt) {
+                  console.warn("Warning: pmtiles tile type is not mvt");
+                }
                 this.tileGrid.minZoom = h.minZoom;
                 this.tileGrid.maxZoom = h.maxZoom;
                 this.setTileLoadFunction(this.tileLoadFunction);

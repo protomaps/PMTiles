@@ -2,8 +2,8 @@
     <head>
         <title>PMTiles OpenLayers Vector Example</title>
         <meta charset="utf-8"/>
-        <script src="https://cdn.jsdelivr.net/npm/ol@v7.1.0/dist/ol.js"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.1.0/ol.css">
+        <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
         <script src="https://unpkg.com/pmtiles@2.7.2/dist/index.js"></script>
         <style>
             body, #map {
@@ -15,79 +15,80 @@
     <body>
         <div id="map"></div>
         <script type="text/javascript">
-            class OLPMTilesSource {
-              constructor(url) {
-                  this._url = url;
-                  this._p = new pmtiles.PMTiles(url)
-              }
+          class VectorPMTilesSource extends ol.source.VectorTile {
+            tileLoadFunction = (tile,url) => {
+              // the URL construction is done internally by OL, so we need to parse it 
+              // back out here using a hacky regex
+              const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
+              const result = url.match(re);
+              const z = +result[2];
+              const x = +result[3];
+              const y = +result[4];
 
-              url = () => {
-                return "pmtiles://" + this._url + "/{z}/{x}/{y}";
-              }
-
-              vectorTileLoadFunction = (tile,url) => {
-                // the URL construction is done internally by OL, so we need to parse it 
-                // back out here using a hacky regex
-                const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
-                const result = url.match(re);
-                const z = +result[2];
-                const x = +result[3];
-                const y = +result[4];
-
-                tile.setLoader((extent, resolution, projection) => {
-                  tile.setState(1); // LOADING
-                  this._p.getZxy(z,x,y).then((tile_result) => {
-                    if (tile_result) {
-                      const format = tile.getFormat();
-                      const features = format.readFeatures(tile_result.data.buffer, {
-                        extent: extent,
-                        featureProjection: projection
-                      });
-                      tile.setFeatures(features);
-                      tile.setState(2); // LOADED
-                    } else {
-                      tile.setFeatures([]);
-                      tile.setState(4); // EMPTY
-                    }
-                  });
-                }); 
-              }
+              tile.setLoader((extent, resolution, projection) => {
+                tile.setState(1); // LOADING
+                this._p.getZxy(z,x,y).then((tile_result) => {
+                  if (tile_result) {
+                    const format = tile.getFormat();
+                    const features = format.readFeatures(tile_result.data.buffer, {
+                      extent: extent,
+                      featureProjection: projection
+                    });
+                    tile.setFeatures(features);
+                    tile.setState(2); // LOADED
+                  } else {
+                    tile.setFeatures([]);
+                    tile.setState(4); // EMPTY
+                  }
+                });
+              });
             }
 
-            const source = new OLPMTilesSource("https://r2-public.protomaps.com/protomaps-sample-datasets/nz-buildings-v3.pmtiles");
+            constructor(options) {
+              super({
+                state:"loading",
+                url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
+                format: new ol.format.MVT(),
+                attributions: options.attributions
+              });
 
-            const style = new ol.style.Style({
+              this._p = new pmtiles.PMTiles(options.url);
+              this._p.getHeader().then(h => {
+                // TODO: set extent based on header
+                this.tileGrid.minZoom = h.minZoom;
+                this.tileGrid.maxZoom = h.maxZoom;
+                this.setTileLoadFunction(this.tileLoadFunction);
+                this.setState("ready");
+              });
+            }
+          }
+
+          const vectorLayer = new ol.layer.VectorTile({
+            declutter: true,
+            source: new VectorPMTilesSource({
+              url: "https://r2-public.protomaps.com/protomaps-sample-datasets/nz-buildings-v3.pmtiles",
+              attributions: ["© Land Information New Zealand"]
+            }),
+            style: new ol.style.Style({
               stroke: new ol.style.Stroke({
                 color: 'gray',
                 width: 1,
               }),
               fill: new ol.style.Fill({
                 color: 'rgba(20,20,20,0.9)',
-              }),
-            });
+              })
+            })
+          });
 
-            const vtLayer = new ol.layer.VectorTile({
-              declutter: true,
-              source: new ol.source.VectorTile({
-                attributions:["© Land Information New Zealand"],
-                maxZoom: 14, // this could come from the PMTiles header (async)
-                format: new ol.format.MVT(), // this could come from the PMTiles header (async)
-                url:source.url(),
-                tileLoadFunction: source.vectorTileLoadFunction
-              }),
-              style: style,
-            });
-
-            ol.proj.useGeographic();
-            const map = new ol.Map({
-              layers: [vtLayer],
-              target: 'map',
-              view: new ol.View({
-                center: [172.606201,-43.556510],
-                zoom: 7,
-                multiWorld: true,
-              }),
-            });
+          ol.proj.useGeographic();
+          const map = new ol.Map({
+            layers: [vectorLayer],
+            target: 'map',
+            view: new ol.View({
+              center: [172.606201,-43.556510],
+              zoom: 7
+            }),
+          });
         </script>
     </body>
 </html>

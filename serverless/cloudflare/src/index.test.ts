@@ -31,9 +31,9 @@ test("parse tile default", () => {
 
   ({ name, tile } = tile_path("/foo/11/22/33.pbf"));
   assert.strictEqual(name, "foo");
-  assert.strictEqual(tile[0], 11);
-  assert.strictEqual(tile[1], 22);
-  assert.strictEqual(tile[2], 33);
+  assert.strictEqual(tile![0], 11);
+  assert.strictEqual(tile![1], 22);
+  assert.strictEqual(tile![2], 33);
 });
 
 test("parse tile path setting", () => {
@@ -41,17 +41,17 @@ test("parse tile path setting", () => {
     "/foo/11/22/33.pbf",
     "/{name}/{z}/{y}/{x}.{ext}"
   );
-  assert.strictEqual(tile[1], 33);
-  assert.strictEqual(tile[2], 22);
+  assert.strictEqual(tile![1], 33);
+  assert.strictEqual(tile![2], 22);
   assert.strictEqual(ext, "pbf");
   ({ ok, name, tile, ext } = tile_path(
     "/tiles/foo/4/2/3.mvt",
     "/tiles/{name}/{z}/{x}/{y}.{ext}"
   ));
   assert.strictEqual(name, "foo");
-  assert.strictEqual(tile[0], 4);
-  assert.strictEqual(tile[1], 2);
-  assert.strictEqual(tile[2], 3);
+  assert.strictEqual(tile![0], 4);
+  assert.strictEqual(tile![1], 2);
+  assert.strictEqual(tile![2], 3);
   assert.strictEqual(ext, "mvt");
 });
 
@@ -69,4 +69,10 @@ test("parse tile path setting slash", () => {
     "/{name}/{z}/{y}/{x}.{ext}"
   );
   assert.strictEqual(name, "foo/bar");
+});
+
+test("parse tileset default", () => {
+  let { ok, name, tile, ext } = tile_path("/abcd.json");
+  assert.strictEqual(ok, true);
+  assert.strictEqual("abcd", name);
 });

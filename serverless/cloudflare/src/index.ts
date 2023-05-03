@@ -18,6 +18,7 @@ interface Env {
   ALLOWED_ORIGINS?: string;
   PMTILES_PATH?: string;
   TILE_PATH?: string;
+  TILESET_PATH?: string;
   CACHE_MAX_AGE?: number;
 }
 
@@ -37,33 +38,57 @@ export const pmtiles_path = (name: string, setting?: string): string => {
 const TILE =
   /^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(?<Z>\d+)\/(?<X>\d+)\/(?<Y>\d+).(?<EXT>[a-z]+)$/;
 
+const TILESET = /^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+).json$/;
+
 export const tile_path = (
   path: string,
-  setting?: string
+  tile_setting?: string,
+  tileset_setting?: string
 ): {
   ok: boolean;
   name: string;
-  tile: [number, number, number];
+  tile?: [number, number, number];
   ext: string;
 } => {
-  let pattern = TILE;
-  if (setting) {
+  let tile_pattern = TILE;
+  if (tile_setting) {
     // escape regex
-    setting = setting.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
-    setting = setting.replace("{name}", "(?<NAME>[0-9a-zA-Z/!-_.*'()]+)");
-    setting = setting.replace("{z}", "(?<Z>\\d+)");
-    setting = setting.replace("{x}", "(?<X>\\d+)");
-    setting = setting.replace("{y}", "(?<Y>\\d+)");
-    setting = setting.replace("{ext}", "(?<EXT>[a-z]+)");
-    pattern = new RegExp(setting);
+    tile_setting = tile_setting.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
+    tile_setting = tile_setting.replace(
+      "{name}",
+      "(?<NAME>[0-9a-zA-Z/!-_.*'()]+)"
+    );
+    tile_setting = tile_setting.replace("{z}", "(?<Z>\\d+)");
+    tile_setting = tile_setting.replace("{x}", "(?<X>\\d+)");
+    tile_setting = tile_setting.replace("{y}", "(?<Y>\\d+)");
+    tile_setting = tile_setting.replace("{ext}", "(?<EXT>[a-z]+)");
+    tile_pattern = new RegExp(tile_setting);
   }
 
-  let match = path.match(pattern);
+  let tile_match = path.match(tile_pattern);
 
-  if (match) {
-    const g = match.groups!;
+  if (tile_match) {
+    const g = tile_match.groups!;
     return { ok: true, name: g.NAME, tile: [+g.Z, +g.X, +g.Y], ext: g.EXT };
   }
+
+  let tileset_pattern = TILESET;
+  if (tileset_setting) {
+    tileset_setting = tileset_setting.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
+    tileset_setting = tileset_setting.replace(
+      "{name}",
+      "(?<NAME>[0-9a-zA-Z/!-_.*'()]+)"
+    );
+    tileset_pattern = new RegExp(tileset_setting);
+  }
+
+  let tileset_match = path.match(tileset_pattern);
+
+  if (tileset_match) {
+    const g = tileset_match.groups!;
+    return { ok: true, name: g.NAME, ext: "json" };
+  }
+
   return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
 };
 
@@ -184,6 +209,53 @@ export default {
       const p = new PMTiles(source, CACHE, nativeDecompress);
       try {
         const p_header = await p.getHeader();
+
+        if (!tile) {
+          const metadata = await p.getMetadata();
+          cacheable_headers.set("Content-Type", "application/json");
+
+          let ext = "";
+          if (p_header.tileType === TileType.Mvt) {
+            ext = ".mvt";
+          } else if (p_header.tileType === TileType.Png) {
+            ext = ".png";
+          } else if (p_header.tileType === TileType.Jpeg) {
+            ext = ".jpg";
+          } else if (p_header.tileType === TileType.Webp) {
+            ext = ".webp";
+          }
+
+          // TODO: this needs to be based on the TILE_PATH setting
+          metadata.tiles = [
+            url.protocol +
+              "//" +
+              url.hostname +
+              "/" +
+              name +
+              "/{z}/{x}/{y}" +
+              ext,
+          ];
+          metadata.bounds = [
+            p_header.minLon,
+            p_header.minLat,
+            p_header.maxLon,
+            p_header.maxLat,
+          ];
+          metadata.center = [
+            p_header.centerLon,
+            p_header.centerLat,
+            p_header.centerZoom,
+          ];
+          metadata.maxzoom = p_header.maxZoom;
+          metadata.minzoom = p_header.minZoom;
+          metadata.scheme = "xyz";
+          return cacheableResponse(
+            JSON.stringify(metadata),
+            cacheable_headers,
+            200
+          );
+        }
+
         if (tile[0] < p_header.minZoom || tile[0] > p_header.maxZoom) {
           return cacheableResponse(undefined, cacheable_headers, 404);
         }

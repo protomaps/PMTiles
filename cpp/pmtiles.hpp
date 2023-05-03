@@ -484,7 +484,7 @@ inline std::tuple<std::string, std::string, int> build_root_leaves(const std::fu
 	std::vector<pmtiles::entryv3> root_entries;
 	std::string leaves_bytes;
 	int num_leaves = 0;
-	for (size_t i = 0; i <= entries.size(); i += leaf_size) {
+	for (size_t i = 0; i < entries.size(); i += leaf_size) {
 		num_leaves++;
 		int end = i + leaf_size;
 		if (i + leaf_size > entries.size()) {

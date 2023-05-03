@@ -196,6 +196,16 @@ string mydecompress(const string &input, uint8_t compression) {
 	return input;
 }
 
+MU_TEST(test_build_dirs_one) {
+	vector<entryv3> entries;
+	entries.push_back(entryv3(0, 0, 1, 2));
+	string root_bytes;
+	string leaves_bytes;
+	int num_leaves;
+	tie(root_bytes, leaves_bytes, num_leaves) = build_root_leaves(&mycompress, pmtiles::COMPRESSION_NONE, entries, 1);
+	mu_check(num_leaves == 1);
+}
+
 MU_TEST(test_build_dirs) {
 	vector<entryv3> entries;
 	for (int i = 0; i < 100000; i += 2) {
@@ -259,6 +269,7 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_serialize_header);
 	MU_RUN_TEST(test_deserialize_header);
 	MU_RUN_TEST(test_build_dirs);
+	MU_RUN_TEST(test_build_dirs_one);
 }
 
 int main(int argc, char *argv[]) {

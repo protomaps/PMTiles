@@ -1,0 +1,34 @@
+{
+  "name": "ol-pmtiles",
+  "version": "0.0.2",
+  "description": "PMTiles sources for OpenLayers",
+  "type": "module",
+  "main": "src/index.js",
+  "files": [
+    "src/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/protomaps/PMTiles.git"
+  },
+  "bugs": {
+    "url": "https://github.com/protomaps/PMTiles/issues"
+  },
+  "keywords": [
+    "openlayers",
+    "pmtiles"
+  ],
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "prettier": "prettier --write *.js",
+    "prettier-check": "prettier --check *.js"
+  },
+  "dependencies": {
+    "pmtiles": "^2.7.0"
+  },
+  "devDependencies": {
+  },
+  "peerDependencies": {
+    "ol": ">=7.3.0"
+  }
+}

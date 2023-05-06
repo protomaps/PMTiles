@@ -10,7 +10,7 @@ A archive consist of five main sections:
 
 1. A fixed-size 127-byte header (described in [chapter 3](#3-header))
 1. A root directory (described in [chapter 4](#4-directories))
-1. Optional JSON meta data (described in [chapter 5](#5-json-metadata))
+1. Optional JSON metadata (described in [chapter 5](#5-json-metadata))
 1. Optional leaf directories (described in [chapter 4](#4-directories))
 1. The actual tile data.
 
@@ -19,7 +19,7 @@ The only restriction is that the root directory must be contained in the first 1
 
 ## 3 Header
 
-The Header has a length of 127 bytes and is always at the start of the archive. It includes the most important meta data and everything needed to decode the rest of the PMTiles archive properly.
+The Header has a length of 127 bytes and is always at the start of the archive. It includes the most important metadata and everything needed to decode the rest of the PMTiles archive properly.
 
 ### 3.1 Overview
 ```
@@ -27,9 +27,9 @@ Offset     00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D  
          +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
 000000   |           Magic Number           |  V |         Root Directory Offset         |
          +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-000010   |         Root Directory Length         |            Meta Data Offset           |
+000010   |         Root Directory Length         |            Metadata Offset            |
          +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-000020   |            Meta Data Length           |        Leaf Directories Offset        |
+000020   |            Metadata Length            |        Leaf Directories Offset        |
          +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
 000030   |        Leaf Directories Length        |            Tile Data Offset           |
          +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
@@ -64,15 +64,15 @@ The Root Directory Length is a 8-byte field specifying the number of bytes in th
 
 This field is encoded as an little-endian 64-bit unsigned integer.
 
-#### Meta Data Offset
+#### Metadata Offset
 
-The Meta Data Offset is a 8-byte field whose value gives the offset of the first byte of the meta data. This address offset is relative to the first byte of the archive.
+The Metadata Offset is a 8-byte field whose value gives the offset of the first byte of the metadata. This address offset is relative to the first byte of the archive.
 
 This field is encoded as an little-endian 64-bit unsigned integer.
 
-#### Meta Data Length
+#### Metadata Length
 
-The Meta Data Length is a 8-byte field specifying the number of bytes reserved for the meta data. A value `0` indicates that there is no meta data included in this PMTiles archive.
+The Metadata Length is a 8-byte field specifying the number of bytes reserved for the metadata. A value `0` indicates that there is no metadata included in this PMTiles archive.
 
 This field is encoded as an little-endian 64-bit unsigned integer.
 
@@ -139,7 +139,7 @@ The field can be one of the following values:
 
 #### Internal Compression (IC)
 
-The Internal Compression is a 1-byte field specifying the compression of the root directory, meta data as well as all leaf directories.
+The Internal Compression is a 1-byte field specifying the compression of the root directory, metadata as well as all leaf directories.
 
 The encoding of this field is described in [chapter 3.3](#33-compression).
 

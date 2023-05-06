@@ -102,7 +102,7 @@ This field is encoded as an little-endian 64-bit unsigned integer.
 
 #### Number of Addressed Tiles
 
-The Number of Addressed Tiles is a 8-byte field specifying the total number of tiles, which are addressable in the PMTiles archive.
+The Number of Addressed Tiles is a 8-byte field specifying the total number of tiles, which are addressable in the PMTiles archive (before Run-Length encoding).
 
 A value of `0` indicates that the number is unknown.
 

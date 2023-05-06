@@ -15,7 +15,7 @@ A archive consist of five main sections:
 1. The actual tile data.
 
 These sections are normally in the same order as in the list above, but theoretically it is possible to relocate all sections other than the header arbitrarily.
-The only restriction is that the root directory must be contained in the first 16,384 bytes (16 KB) of the archive so that latency-optimized clients can retrieve the root directory in advance and ensure that it is complete.
+The only two restrictions are that the header is at the start of the archive and the root directory must be contained in the first 16,384 bytes (16 KB) of the archive so that latency-optimized clients can retrieve the root directory in advance and ensure that it is complete.
 
 ## 3 Header
 

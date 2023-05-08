@@ -160,6 +160,20 @@ const LayersVisibilityController = (props: {
 
 const rasterStyle = async (file: PMTiles): Promise<any> => {
   let header = await file.getHeader();
+  let metadata = await file.getMetadata();
+  let layers: any[] = [];
+
+  if (metadata.type !== "baselayer") {
+    layers = base_theme("basemap", "black");
+    layers[0].paint["background-color"] = "black";
+  }
+
+  layers.push({
+    id: "raster",
+    type: "raster",
+    source: "source",
+  });
+
   return {
     version: 8,
     sources: {
@@ -169,14 +183,16 @@ const rasterStyle = async (file: PMTiles): Promise<any> => {
         minzoom: header.minZoom,
         maxzoom: header.maxZoom,
       },
-    },
-    layers: [
-      {
-        id: "raster",
-        type: "raster",
-        source: "source",
+      basemap: {
+        type: "vector",
+        tiles: [
+          "https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=1003762824b9687f",
+        ],
+        maxzoom: 14,
       },
-    ],
+    },
+    glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
+    layers: layers,
   };
 };
 

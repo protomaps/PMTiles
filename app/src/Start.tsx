@@ -1,6 +1,5 @@
 import { useState, Dispatch, SetStateAction, useCallback } from "react";
 import maplibregl from "maplibre-gl";
-import L from "leaflet";
 import { PMTiles, FileAPISource } from "../../js/index";
 import { styled } from "./stitches.config";
 import { useDropzone } from "react-dropzone";

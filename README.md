@@ -42,13 +42,13 @@ See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.
 
 ### Python
 
-See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usage
+See https://github.com/protomaps/PMTiles/tree/main/python/bin for library usage
 
 ### Serverless
 
-[PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/master/serverless/aws)
+[PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/main/serverless/aws)
 
-[PMTiles on Cloudflare Workers](https://github.com/protomaps/PMTiles/tree/master/serverless/cloudflare)
+[PMTiles on Cloudflare Workers](https://github.com/protomaps/PMTiles/tree/main/serverless/cloudflare)
 
 ## Specification
 

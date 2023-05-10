@@ -34,6 +34,8 @@ Download the `pmtiles` binary for your system at [go-pmtiles/Releases](https://g
 
 See [js/README.md](js/README.md) and [js/examples](js/examples) for usage in Leaflet or MapLibre GL JS.
 
+See [openlayers/README.md](openlayers/README.md) for usage in OpenLayers.
+
 ### Go
 
 See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.

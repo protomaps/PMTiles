@@ -1,11 +1,11 @@
 {
   "name": "ol-pmtiles",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "PMTiles sources for OpenLayers",
   "type": "module",
   "main": "src/index.js",
   "files": [
-    "src/*"
+    "src/index.js"
   ],
   "repository": {
     "type": "git",

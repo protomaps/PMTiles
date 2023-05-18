@@ -381,6 +381,7 @@ function MaplibreMap(props: { file: PMTiles }) {
     const popup = new maplibregl.Popup({
       closeButton: false,
       closeOnClick: false,
+      maxWidth: "none",
     });
 
     mapRef.current = map;

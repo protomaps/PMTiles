@@ -106,10 +106,15 @@ class TestFindTile(unittest.TestCase):
         self.assertEqual(result.length, 1)
 
     def test_find_tile_leaf(self):
-        entries = [Entry(100, 1, 1, 0)]
+        entries = [Entry(100, 1, 1, 151)]
         result = find_tile(entries, 150)
         self.assertEqual(result.offset, 1)
         self.assertEqual(result.length, 1)
+
+    def test_find_tile_missing_between(self):
+        entries = [Entry(3, 3, 1, 0),Entry(5, 5, 1, 0)]
+        result = find_tile(entries, 4)
+        self.assertEqual(result, None)
 
 
 class TestDirectory(unittest.TestCase):

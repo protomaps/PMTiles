@@ -10,7 +10,7 @@ A archive consist of five main sections:
 
 1. A fixed-size 127-byte header (described in [chapter 3](#3-header))
 1. A root directory (described in [chapter 4](#4-directories))
-1. Optional JSON metadata (described in [chapter 5](#5-json-metadata))
+1. JSON metadata (described in [chapter 5](#5-json-metadata))
 1. Optional leaf directories (described in [chapter 4](#4-directories))
 1. The actual tile data.
 
@@ -72,7 +72,7 @@ This field is encoded as an little-endian 64-bit unsigned integer.
 
 #### Metadata Length
 
-The Metadata Length is a 8-byte field specifying the number of bytes reserved for the metadata. A value `0` indicates that there is no metadata included in this PMTiles archive.
+The Metadata Length is a 8-byte field specifying the number of bytes reserved for the metadata. 
 
 This field is encoded as an little-endian 64-bit unsigned integer.
 

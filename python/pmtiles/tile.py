@@ -98,7 +98,7 @@ def find_tile(entries, tile_id):
     if n >= 0:
         if entries[n].tile_id == tile_id and entries[n].run_length == 0:
             return entries[n]
-        if tile_id - entries[n].tile_id > 0 and tile_id - entries[n].tile_id < entries[n].run_length:
+        if tile_id - entries[n].tile_id >= 0 and tile_id - entries[n].tile_id < entries[n].run_length:
             return entries[n]
 
 

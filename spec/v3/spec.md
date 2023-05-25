@@ -322,7 +322,7 @@ _TODO_
 
 ## 5 JSON Metadata
 
-_TODO_
+The meta data section may include additional meta data related to the tileset, which is not already covered in the header section. This section allows for any valid JSON, thereby enabling flexibility in its structure. As a result, readers should refrain from assuming a predetermined format.
 
 ---
 

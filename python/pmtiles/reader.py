@@ -12,7 +12,7 @@ import gzip
 
 
 def MmapSource(f):
-    mapping = mmap.mmap(f.fileno(), 0)
+    mapping = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
 
     def get_bytes(offset, length):
         return mapping[offset : offset + length]

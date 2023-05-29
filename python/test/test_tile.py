@@ -162,6 +162,7 @@ class TestHeader(unittest.TestCase):
         }
         serialized = serialize_header(header)
         result = deserialize_header(serialized)
+        self.assertEqual(result['version'], 3)
         self.assertEqual(result["root_offset"], 1)
         self.assertEqual(result["root_length"], 2)
         self.assertEqual(result["metadata_offset"], 3)

@@ -214,6 +214,7 @@ def deserialize_header(buf):
         return int.from_bytes(buf[pos : pos + 4], byteorder="little", signed=True)
 
     return {
+        "version": buf[7],
         "root_offset": read_uint64(8),
         "root_length": read_uint64(16),
         "metadata_offset": read_uint64(24),

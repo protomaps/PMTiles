@@ -78,7 +78,7 @@ type RequestParameters = {
   headers?: any;
   method?: "GET" | "POST" | "PUT";
   body?: string;
-  type?: "string" | "json" | "arrayBuffer";
+  type?: "string" | "json" | "arrayBuffer" | "image";
   credentials?: "same-origin" | "include";
   collectResourceTiming?: boolean;
 };

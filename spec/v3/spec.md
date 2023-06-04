@@ -370,3 +370,54 @@ for (index, entry) in entries {
 
 compress(buffer)
 ```
+
+### A.2 Decode a directory
+
+#### Functions
+
+```
+read_var_int(x) = read little-endian variable-width integer from 'x'
+decompress(x) = decompress 'x' according to internal compression
+```
+
+#### Pseudo Code
+
+```rs
+input_buffer = the input byte-buffer
+
+buffer = decompress(buffer)
+
+num_entries = read_var_int(buffer)
+
+entries = empty list of entries
+
+last_id = 0
+for i in num_entries {
+    value = read_var_int(buffer)
+    last_id = last_id + value
+
+    entries[i] = Entry { tile_id: last_id }
+}
+
+for i in num_entries {
+    entries[i].run_length = read_var_int(buffer)
+}
+
+for i in num_entries {
+    entries[i].length = read_var_int(buffer)
+}
+
+for i in num_entries {
+    value = read_var_int(buffer)
+
+    if value == 0 && i > 0 {
+        // offset = 0 -> entry is directly after previous entry
+        prev_entry = entries[i - 1];
+
+        entries[i].offset = prev_entry.offset + prev_entry.length;
+    } else {
+        entries[i].offset = value - 1;
+    }
+}
+
+```

@@ -192,7 +192,7 @@ export const handlerRaw = async (
         }
         return apiResp(
           400,
-          "Bad request: archive has type ." + pair[1],
+          `Bad request: requested .${ext} but archive has type .${pair[1]}`,
           false,
           headers
         );

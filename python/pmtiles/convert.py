@@ -38,8 +38,8 @@ def mbtiles_to_header_json(mbtiles_metadata):
     else:
         header["tile_type"] = TileType.UNKNOWN
 
-    if mbtiles_metadata.get("compression") == "gzip":
-        header["tile_compression"] = Compression.GZIP  # TODO: does this ever matter?
+    if tile_format == "pbf" or mbtiles_metadata.get("compression") == "gzip":
+        header["tile_compression"] = Compression.GZIP
     else:
         header["tile_compression"] = Compression.UNKNOWN
 
@@ -63,6 +63,11 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
 
         tileid_set.sort()
 
+        mbtiles_metadata = {}
+        for row in cursor.execute("SELECT name,value FROM metadata"):
+            mbtiles_metadata[row[0]] = row[1]
+        is_pbf = mbtiles_metadata["format"] == "pbf"
+
         # query the db in ascending tile order
         for tileid in tileid_set:
             z, x, y = tileid_to_zxy(tileid)
@@ -73,13 +78,9 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
             )
             data = res.fetchone()[0]
             # force gzip compression only for vector
-            if data[0:2] != b"\x1f\x8b":
+            if is_pbf and data[0:2] != b"\x1f\x8b":
                 data = gzip.compress(data)
             writer.write_tile(tileid, data)
-
-        mbtiles_metadata = {}
-        for row in cursor.execute("SELECT name,value FROM metadata"):
-            mbtiles_metadata[row[0]] = row[1]
 
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(mbtiles_metadata)
         result = writer.finalize(pmtiles_header, pmtiles_metadata)

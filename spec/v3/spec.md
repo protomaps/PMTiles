@@ -359,7 +359,7 @@ for entry in entries {
 
 next_byte = 0
 for (index, entry) in entries {
-    if entry.offset == next_byte {
+    if index > 0 && entry.offset == next_byte {
         write_var_int(buffer, 0)
     } else {
         write_var_int(buffer, entry.offset + 1)

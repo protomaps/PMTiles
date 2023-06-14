@@ -25,7 +25,7 @@ const uint8_t COMPRESSION_ZSTD = 0x4;
 
 #ifdef PMTILES_MSB
 template<class T>
-inline void swap_byte_order(T* ptr) {
+inline void swap_byte_order_if_msb(T* ptr) {
     unsigned char* ptrBytes = reinterpret_cast<unsigned char*>(ptr);
     for (size_t i = 0; i < sizeof(T)/2; ++i) {
         std::swap(ptrBytes[i], ptrBytes[sizeof(T)-1-i]);
@@ -492,7 +492,11 @@ inline std::vector<entryv3> deserialize_directory(const std::string &decompresse
 
 	uint64_t last_id = 0;
 	for (size_t i = 0; i < num_entries; i++) {
-		uint64_t tile_id = last_id + decode_varint(&t, end);
+		const uint64_t val = decode_varint(&t, end);
+		if (val > std::numeric_limits<uint64_t>::max() - last_id) {
+			throw malformed_directory_exception();
+		}
+		const uint64_t tile_id = last_id + val;
 		result[i].tile_id = tile_id;
 		last_id = tile_id;
 	}

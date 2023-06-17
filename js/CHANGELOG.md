@@ -1,3 +1,8 @@
+2.8.0
+
+* Polyfill `DecompressionStream` using 101arrowz/compression-streams-polyfill
+* Surface errors to MapLibre protocol instead of throwing raw exception
+
 2.7.2
 
 * `leafletRasterLayer` sets correct MIME types (via @bmcbride)

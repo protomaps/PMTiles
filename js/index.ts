@@ -1,4 +1,4 @@
-import { decompressSync } from "fflate";
+import { makeDecompressionStream } from "compression-streams-polyfill/ponyfill";
 import v2 from "./v2";
 export * from "./adapters";
 
@@ -155,14 +155,17 @@ type DecompressFunc = (
   compression: Compression
 ) => Promise<ArrayBuffer>;
 
-async function fflateDecompress(
+async function defaultDecompress(
   buf: ArrayBuffer,
   compression: Compression
 ): Promise<ArrayBuffer> {
   if (compression === Compression.None || compression === Compression.Unknown) {
     return buf;
   } else if (compression === Compression.Gzip) {
-    return decompressSync(new Uint8Array(buf));
+    let stream = new Response(buf).body!;
+    const decompressionStream = makeDecompressionStream(TransformStream);
+    let result = stream.pipeThrough(new decompressionStream("gzip"));
+    return new Response(result).arrayBuffer();
   } else {
     throw Error("Compression method not supported");
   }
@@ -547,7 +550,7 @@ export class ResolvedValueCache {
   constructor(
     maxCacheEntries = 100,
     prefetch = true,
-    decompress: DecompressFunc = fflateDecompress
+    decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, ResolvedValue>();
     this.maxCacheEntries = maxCacheEntries;
@@ -682,7 +685,7 @@ export class SharedPromiseCache {
   constructor(
     maxCacheEntries = 100,
     prefetch = true,
-    decompress: DecompressFunc = fflateDecompress
+    decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, SharedPromiseCacheValue>();
     this.maxCacheEntries = maxCacheEntries;
@@ -824,7 +827,7 @@ export class PMTiles {
     if (decompress) {
       this.decompress = decompress;
     } else {
-      this.decompress = fflateDecompress;
+      this.decompress = defaultDecompress;
     }
     if (cache) {
       this.cache = cache;

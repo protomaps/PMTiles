@@ -123,14 +123,20 @@ export class Protocol {
 
       // TODO: create vector_layers if present to return valid TileJSON
 
-      instance.getHeader().then((h) => {
-        const tilejson = {
-          tiles: [params.url + "/{z}/{x}/{y}"],
-          minzoom: h.minZoom,
-          maxzoom: h.maxZoom,
-        };
-        callback(null, tilejson, null, null);
-      });
+      instance
+        .getHeader()
+        .then((h) => {
+          const tilejson = {
+            tiles: [params.url + "/{z}/{x}/{y}"],
+            minzoom: h.minZoom,
+            maxzoom: h.maxZoom,
+          };
+          callback(null, tilejson, null, null);
+        })
+        .catch((e) => {
+          callback(e, null, null, null);
+        });
+
       return {
         cancel: () => {},
       };
@@ -181,7 +187,7 @@ export class Protocol {
           })
           .catch((e) => {
             if ((e as Error).name !== "AbortError") {
-              throw e;
+              callback(e, null, null, null);
             }
           });
       });

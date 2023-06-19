@@ -82,6 +82,9 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
             mbtiles_metadata[row[0]] = row[1]
 
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(mbtiles_metadata)
+        if maxzoom:
+            pmtiles_header["max_zoom"] = int(maxzoom)
+            mbtiles_metadata["maxzoom"] = maxzoom
         result = writer.finalize(pmtiles_header, pmtiles_metadata)
 
     conn.close()

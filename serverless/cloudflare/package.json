@@ -11,7 +11,7 @@
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler publish",
-    "test": "node -r esbuild-runner/register src/index.test.ts",
+    "test": "node -r esbuild-runner/register ../shared/index.test.ts",
     "tsc": "tsc --watch",
     "build": "wrangler publish --outdir dist --dry-run"
   }

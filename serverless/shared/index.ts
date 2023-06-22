@@ -39,7 +39,7 @@ export const tile_path = (
 
 export const tileJSON = (
   header: Header,
-  metadata: unknown,
+  metadata: any,
   hostname: string,
   tileset_name: string
 ) => {

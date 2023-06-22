@@ -4,6 +4,7 @@ import {
   RangeResponse,
   ResolvedValueCache,
   TileType,
+  Compression,
 } from "../../../js/index";
 import { pmtiles_path, tile_path, tileJSON } from "../../shared/index";
 
@@ -21,7 +22,22 @@ class KeyNotFoundError extends Error {
   }
 }
 
-const CACHE = new ResolvedValueCache(25, undefined);
+async function nativeDecompress(
+  buf: ArrayBuffer,
+  compression: Compression
+): Promise<ArrayBuffer> {
+  if (compression === Compression.None || compression === Compression.Unknown) {
+    return buf;
+  } else if (compression === Compression.Gzip) {
+    let stream = new Response(buf).body!;
+    let result = stream.pipeThrough(new DecompressionStream("gzip"));
+    return new Response(result).arrayBuffer();
+  } else {
+    throw Error("Compression method not supported");
+  }
+}
+
+const CACHE = new ResolvedValueCache(25, undefined, nativeDecompress);
 
 class R2Source implements Source {
   env: Env;
@@ -120,7 +136,7 @@ export default {
 
       const cacheable_headers = new Headers();
       const source = new R2Source(env, name);
-      const p = new PMTiles(source, CACHE);
+      const p = new PMTiles(source, CACHE, nativeDecompress);
       try {
         const p_header = await p.getHeader();
 

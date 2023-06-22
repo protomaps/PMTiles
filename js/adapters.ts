@@ -123,8 +123,6 @@ export class Protocol {
         this.tiles.set(pmtiles_url, instance);
       }
 
-      // TODO: create vector_layers if present to return valid TileJSON
-
       instance
         .getHeader()
         .then((h) => {
@@ -132,6 +130,7 @@ export class Protocol {
             tiles: [params.url + "/{z}/{x}/{y}"],
             minzoom: h.minZoom,
             maxzoom: h.maxZoom,
+            bounds: [h.minLon, h.minLat, h.maxLon, h.maxLat],
           };
           callback(null, tilejson, null, null);
         })

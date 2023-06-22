@@ -1,3 +1,8 @@
+2.9.0
+
+* Recognize AVIF TileType
+* MapLibre adapter internally passes bounds from PMTiles header
+
 2.8.0
 
 * Polyfill `DecompressionStream` using 101arrowz/compression-streams-polyfill

@@ -177,6 +177,7 @@ export enum TileType {
   Png = 2,
   Jpeg = 3,
   Webp = 4,
+  Avif = 5,
 }
 
 const HEADER_SIZE_BYTES = 127;

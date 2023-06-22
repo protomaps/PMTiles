@@ -27,6 +27,8 @@ export const leafletRasterLayer = (source: PMTiles, options: any) => {
             mimeType = "image/jpeg";
           } else if (header.tileType == 4) {
             mimeType = "image/webp";
+          } else if (header.tileType == 5) {
+            mimeType = "image/avif";
           }
         });
         loaded = true;

@@ -163,6 +163,7 @@ export const handlerRaw = async (
       [TileType.Png, "png"],
       [TileType.Jpeg, "jpg"],
       [TileType.Webp, "webp"],
+      [TileType.Avif, "avif"],
     ]) {
       if (header.tileType === pair[0] && ext !== pair[1]) {
         if (header.tileType == TileType.Mvt && ext === "pbf") {
@@ -193,6 +194,9 @@ export const handlerRaw = async (
           break;
         case TileType.Webp:
           headers["Content-Type"] = "image/webp";
+          break;
+        case TileType.Avif:
+          headers["Content-Type"] = "image/avif";
           break;
       }
 

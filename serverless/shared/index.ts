@@ -52,6 +52,8 @@ export const tileJSON = (
     ext = ".jpg";
   } else if (header.tileType === TileType.Webp) {
     ext = ".webp";
+  } else if (header.tileType === TileType.Avif) {
+    ext = ".avif";
   }
 
   return {

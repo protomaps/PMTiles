@@ -97,6 +97,14 @@ The `Header` is 127 bytes, with little-endian integer values:
 
 The JSON metadata is designed to contain arbitrary, application-specific data. However, if the `TileType` is `mvt`, the metadata should contain `vector_layers` as described in the [TileJSON 3.0 spec](https://github.com/mapbox/tilejson-spec/tree/master/3.0.0#1-purpose).
 
+Other optional keys that may, by convention, be read by viewers (all values should be strings):
+
+* `name`
+* `description`
+* `attribution`
+* `type`: `overlay` or `baselayer`
+* `version`, a revision of the tileset e.g. `1.0.0`
+
 ### Organization
 
 In most cases, the archive should be in the order `Header`, Root Directory, JSON Metadata, Leaf Directories, Tile Data. It is possible to relocate sections other than `Header` arbitrarily, but no current writers/readers take advantage of this. A future design may allow for reverse-ordered archives to enable single-pass writing.

@@ -1,5 +1,10 @@
 # PMTiles version 3
 
+### 3.1
+* added `metadata` details about `vector_layers`.
+* Clarified that directory entry lengths must be nonzero, and directories must be non-empty.
+* add AVIF to TileTypes.
+
 ## File structure
 
 A PMTiles archive is a single-file archive of square tiles with five main sections:
@@ -18,7 +23,7 @@ A Directory is a list of `Entries`, in ascending order by `TileId`:
 
 * `TileId` starts at 0 and corresponds to a cumulative position on the series of square Hilbert curves starting at z=0.
 * `Offset` is the position of the tile in the file relative to the start of the data section.
-*	`Length` is the size of the tile in bytes. 
+*	`Length` is the size of the tile in bytes, **which must be > 0.**
 * `RunLength` is how many times this tile is repeated: the `TileId=5,RunLength=2` means that tile is present at IDs 5 and 6.
 * If `RunLength=0`, the offset/length points to a Leaf Directory where `TileId` is the first entry.
 
@@ -26,7 +31,7 @@ A Directory is a list of `Entries`, in ascending order by `TileId`:
 
 Entries are stored in memory as integers, but serialized to disk using these compression steps:
 
-1. A little-endian varint indicating the # of entries
+1. A little-endian varint indicating the # of entries, **which must be > 0**
 2. Delta encoding of `TileId`
 3. Zeroing of `Offset`:
 	* `0` if it is equal to the `Offset` + `Length` of the previous entry
@@ -65,7 +70,7 @@ The `Header` is 127 bytes, with little-endian integer values:
 | 96 | boolean clustered flag, `0x1` if true | 1 |
 | 97 | `InternalCompression` enum (0 = Unknown, 1 = None, 2 = Gzip, 3 = Brotli, 4 = Zstd) | 1 |
 | 98 | `TileCompression` enum | 1 |
-| 99 | tile type enum (0 = Unknown/Other, 1 = MVT (PBF Vector Tile), 2 = PNG, 3 = JPEG, 4 = WEBP | 1 |
+| 99 | tile type enum (0 = Unknown/Other, 1 = MVT (PBF Vector Tile), 2 = PNG, 3 = JPEG, 4 = WEBP, 5 = AVIF | 1 |
 | 100 | min zoom | 1 |
 | 101 | max zoom | 1 |
 | 102 | min longitude (signed 32-bit integer: longitude * 10,000,000) | 4 |
@@ -87,6 +92,10 @@ The `Header` is 127 bytes, with little-endian integer values:
  	* Automatically determine a visualization method
 	* provide a conventional MIME type `Content-Type` HTTP header
 	* Enforce a canonical extension e.g. `.mvt`, `png`, `jpeg`, `.webp` to prevent duplication in caches
+
+### Metadata
+
+The JSON metadata is designed to contain arbitrary, application-specific data. However, if the `TileType` is `mvt`, the metadata should contain `vector_layers` as described in the [TileJSON 3.0 spec](https://github.com/mapbox/tilejson-spec/tree/master/3.0.0#1-purpose).
 
 ### Organization
 

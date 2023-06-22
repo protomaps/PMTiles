@@ -146,6 +146,7 @@ export default {
           [TileType.Png, "png"],
           [TileType.Jpeg, "jpg"],
           [TileType.Webp, "webp"],
+          [TileType.Avif, "avif"],
         ]) {
           if (p_header.tileType === pair[0] && ext !== pair[1]) {
             if (p_header.tileType == TileType.Mvt && ext === "pbf") {

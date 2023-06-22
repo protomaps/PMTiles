@@ -91,7 +91,7 @@ The `Header` is 127 bytes, with little-endian integer values:
 * **tile type**: A hint as to the tile contents. Clients and proxies may use this to:
  	* Automatically determine a visualization method
 	* provide a conventional MIME type `Content-Type` HTTP header
-	* Enforce a canonical extension e.g. `.mvt`, `png`, `jpeg`, `.webp` to prevent duplication in caches
+	* Enforce a canonical extension e.g. `.mvt`, `png`, `jpeg`, `.webp`, `.avif` to prevent duplication in caches
 
 ### Metadata
 

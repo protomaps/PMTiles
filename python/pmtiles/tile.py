@@ -142,6 +142,7 @@ class TileType(Enum):
     PNG = 2
     JPEG = 3
     WEBP = 4
+    AVIF = 5
 
 
 def deserialize_directory(buf):

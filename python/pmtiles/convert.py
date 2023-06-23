@@ -35,6 +35,8 @@ def mbtiles_to_header_json(mbtiles_metadata):
         header["tile_type"] = TileType.JPEG
     elif tile_format == "webp":
         header["tile_type"] = TileType.WEBP
+    elif tile_format == "avif":
+        header["tile_type"] = TileType.AVIF
     else:
         header["tile_type"] = TileType.UNKNOWN
 

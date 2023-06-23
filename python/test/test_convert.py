@@ -1,6 +1,8 @@
 import unittest
+import sqlite3
 from io import BytesIO
 import os
+import json
 from pmtiles.writer import Writer
 from pmtiles.reader import Reader, MemorySource
 from pmtiles.convert import (
@@ -51,10 +53,19 @@ class TestConvert(unittest.TestCase):
                     "center_lon_e7": 0,
                     "center_lat_e7": 0,
                 },
-                {"": "value"},
+                {"vector_layers": ['vector','layers'],
+                "tilestats":{'tile':'stats'}},
             )
 
         pmtiles_to_mbtiles("test_tmp.pmtiles", "test_tmp.mbtiles")
+        conn = sqlite3.connect('test_tmp.mbtiles')
+        cursor = conn.cursor()
+        res = cursor.execute("SELECT value from metadata where name = 'json'")
+        data = res.fetchone()[0]
+        json_metadata = json.loads(data)
+        self.assertEqual(json_metadata['vector_layers'], ['vector', 'layers'])
+        self.assertEqual(json_metadata['tilestats'], {'tile':'stats'})
+
         mbtiles_to_pmtiles("test_tmp.mbtiles", "test_tmp_2.pmtiles", 3)
 
     def test_mbtiles_header(self):

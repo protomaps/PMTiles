@@ -128,10 +128,23 @@ def pmtiles_to_mbtiles(input, output):
             if header["tile_type"] == TileType.MVT:
                 metadata["format"] = "pbf"
 
+        json_metadata = {}
         for k, v in metadata.items():
-            if not isinstance(v, str):
+            if k == "vector_layers":
+                json_metadata["vector_layers"] = v
+                continue
+            elif k == "tilestats":
+                json_metadata["tilestats"] = v
+                continue
+            elif not isinstance(v, str):
                 v = json.dumps(v, ensure_ascii=False)
             cursor.execute("INSERT INTO metadata VALUES(?,?)", (k, v))
+
+        if len(json_metadata) > 0:
+            cursor.execute(
+                "INSERT INTO metadata VALUES(?,?)",
+                ("json", json.dumps(json_metadata, ensure_ascii=False)),
+            )
 
         for zxy, tile_data in all_tiles(source):
             flipped_y = (1 << zxy[0]) - 1 - zxy[2]

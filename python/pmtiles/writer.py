@@ -3,7 +3,13 @@ import tempfile
 import gzip
 import shutil
 from contextlib import contextmanager
-from .tile import Entry, serialize_directory, Compression, serialize_header
+from .tile import (
+    Entry,
+    serialize_directory,
+    Compression,
+    serialize_header,
+    tileid_to_zxy,
+)
 
 
 @contextmanager
@@ -55,9 +61,12 @@ class Writer:
         self.tile_f = tempfile.TemporaryFile()
         self.offset = 0
         self.addressed_tiles = 0
+        self.clustered = True
 
-    # TODO enforce ordered writes
     def write_tile(self, tileid, data):
+        if len(self.tile_entries) > 0 and tileid < self.tile_entries[-1].tile_id:
+            self.clustered = False
+
         hsh = hash(data)
         if hsh in self.hash_to_offset:
             last = self.tile_entries[-1]
@@ -83,6 +92,11 @@ class Writer:
         header["tile_entries_count"] = len(self.tile_entries)
         header["tile_contents_count"] = len(self.hash_to_offset)
 
+        self.tile_entries = sorted(self.tile_entries, key=lambda e: e.tile_id)
+
+        header["min_zoom"] = tileid_to_zxy(self.tile_entries[0].tile_id)[0]
+        header["max_zoom"] = tileid_to_zxy(self.tile_entries[-1].tile_id)[0]
+
         root_bytes, leaves_bytes, num_leaves = optimize_directories(
             self.tile_entries, 16384 - 127
         )
@@ -105,7 +119,7 @@ class Writer:
             )
 
         compressed_metadata = gzip.compress(json.dumps(metadata).encode())
-        header["clustered"] = True
+        header["clustered"] = self.clustered
         header["internal_compression"] = Compression.GZIP
         header["root_offset"] = 127
         header["root_length"] = len(root_bytes)

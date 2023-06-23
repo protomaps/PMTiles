@@ -43,7 +43,7 @@ def mbtiles_to_header_json(mbtiles_metadata):
     if tile_format == "pbf" or mbtiles_metadata.get("compression") == "gzip":
         header["tile_compression"] = Compression.GZIP
     else:
-        header["tile_compression"] = Compression.UNKNOWN
+        header["tile_compression"] = Compression.NONE
 
     return header, mbtiles_metadata
 

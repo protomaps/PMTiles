@@ -136,7 +136,7 @@ export const handlerRaw = async (
     if (!tile) {
       if (!process.env.PUBLIC_HOSTNAME) {
         return apiResp(
-          400,
+          501,
           "PUBLIC_HOSTNAME must be set for TileJSON",
           false,
           headers

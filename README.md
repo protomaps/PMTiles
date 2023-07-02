@@ -56,14 +56,13 @@ The current specification version is [Version 3](./spec/v3/spec.md).
 
 ## Recipes
 
-Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](https://github.com/mapbox/tippecanoe) and the [`pmtiles`](https://github.com/protomaps/go-pmtiles/releases) standalone binary:
+Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](https://github.com/felt/tippecanoe):
 
 ```sh
     # use GDAL/OGR to convert SHP to GeoJSON
     ogr2ogr -t_srs EPSG:4326 cb_2018_us_zcta510_500k.json cb_2018_us_zcta510_500k.shp
     # Creates a layer in the vector tiles named "zcta"
-    tippecanoe -zg --projection=EPSG:4326 -o cb_2018_us_zcta510_500k_nolimit.mbtiles -l zcta cb_2018_us_zcta510_500k.json
-    pmtiles convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k.pmtiles
+    tippecanoe -zg --projection=EPSG:4326 -o cb_2018_us_zcta510_500k_nolimit.pmtiles -l zcta cb_2018_us_zcta510_500k.json
 ```
 
 ### Uploading to Storage

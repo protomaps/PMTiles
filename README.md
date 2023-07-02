@@ -56,7 +56,7 @@ The current specification version is [Version 3](./spec/v3/spec.md).
 
 ## Recipes
 
-Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](http://github.com/protomaps/tippecanoe) and the [`pmtiles`](https://github.com/protomaps/go-pmtiles/releases) standalone binary:
+Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](https://github.com/mapbox/tippecanoe) and the [`pmtiles`](https://github.com/protomaps/go-pmtiles/releases) standalone binary:
 
 ```sh
     # use GDAL/OGR to convert SHP to GeoJSON

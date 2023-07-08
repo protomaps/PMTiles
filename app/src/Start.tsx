@@ -97,6 +97,7 @@ const ExampleList = styled("div", {
 });
 
 const EXAMPLE_FILES = [
+  "https://r2-public.protomaps.com/protomaps-sample-datasets/protomaps-basemap-opensource-20230408.pmtiles",
   "https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles",
   "https://protomaps.github.io/PMTiles/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles",
   "https://r2-public.protomaps.com/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles",

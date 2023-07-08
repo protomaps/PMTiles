@@ -9,6 +9,10 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { schemeSet3 } from "d3-scale-chromatic";
 import base_theme from "protomaps-themes-base";
 
+const INITIAL_ZOOM = 0;
+const INITIAL_LNG = 0;
+const INITIAL_LAT = 0;
+
 maplibregl.setRTLTextPlugin(
   "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
   () => {},
@@ -367,8 +371,8 @@ function MaplibreMap(props: { file: PMTiles }) {
     const map = new maplibregl.Map({
       container: mapContainerRef.current!,
       hash: "map",
-      zoom: 0,
-      center: [0, 0],
+      zoom: INITIAL_ZOOM,
+      center: [INITIAL_LNG, INITIAL_LAT],
       style: {
         version: 8,
         sources: {},
@@ -433,14 +437,20 @@ function MaplibreMap(props: { file: PMTiles }) {
       if (mapRef.current) {
         let map = mapRef.current;
         let header = await props.file.getHeader();
-
-        map.fitBounds(
-          [
-            [header.minLon, header.minLat],
-            [header.maxLon, header.maxLat],
-          ],
-          { animate: false }
-        );
+        if (
+          map.getCenter().lng === INITIAL_LNG &&
+          map.getCenter().lat == INITIAL_LAT &&
+          map.getZoom() === INITIAL_ZOOM
+        ) {
+          // the map hash was not passed, so auto-detect the initial viewport based on metadata
+          map.fitBounds(
+            [
+              [header.minLon, header.minLat],
+              [header.maxLon, header.maxLat],
+            ],
+            { animate: false }
+          );
+        }
 
         let style: any; // TODO maplibre types (not any)
         if (

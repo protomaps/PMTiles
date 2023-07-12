@@ -8,10 +8,10 @@ PMTiles is a single-file archive format for tiled data. It enables low-cost, zer
 
 An archive consists of five main sections:
 
-1. A fixed-size 127-byte header (described in [chapter 3](#3-header))
-1. A root directory (described in [chapter 4](#4-directories))
-1. JSON metadata (described in [chapter 5](#5-json-metadata))
-1. Optional leaf directories (described in [chapter 4](#4-directories))
+1. A fixed-size 127-byte header (described in [Chapter 3](#3-header))
+1. A root directory (described in [Chapter 4](#4-directories))
+1. JSON metadata (described in [Chapter 5](#5-json-metadata))
+1. Optional leaf directories (described in [Chapter 4](#4-directories))
 1. The actual tile data
 
 These sections are normally in the same order as in the list above, but theoretically, it is possible to relocate all sections other than the header arbitrarily.
@@ -127,9 +127,9 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 #### Clustered (C)
 
 Clustered is a 1-byte field specifying if the data of the individual tiles in the data section is ordered by their Tile-ID (clustered) or not (not clustered).  
-Therfore, Clustered means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset when writing with deduplication.
+Therefore, Clustered means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset when writing with deduplication.
 
-The field can be one of the following values:
+The field can have one of the following values:
 
 | Value  | Meaning       |
 | :----- | :------------ |
@@ -140,19 +140,19 @@ The field can be one of the following values:
 
 The Internal Compression is a 1-byte field specifying the compression of the root directory, metadata, and all leaf directories.
 
-The encoding of this field is described in [chapter 3.3](#33-compression).
+The encoding of this field is described in [Chapter 3.3](#33-compression).
 
 #### Tile Compression (TC)
 
 The Tile Compression is a 1-byte field specifying the compression of all tiles.
 
-The encoding of this field is described in [chapter 3.3](#33-compression).
+The encoding of this field is described in [Chapter 3.3](#33-compression).
 
 #### Tile Type (TT)
 
 The Tile Type is a 1-byte field specifying the type of tiles.
 
-The field can be one of the following values:
+The field can have one of the following values:
 
 | Value  | Meaning            |
 | :----- | :----------------- |
@@ -178,13 +178,13 @@ This field is encoded as an 8-bit unsigned integer.
 
 The Min Position is an 8-byte field that includes the minimum latitude and minimum longitude of the bounds.
 
-The encoding of this field is described in [chapter 3.4](#34-position).
+The encoding of this field is described in [Chapter 3.4](#34-position).
 
 #### Max Position
 
 The Max Position is an 8-byte field including the maximum latitude and maximum longitude of the bounds.
 
-The encoding of this field is described in [chapter 3.4](#34-position).
+The encoding of this field is described in [Chapter 3.4](#34-position).
 
 #### Center Zoom (CZ)
 
@@ -196,7 +196,7 @@ This field is encoded as an 8-bit unsigned integer.
 
 The Center Position is an 8-byte field that includes the latitude and longitude of the center position. A reader may use this as the initial center position when displaying tiles from the PMTiles archive.
 
-The encoding of this field is described in [chapter 3.4](#34-position).
+The encoding of this field is described in [Chapter 3.4](#34-position).
 
 ### 3.3 Compression
 
@@ -244,7 +244,7 @@ Each directory entry consists of the following properties:
 - Run-Length
 
 #### Tile-ID
-Specifies the ID of the tile / the first tile in the leaf directory. 
+Specifies the ID of the tile or the first tile in the leaf directory. 
 
 The Tile-ID corresponds to a cumulative position on the series of [Hilbert curves](https://wikipedia.org/wiki/Hilbert_curve) starting at zoom level 0.
 
@@ -271,14 +271,14 @@ Specifies the number of tiles for which this entry is valid. A run length of `0`
 #### Examples
 |Tile-ID|Offset|Length|Run-Length|Description|
 |--:|--:|--:|--:|:--|
-|`5`|`1337`|`42`|`1`|Tile 5 is located at bytes 1337-1378 of the _tile data section_|
-|`5`|`1337`|`42`|`3`|Tile 5, 6 and 7 are located at bytes 1337-1378 of the _tile data section_|
-|`5`|`1337`|`42`|`0`|A leaf directory whose first tile has an ID of 5 is located at byte 1337-1378 of the _leaf directories section_|
+|`5`|`1337`|`42`|`1`|Tile 5 is located at bytes 1337–1378 of the _tile data section_.|
+|`5`|`1337`|`42`|`3`|Tiles 5, 6, and 7 are located at bytes 1337–1378 of the _tile data section_.|
+|`5`|`1337`|`42`|`0`|A leaf directory whose first tile has an ID of 5 is located at byte 1337–1378 of the _leaf directories section_.|
 
 ### 4.2 Encoding
 A directory can only be encoded in its entirety. It is not possible to encode a single directory entry by itself. 
 
-[Appendix A.1](#a1-encode-a-directory) includes a pseudo code implementation of encoding a directory.
+[Appendix A.1](#a1-encode-a-directory) includes a pseudocode implementation of encoding a directory.
 
 An encoded directory consists of five parts in the following order:
 1. The number of entries contained in the directory
@@ -317,13 +317,13 @@ After encoding, each directory is compressed according to the internal compressi
 
 ### 4.3 Decoding
 
-Decoding a directory works similarly to encoding, but in reverse. [Appendix A.2](#a2-decode-a-directory) includes a pseudo code implementation of decoding a directory. The basic steps are the following:
+Decoding a directory works similarly to encoding, but in reverse. [Appendix A.2](#a2-decode-a-directory) includes a pseudocode implementation of decoding a directory. The basic steps are the following:
 1. Decompress the data according to the internal compression.
 1. Read a [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints) indicating how many entries are included in the directory (let's call this `n`).
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the delta-encoded Tile IDs of all entries. _¹_
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Run-Lenghts of all entries.
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Lenghts of all entries.
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Offsets of all entries. _¹_
+1. Read `n` number of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the delta-encoded Tile IDs of all entries. _¹_
+1. Read `n` number of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Run-Lenghts of all entries.
+1. Read `n` number of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Lenghts of all entries.
+1. Read `n` number of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Offsets of all entries. _¹_
 
 _¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and Offset are encoded._
 
@@ -333,7 +333,7 @@ The meta data section may include additional meta data related to the tileset th
 
 ---
 
-## A Pseudo Codes
+## A Pseudocodes
 
 ### A.1 Encode a directory
 
@@ -344,7 +344,7 @@ write_var_int(x, y) = write 'y' as a little-endian variable-width integer to 'x'
 compress(x) = compress 'x' according to internal compression
 ```
 
-#### Pseudo Code
+#### Pseudocode
 
 ```rs
 entries = list of entries in this directory
@@ -387,7 +387,7 @@ read_var_int(x) = read little-endian variable-width integer from 'x'
 decompress(x) = decompress 'x' according to internal compression
 ```
 
-#### Pseudo Code
+#### Pseudocode
 
 ```rs
 input_buffer = the input byte-buffer

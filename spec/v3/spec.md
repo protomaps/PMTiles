@@ -126,9 +126,8 @@ This field is encoded as an little-endian 64-bit unsigned integer.
 
 #### Clustered (C)
 
-Clustered is a 1-byte field specifying if the data of the individual tiles in the data section are order by their Tile-ID (clustered) or not (not clustered).
-
-Clustered means, that offsets are either contiguous with the previous offset+length, or refer to a lesser offset, when writing with deduplication.
+Clustered is a 1-byte field specifying if the data of the individual tiles in the data section are order by their Tile-ID (clustered) or not (not clustered).  
+Therfore Clustered means, that offsets are either contiguous with the previous offset+length, or refer to a lesser offset, when writing with deduplication.
 
 The field can be one of the following values:
 
@@ -385,7 +384,7 @@ decompress(x) = decompress 'x' according to internal compression
 ```rs
 input_buffer = the input byte-buffer
 
-buffer = decompress(buffer)
+buffer = decompress(input_buffer)
 
 num_entries = read_var_int(buffer)
 

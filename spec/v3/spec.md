@@ -6,15 +6,15 @@ PMTiles is a single-file archive format for tiled data. It enables low-cost, zer
 
 ## 2 Overview
 
-A archive consist of five main sections:
+An archive consists of five main sections:
 
 1. A fixed-size 127-byte header (described in [chapter 3](#3-header))
 1. A root directory (described in [chapter 4](#4-directories))
 1. JSON metadata (described in [chapter 5](#5-json-metadata))
 1. Optional leaf directories (described in [chapter 4](#4-directories))
-1. The actual tile data.
+1. The actual tile data
 
-These sections are normally in the same order as in the list above, but theoretically it is possible to relocate all sections other than the header arbitrarily.
+These sections are normally in the same order as in the list above, but theoretically, it is possible to relocate all sections other than the header arbitrarily.
 The only two restrictions are that the header is at the start of the archive and the root directory must be contained in the first 16,384 bytes (16 KB) of the archive so that latency-optimized clients can retrieve the root directory in advance and ensure that it is complete.
 
 ## 3 Header
@@ -54,80 +54,80 @@ The version is a fixed 1-byte field whose value is always 3 (`0x03`).
 
 #### Root Directory Offset
 
-The Root Directory Offset is a 8-byte field whose value gives the offset of the first byte of the root directory. This address offset is relative to the first byte of the archive.
+The Root Directory Offset is an 8-byte field whose value gives the offset of the first byte of the root directory. This address offset is relative to the first byte of the archive.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Root Directory Length
 
-The Root Directory Length is a 8-byte field specifying the number of bytes in the root directory.
+The Root Directory Length is an 8-byte field specifying the number of bytes in the root directory.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Metadata Offset
 
-The Metadata Offset is a 8-byte field whose value gives the offset of the first byte of the metadata. This address offset is relative to the first byte of the archive.
+The Metadata Offset is an 8-byte field whose value gives the offset of the first byte of the metadata. This address offset is relative to the first byte of the archive.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Metadata Length
 
-The Metadata Length is a 8-byte field specifying the number of bytes reserved for the metadata. 
+The Metadata Length is an 8-byte field specifying the number of bytes reserved for the metadata. 
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Leaf Directories Offset
 
-The Leaf Directories Offset is a 8-byte field whose value gives the offset of the first byte of the leaf directories. This address offset is relative to the first byte of the archive.
+The Leaf Directories Offset is an 8-byte field whose value gives the offset of the first byte of the leaf directories. This address offset is relative to the first byte of the archive.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Leaf Directories Length
 
-The Leaf Directories Length is a 8-byte field specifying the number of bytes reserved for leaf directories. A value `0` indicates that there are no leaf directories included in this PMTiles archive.
+The Leaf Directories Length is an 8-byte field specifying the number of bytes reserved for leaf directories. A value of `0` indicates that there are no leaf directories included in this PMTiles archive.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Tile Data Offset
 
-The Tile Data Offset is a 8-byte field whose value gives the offset of the first byte of the tile data. This address offset is relative to the first byte of the archive.
+The Tile Data Offset is an 8-byte field whose value gives the offset of the first byte of the tile data. This address offset is relative to the first byte of the archive.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Tile Data Length
 
-The Tile Data Length is a 8-byte field specifying the number of bytes reserved for the tile data.
+The Tile Data Length is an 8-byte field specifying the number of bytes reserved for the tile data.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Number of Addressed Tiles
 
-The Number of Addressed Tiles is a 8-byte field specifying the total number of tiles, which are addressable in the PMTiles archive (before Run-Length encoding).
+The Number of Addressed Tiles is an 8-byte field specifying the total number of tiles that are addressable in the PMTiles archive (before Run-Length encoding).
 
 A value of `0` indicates that the number is unknown.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Number of Tile Entries
 
-The Number of Tile Entries is a 8-byte field specifying the total number of tile-entries (_Run-Length_ is greater 0).
+The Number of Tile Entries is an 8-byte field specifying the total number of tile entries (_Run-Length_ is greater than 0).
 
 A value of `0` indicates that the number is unknown.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Number of Tile Contents
 
-The Number of Tile Contents is a 8-byte field specifying the total number of blobs in the tile data section.
+The Number of Tile Contents is an 8-byte field specifying the total number of blobs in the tile data section.
 
 A value of `0` indicates that the number is unknown.
 
-This field is encoded as an little-endian 64-bit unsigned integer.
+This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Clustered (C)
 
-Clustered is a 1-byte field specifying if the data of the individual tiles in the data section are order by their Tile-ID (clustered) or not (not clustered).  
-Therfore Clustered means, that offsets are either contiguous with the previous offset+length, or refer to a lesser offset, when writing with deduplication.
+Clustered is a 1-byte field specifying if the data of the individual tiles in the data section is ordered by their Tile-ID (clustered) or not (not clustered).  
+Therfore, Clustered means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset when writing with deduplication.
 
 The field can be one of the following values:
 
@@ -138,7 +138,7 @@ The field can be one of the following values:
 
 #### Internal Compression (IC)
 
-The Internal Compression is a 1-byte field specifying the compression of the root directory, metadata as well as all leaf directories.
+The Internal Compression is a 1-byte field specifying the compression of the root directory, metadata, and all leaf directories.
 
 The encoding of this field is described in [chapter 3.3](#33-compression).
 
@@ -164,43 +164,43 @@ The field can be one of the following values:
 
 #### Min Zoom (MinZ)
 
-The Min Zoom is a 1-byte field specifying minimum zoom (LOD) of the tiles.
+The Min Zoom is a 1-byte field specifying the minimum zoom (LOD) of the tiles.
 
 This field is encoded as an 8-bit unsigned integer.
 
 #### Max Zoom (MaxZ)
 
-The Max Zoom is a 1-byte field specifying maximum zoom (LOD) of the tiles.
+The Max Zoom is a 1-byte field specifying the maximum zoom (LOD) of the tiles.
 
 This field is encoded as an 8-bit unsigned integer.
 
 #### Min Position
 
-The Min Position is a 8-byte field including the minimum latitude and minimum longitude of the bounds.
+The Min Position is an 8-byte field that includes the minimum latitude and minimum longitude of the bounds.
 
 The encoding of this field is described in [chapter 3.4](#34-position).
 
 #### Max Position
 
-The Max Position is a 8-byte field including the maximum latitude and maximum longitude of the bounds.
+The Max Position is an 8-byte field including the maximum latitude and maximum longitude of the bounds.
 
 The encoding of this field is described in [chapter 3.4](#34-position).
 
 #### Center Zoom (CZ)
 
-The Center Zoom is a 1-byte field specifying center zoom (LOD) of the tiles. A reader may use this as the initial zoom, when displaying tiles from the PMTiles archive.
+The Center Zoom is a 1-byte field specifying the center zoom (LOD) of the tiles. A reader may use this as the initial zoom when displaying tiles from the PMTiles archive.
 
 This field is encoded as an 8-bit unsigned integer.
 
 #### Center Position
 
-The Center Position is a 8-byte field including the latitude and longitude of the center position. A reader may use this as the initial center position, when displaying tiles from the PMTiles archive.
+The Center Position is an 8-byte field that includes the latitude and longitude of the center position. A reader may use this as the initial center position when displaying tiles from the PMTiles archive.
 
 The encoding of this field is described in [chapter 3.4](#34-position).
 
 ### 3.3 Compression
 
-Compression is a enum with the following values:
+Compression is an enum with the following values:
 
 | Value  | Meaning |
 | :----- | :------ |
@@ -212,27 +212,27 @@ Compression is a enum with the following values:
 
 ### 3.4 Position
 
-A Position is encoded into 8 bytes. Bytes 0 through 3 (first 4 bytes) represent the latitude and byte 4 through 7 (last 4 bytes) represent the longitude.
+A Position is encoded into 8 bytes. Bytes 0 through 3 (the first 4 bytes) represent the latitude, and bytes 4 through 7 (the last 4 bytes) represent the longitude.
 
 #### Encoding
 
-To encode a latitude or a longitude into 4 bytes use the following method:
+To encode a latitude or a longitude into 4 bytes, use the following method:
 
-1. Multiply value by 10,000,000
-1. Convert result into little-endian 32-bit signed integer
+1. Multiply the value by 10,000,000.
+1. Convert the result into a little-endian 32-bit signed integer.
 
 #### Decoding
 
-To decode a latitude or a longitude from 4 bytes use the following method:
+To decode a latitude or a longitude from 4 bytes, use the following method:
 
-1. Read bytes as a little-endian 32-bit signed integer
-1. Divide read value by 10,000,000
+1. Read bytes as a little-endian 32-bit signed integer.
+1. Divide the read value by 10,000,000.
 
 ## 4 Directories
 
-A directory is simply a list of entries. Each entry describes either where a specific tile can be found in the _tile data section_, or where a leaf directory can be found in the _leaf directories section_.  
+A directory is simply a list of entries. Each entry describes either where a specific tile can be found in the _tile data section_ or where a leaf directory can be found in the _leaf directories section_.  
 
-The number of entries in the root directory and in the leaf directories is left to the implementation and can vary drastically depending on what the writer has optimized for (cost, bandwidth, latency etc.).  
+The number of entries in the root directory and in the leaf directories is left to the implementation and can vary drastically depending on what the writer has optimized for (cost, bandwidth, latency, etc.).  
 However, the size of the header plus the compressed size of the root directory must not exceed 16384 bytes to allow latency-optimized clients to retrieve the root directory in its entirety. Therefore, the **maximum compressed size of the root directory is 16257 bytes** (16384 bytes - 127 bytes). A sophisticated writer might need several attempts to optimize this.
 
 ### 4.1 Directory Entries
@@ -260,7 +260,7 @@ The Tile-ID corresponds to a cumulative position on the series of [Hilbert curve
 |12|3423|1763|19078479|
 
 #### Offset
-Specifies the offset of the first byte of the tile or leaf directory. This address offset is relative to the first byte of the _tile data section_ for tile-entries, and relative to the first byte of the _leaf directories section_ for leaf-directory-entries.
+Specifies the offset of the first byte of the tile or leaf directory. This address offset is relative to the first byte of the _tile data section_ for tile-entries and relative to the first byte of the _leaf directories section_ for leaf-directory-entries.
 
 #### Length
 Specifies the number of bytes reserved for this tile or leaf directory. This size always indicates the compressed size, if the tile or leaf directory is compressed.
@@ -290,46 +290,46 @@ An encoded directory consists of five parts in the following order:
 #### Number of entries
 The number of entries included in this directory.
 
-This field is encoded as an little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
+This field is encoded as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
 
 #### Tile IDs
-The Tile-IDs are delta-encoded, i.e. the number to be written is the difference to the last Tile-ID.
+The Tile-IDs are delta-encoded, i.e., the number to be written is the difference to the last Tile-ID.
 
-For example the Tile-IDs `5`, `42` and `69` would be encoded as `5` (_5 - 0_) `37` (_42 - 5_) and `27` (_69 - 42_).
+For example, the Tile-IDs `5`, `42`, and `69` would be encoded as `5` (_5 - 0_), `37` (_42 - 5_), and `27` (_69 - 42_).
 
-Each delta-encoded Tile-ID is encoded as an little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
+Each delta-encoded Tile-ID is encoded as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
 
 #### Run-Lengths
 
-The Run-Lengths are simply encoded as is, each as an little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
+The Run-Lengths are simply encoded as is, each as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
 
 #### Lengths
 
-The lengths are simply encoded as is, each as an little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
+The lengths are simply encoded as is, each as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
 
 #### Offsets
-Offsets are encoded either as `Offset + 1` or `0`, if it is equal to the sum of offset and length of the previous entry (tile blobs are contiguous).
+Offsets are encoded either as `Offset + 1` or `0`, if they are equal to the sum of offset and length of the previous entry (tile blobs are contiguous).
 
-Each offset is encoded as an little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
+Each offset is encoded as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
 
 #### Compression
 After encoding, each directory is compressed according to the internal compression field of the header. Leaf directories are compressed separately and not as a whole section.
 
 ### 4.3 Decoding
 
-Decoding a directory works similar to encoding but in reverse. [Appendix A.2](#a2-decode-a-directory) includes a pseudo code implementation of decoding a directory. The basic steps for are the following:
-1. Decompress the data according to the internal compression
-1. Read a [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints) indicating how many entries are included in the directory (let's call this `n`)
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the delta-encoded Tile IDs of all entries _¹_
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the Run-Lenghts of all entries
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the Lenghts of all entries
-1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the Offsets of all entries _¹_
+Decoding a directory works similarly to encoding, but in reverse. [Appendix A.2](#a2-decode-a-directory) includes a pseudo code implementation of decoding a directory. The basic steps are the following:
+1. Decompress the data according to the internal compression.
+1. Read a [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints) indicating how many entries are included in the directory (let's call this `n`).
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the delta-encoded Tile IDs of all entries. _¹_
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Run-Lenghts of all entries.
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Lenghts of all entries.
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the Offsets of all entries. _¹_
 
-_¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and Offset are encoded_
+_¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and Offset are encoded._
 
 ## 5 JSON Metadata
 
-The meta data section may include additional meta data related to the tileset, which is not already covered in the header section. This section allows for any valid JSON, thereby enabling flexibility in its structure. As a result, readers should refrain from assuming a predetermined format.
+The meta data section may include additional meta data related to the tileset that is not already covered in the header section. This section allows for any valid JSON, thereby enabling flexibility in its structure. As a result, readers should refrain from assuming a predetermined format.
 
 ---
 

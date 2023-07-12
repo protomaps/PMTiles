@@ -317,7 +317,15 @@ After encoding, each directory is compressed according to the internal compressi
 
 ### 4.3 Decoding
 
-_TODO_
+Decoding a directory works similar to encoding but in reverse. [Appendix A.2](#a2-decode-a-directory) includes a pseudo code implementation of decoding a directory. The basic steps for are the following:
+1. Decompress the data according to the internal compression
+1. Read a [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints) indicating how many entries are included in the directory (let's call this `n`)
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the delta-encoded Tile IDs of all entries _¹_
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the Run-Lenghts of all entries
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the Lenghts of all entries
+1. Read `n` amount of [variable-width integers](https://protobuf.dev/programming-guides/encoding/#varints), which are the the Offsets of all entries _¹_
+
+_¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and Offset are encoded_
 
 ## 5 JSON Metadata
 

@@ -1,6 +1,7 @@
 #ifndef PMTILES_HPP
 #define PMTILES_HPP
 
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <vector>

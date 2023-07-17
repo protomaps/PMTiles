@@ -282,7 +282,7 @@ A directory can only be encoded in its entirety. It is not possible to encode a 
 [Appendix A.1](#a1-encode-a-directory) includes a pseudocode implementation of encoding a directory.
 
 An encoded directory consists of five parts in the following order:
-1. The number of entries contained in the directory
+1. The number of entries contained in the directory (must be greater than 0)
 1. Tile-IDs of all entries
 1. Run-Lengths of all entries
 1. Lengths of all entries
@@ -306,7 +306,7 @@ The Run-Lengths are simply encoded as is, each as a little-endian [variable-widt
 
 #### Lengths
 
-The lengths are simply encoded as is, each as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints).
+The lengths are simply encoded as is, each as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints). Each length must be greater than 0.
 
 #### Offsets
 Offsets are encoded either as `Offset + 1` or `0`, if they are equal to the sum of offset and length of the previous entry (tile blobs are contiguous).

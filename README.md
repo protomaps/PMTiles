@@ -34,19 +34,21 @@ Download the `pmtiles` binary for your system at [go-pmtiles/Releases](https://g
 
 See [js/README.md](js/README.md) and [js/examples](js/examples) for usage in Leaflet or MapLibre GL JS.
 
+See [openlayers/README.md](openlayers/README.md) for usage in OpenLayers.
+
 ### Go
 
 See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.
 
 ### Python
 
-See https://github.com/protomaps/PMTiles/tree/master/python/bin for library usage
+See https://github.com/protomaps/PMTiles/tree/main/python/bin for library usage
 
 ### Serverless
 
-[PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/master/serverless/aws)
+[PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/main/serverless/aws)
 
-[PMTiles on Cloudflare Workers](https://github.com/protomaps/PMTiles/tree/master/serverless/cloudflare)
+[PMTiles on Cloudflare Workers](https://github.com/protomaps/PMTiles/tree/main/serverless/cloudflare)
 
 ## Specification
 
@@ -54,14 +56,13 @@ The current specification version is [Version 3](./spec/v3/spec.md).
 
 ## Recipes
 
-Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](http://github.com/protomaps/tippecanoe) and the [`pmtiles`](https://github.com/protomaps/go-pmtiles/releases) standalone binary:
+Example of how to create a PMTiles archive from the [Census Bureau Zip Code Tabulation Areas Shapefile](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html) using [tippecanoe](https://github.com/felt/tippecanoe):
 
 ```sh
     # use GDAL/OGR to convert SHP to GeoJSON
     ogr2ogr -t_srs EPSG:4326 cb_2018_us_zcta510_500k.json cb_2018_us_zcta510_500k.shp
     # Creates a layer in the vector tiles named "zcta"
-    tippecanoe -zg --projection=EPSG:4326 -o cb_2018_us_zcta510_500k_nolimit.mbtiles -l zcta cb_2018_us_zcta510_500k.json
-    pmtiles convert cb_2018_us_zcta510_500k_nolimit.mbtiles cb_2018_us_zcta510_500k.pmtiles
+    tippecanoe -zg --projection=EPSG:4326 -o cb_2018_us_zcta510_500k_nolimit.pmtiles -l zcta cb_2018_us_zcta510_500k.json
 ```
 
 ### Uploading to Storage

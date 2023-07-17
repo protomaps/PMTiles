@@ -35,13 +35,15 @@ def mbtiles_to_header_json(mbtiles_metadata):
         header["tile_type"] = TileType.JPEG
     elif tile_format == "webp":
         header["tile_type"] = TileType.WEBP
+    elif tile_format == "avif":
+        header["tile_type"] = TileType.AVIF
     else:
         header["tile_type"] = TileType.UNKNOWN
 
-    if mbtiles_metadata.get("compression") == "gzip":
-        header["tile_compression"] = Compression.GZIP  # TODO: does this ever matter?
+    if tile_format == "pbf" or mbtiles_metadata.get("compression") == "gzip":
+        header["tile_compression"] = Compression.GZIP
     else:
-        header["tile_compression"] = Compression.UNKNOWN
+        header["tile_compression"] = Compression.NONE
 
     return header, mbtiles_metadata
 
@@ -63,6 +65,11 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
 
         tileid_set.sort()
 
+        mbtiles_metadata = {}
+        for row in cursor.execute("SELECT name,value FROM metadata"):
+            mbtiles_metadata[row[0]] = row[1]
+        is_pbf = mbtiles_metadata["format"] == "pbf"
+
         # query the db in ascending tile order
         for tileid in tileid_set:
             z, x, y = tileid_to_zxy(tileid)
@@ -73,15 +80,14 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
             )
             data = res.fetchone()[0]
             # force gzip compression only for vector
-            if data[0:2] != b"\x1f\x8b":
+            if is_pbf and data[0:2] != b"\x1f\x8b":
                 data = gzip.compress(data)
             writer.write_tile(tileid, data)
 
-        mbtiles_metadata = {}
-        for row in cursor.execute("SELECT name,value FROM metadata"):
-            mbtiles_metadata[row[0]] = row[1]
-
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(mbtiles_metadata)
+        if maxzoom:
+            pmtiles_header["max_zoom"] = int(maxzoom)
+            mbtiles_metadata["maxzoom"] = maxzoom
         result = writer.finalize(pmtiles_header, pmtiles_metadata)
 
     conn.close()
@@ -125,10 +131,23 @@ def pmtiles_to_mbtiles(input, output):
             if header["tile_type"] == TileType.MVT:
                 metadata["format"] = "pbf"
 
+        json_metadata = {}
         for k, v in metadata.items():
-            if not isinstance(v, str):
+            if k == "vector_layers":
+                json_metadata["vector_layers"] = v
+                continue
+            elif k == "tilestats":
+                json_metadata["tilestats"] = v
+                continue
+            elif not isinstance(v, str):
                 v = json.dumps(v, ensure_ascii=False)
             cursor.execute("INSERT INTO metadata VALUES(?,?)", (k, v))
+
+        if len(json_metadata) > 0:
+            cursor.execute(
+                "INSERT INTO metadata VALUES(?,?)",
+                ("json", json.dumps(json_metadata, ensure_ascii=False)),
+            )
 
         for zxy, tile_data in all_tiles(source):
             flipped_y = (1 << zxy[0]) - 1 - zxy[2]

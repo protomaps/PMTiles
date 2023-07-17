@@ -1,9 +1,3 @@
-/**
- * - Run `wrangler dev src/index.ts` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `wrangler publish src/index.ts --name my-worker` to publish your worker
- */
-
 import {
   PMTiles,
   Source,
@@ -12,13 +6,14 @@ import {
   TileType,
   Compression,
 } from "../../../js/index";
+import { pmtiles_path, tile_path, tileJSON } from "../../shared/index";
 
 interface Env {
-  BUCKET: R2Bucket;
   ALLOWED_ORIGINS?: string;
-  PMTILES_PATH?: string;
-  TILE_PATH?: string;
+  BUCKET: R2Bucket;
   CACHE_MAX_AGE?: number;
+  PMTILES_PATH?: string;
+  PUBLIC_HOSTNAME?: string;
 }
 
 class KeyNotFoundError extends Error {
@@ -26,46 +21,6 @@ class KeyNotFoundError extends Error {
     super(message);
   }
 }
-
-export const pmtiles_path = (name: string, setting?: string): string => {
-  if (setting) {
-    return setting.replaceAll("{name}", name);
-  }
-  return name + ".pmtiles";
-};
-
-const TILE =
-  /^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(?<Z>\d+)\/(?<X>\d+)\/(?<Y>\d+).(?<EXT>[a-z]+)$/;
-
-export const tile_path = (
-  path: string,
-  setting?: string
-): {
-  ok: boolean;
-  name: string;
-  tile: [number, number, number];
-  ext: string;
-} => {
-  let pattern = TILE;
-  if (setting) {
-    // escape regex
-    setting = setting.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
-    setting = setting.replace("{name}", "(?<NAME>[0-9a-zA-Z/!-_.*'()]+)");
-    setting = setting.replace("{z}", "(?<Z>\\d+)");
-    setting = setting.replace("{x}", "(?<X>\\d+)");
-    setting = setting.replace("{y}", "(?<Y>\\d+)");
-    setting = setting.replace("{ext}", "(?<EXT>[a-z]+)");
-    pattern = new RegExp(setting);
-  }
-
-  let match = path.match(pattern);
-
-  if (match) {
-    const g = match.groups!;
-    return { ok: true, name: g.NAME, tile: [+g.Z, +g.X, +g.Y], ext: g.EXT };
-  }
-  return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
-};
 
 async function nativeDecompress(
   buf: ArrayBuffer,
@@ -128,23 +83,23 @@ export default {
       return new Response(undefined, { status: 405 });
 
     const url = new URL(request.url);
-    const { ok, name, tile, ext } = tile_path(url.pathname, env.TILE_PATH);
+    const { ok, name, tile, ext } = tile_path(url.pathname);
 
     const cache = caches.default;
 
     if (ok) {
       let allowed_origin = "";
       if (typeof env.ALLOWED_ORIGINS !== "undefined") {
-        for (let o of env.ALLOWED_ORIGINS.split(",")) {
+        for (const o of env.ALLOWED_ORIGINS.split(",")) {
           if (o === request.headers.get("Origin") || o === "*") {
             allowed_origin = o;
           }
         }
       }
 
-      let cached = await cache.match(request.url);
+      const cached = await cache.match(request.url);
       if (cached) {
-        let resp_headers = new Headers(cached.headers);
+        const resp_headers = new Headers(cached.headers);
         if (allowed_origin)
           resp_headers.set("Access-Control-Allow-Origin", allowed_origin);
         resp_headers.set("Vary", "Origin");
@@ -162,9 +117,9 @@ export default {
       ) => {
         cacheable_headers.set(
           "Cache-Control",
-          "max-age=" + (env.CACHE_MAX_AGE | 86400)
+          "max-age=" + (env.CACHE_MAX_AGE || 86400)
         );
-        let cacheable = new Response(body, {
+        const cacheable = new Response(body, {
           headers: cacheable_headers,
           status: status,
         });
@@ -172,7 +127,7 @@ export default {
         // normalize HEAD requests
         ctx.waitUntil(cache.put(request.url, cacheable));
 
-        let resp_headers = new Headers(cacheable_headers);
+        const resp_headers = new Headers(cacheable_headers);
         if (allowed_origin)
           resp_headers.set("Access-Control-Allow-Origin", allowed_origin);
         resp_headers.set("Vary", "Origin");
@@ -184,6 +139,20 @@ export default {
       const p = new PMTiles(source, CACHE, nativeDecompress);
       try {
         const p_header = await p.getHeader();
+
+        if (!tile) {
+          cacheable_headers.set("Content-Type", "application/json");
+
+          const t = tileJSON(
+            p_header,
+            await p.getMetadata(),
+            env.PUBLIC_HOSTNAME || url.hostname,
+            name
+          );
+
+          return cacheableResponse(JSON.stringify(t), cacheable_headers, 200);
+        }
+
         if (tile[0] < p_header.minZoom || tile[0] > p_header.maxZoom) {
           return cacheableResponse(undefined, cacheable_headers, 404);
         }
@@ -193,6 +162,7 @@ export default {
           [TileType.Png, "png"],
           [TileType.Jpeg, "jpg"],
           [TileType.Webp, "webp"],
+          [TileType.Avif, "avif"],
         ]) {
           if (p_header.tileType === pair[0] && ext !== pair[1]) {
             if (p_header.tileType == TileType.Mvt && ext === "pbf") {
@@ -200,7 +170,7 @@ export default {
               continue;
             }
             return cacheableResponse(
-              "Bad request: archive has type ." + pair[1],
+              `Bad request: requested .${ext} but archive has type .${pair[1]}`,
               cacheable_headers,
               400
             );
@@ -238,7 +208,6 @@ export default {
       }
     }
 
-    // TODO: metadata responses, tileJSON
     return new Response("Invalid URL", { status: 404 });
   },
 };

@@ -12,7 +12,7 @@ import gzip
 
 
 def MmapSource(f):
-    mapping = mmap.mmap(f.fileno(), 0)
+    mapping = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
 
     def get_bytes(offset, length):
         return mapping[offset : offset + length]
@@ -35,7 +35,7 @@ class Reader:
         return deserialize_header(self.get_bytes(0, 127))
 
     def metadata(self):
-        header = deserialize_header(self.get_bytes(0, 127))
+        header = self.header()
         metadata = self.get_bytes(header["metadata_offset"], header["metadata_length"])
         if header["internal_compression"] == Compression.GZIP:
             metadata = gzip.decompress(metadata)
@@ -43,7 +43,7 @@ class Reader:
 
     def get(self, z, x, y):
         tile_id = zxy_to_tileid(z, x, y)
-        header = deserialize_header(self.get_bytes(0, 127))
+        header = self.header()
         dir_offset = header["root_offset"]
         dir_length = header["root_length"]
         for depth in range(0, 4):  # max depth

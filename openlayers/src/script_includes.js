@@ -1,10 +1,13 @@
-import DataTile from "ol/source/DataTile";
-import VectorTile from "ol/source/VectorTile";
-import TileState from "ol/TileState";
-import { MVT } from "ol/format";
+// IMPORTANT: this file is manually edited!
+// copy any changes made from src/index.js to here
+
+// import DataTile from "ol/source/DataTile";
+// import VectorTile from "ol/source/VectorTile";
+// import TileState from "ol/TileState";
+// import { MVT } from "ol/format";
 import * as pmtiles from "pmtiles";
 
-export class PMTilesRasterSource extends DataTile {
+export class PMTilesRasterSource extends ol.source.DataTile {
   loadImage = (src) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -38,7 +41,7 @@ export class PMTilesRasterSource extends DataTile {
   }
 }
 
-export class PMTilesVectorSource extends VectorTile {
+export class PMTilesVectorSource extends ol.source.VectorTile {
   tileLoadFunction = (tile, url) => {
     // the URL construction is done internally by OL, so we need to parse it
     // back out here using a hacky regex
@@ -49,7 +52,7 @@ export class PMTilesVectorSource extends VectorTile {
     const y = +result[4];
 
     tile.setLoader((extent, resolution, projection) => {
-      tile.setState(TileState.LOADING);
+      tile.setState(1);
       this.pmtiles_
         .getZxy(z, x, y)
         .then((tile_result) => {
@@ -61,15 +64,15 @@ export class PMTilesVectorSource extends VectorTile {
                 featureProjection: projection,
               })
             );
-            tile.setState(TileState.LOADED);
+            tile.setState(2);
           } else {
             tile.setFeatures([]);
-            tile.setState(TileState.EMPTY);
+            tile.setState(4);
           }
         })
         .catch((err) => {
           tile.setFeatures([]);
-          tile.setState(TileState.ERROR);
+          tile.setState(3);
         });
     });
   };
@@ -80,7 +83,7 @@ export class PMTilesVectorSource extends VectorTile {
       ...{
         state: "loading",
         url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
-        format: new MVT(),
+        format: new ol.format.MVT(),
       },
     });
 

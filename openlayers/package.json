@@ -1,11 +1,12 @@
 {
   "name": "ol-pmtiles",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "PMTiles sources for OpenLayers",
   "type": "module",
   "main": "src/index.js",
   "files": [
-    "src/*"
+    "dist/olpmtiles.js",
+    "src/index.js"
   ],
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   ],
   "license": "BSD-3-Clause",
   "scripts": {
+    "build-iife": "esbuild src/script_includes.js --outfile=dist/olpmtiles.js --target=es6 --global-name=olpmtiles --bundle --format=iife",
     "prettier": "prettier --write *.js",
     "prettier-check": "prettier --check *.js"
   },
@@ -27,6 +29,7 @@
     "pmtiles": "^2.7.0"
   },
   "devDependencies": {
+    "esbuild": "^0.15.11"
   },
   "peerDependencies": {
     "ol": ">=7.3.0"

@@ -1,12 +1,14 @@
 #ifndef PMTILES_HPP
 #define PMTILES_HPP
 
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <tuple>
 #include <functional>
 #include <algorithm>
+#include <limits> // for std::numeric_limits<>
 
 namespace pmtiles {
 
@@ -15,12 +17,39 @@ const uint8_t TILETYPE_MVT = 0x1;
 const uint8_t TILETYPE_PNG = 0x2;
 const uint8_t TILETYPE_JPEG = 0x3;
 const uint8_t TILETYPE_WEBP = 0x4;
+const uint8_t TILETYPE_AVIF = 0x5;
 
 const uint8_t COMPRESSION_UNKNOWN = 0x0;
 const uint8_t COMPRESSION_NONE = 0x1;
 const uint8_t COMPRESSION_GZIP = 0x2;
 const uint8_t COMPRESSION_BROTLI = 0x3;
 const uint8_t COMPRESSION_ZSTD = 0x4;
+
+#ifdef PMTILES_MSB
+template<class T>
+inline void swap_byte_order_if_msb(T* ptr) {
+    unsigned char* ptrBytes = reinterpret_cast<unsigned char*>(ptr);
+    for (size_t i = 0; i < sizeof(T)/2; ++i) {
+        std::swap(ptrBytes[i], ptrBytes[sizeof(T)-1-i]);
+    }
+}
+#else
+template<class T>
+inline void swap_byte_order_if_msb(T* /*ptr*/)
+{
+}
+#endif
+
+template<class T>
+inline void copy_to_lsb(std::stringstream& ss, T val) {
+    swap_byte_order_if_msb(&val);
+    ss.write(reinterpret_cast<char*>(&val), sizeof(T));
+}
+
+template<>
+inline void copy_to_lsb<uint8_t>(std::stringstream& ss, uint8_t val) {
+    ss.write(reinterpret_cast<char*>(&val), 1);
+}
 
 struct headerv3 {
 	uint64_t root_dir_offset;
@@ -53,37 +82,37 @@ struct headerv3 {
 		std::stringstream ss;
 		ss << "PMTiles";
 		uint8_t version = 3;
-		ss.write((char *) &version, 1);
-		ss.write((char *) &root_dir_offset, 8);
-		ss.write((char *) &root_dir_bytes, 8);
-		ss.write((char *) &json_metadata_offset, 8);
-		ss.write((char *) &json_metadata_bytes, 8);
-		ss.write((char *) &leaf_dirs_offset, 8);
-		ss.write((char *) &leaf_dirs_bytes, 8);
-		ss.write((char *) &tile_data_offset, 8);
-		ss.write((char *) &tile_data_bytes, 8);
-		ss.write((char *) &addressed_tiles_count, 8);
-		ss.write((char *) &tile_entries_count, 8);
-		ss.write((char *) &tile_contents_count, 8);
+		copy_to_lsb(ss, version);
+		copy_to_lsb(ss, root_dir_offset);
+		copy_to_lsb(ss, root_dir_bytes);
+		copy_to_lsb(ss, json_metadata_offset);
+		copy_to_lsb(ss, json_metadata_bytes);
+		copy_to_lsb(ss, leaf_dirs_offset);
+		copy_to_lsb(ss, leaf_dirs_bytes);
+		copy_to_lsb(ss, tile_data_offset);
+		copy_to_lsb(ss, tile_data_bytes);
+		copy_to_lsb(ss, addressed_tiles_count);
+		copy_to_lsb(ss, tile_entries_count);
+		copy_to_lsb(ss, tile_contents_count);
 
 		uint8_t clustered_val = 0x0;
 		if (clustered) {
 			clustered_val = 0x1;
 		}
 
-		ss.write((char *) &clustered_val, 1);
-		ss.write((char *) &internal_compression, 1);
-		ss.write((char *) &tile_compression, 1);
-		ss.write((char *) &tile_type, 1);
-		ss.write((char *) &min_zoom, 1);
-		ss.write((char *) &max_zoom, 1);
-		ss.write((char *) &min_lon_e7, 4);
-		ss.write((char *) &min_lat_e7, 4);
-		ss.write((char *) &max_lon_e7, 4);
-		ss.write((char *) &max_lat_e7, 4);
-		ss.write((char *) &center_zoom, 1);
-		ss.write((char *) &center_lon_e7, 4);
-		ss.write((char *) &center_lat_e7, 4);
+		copy_to_lsb(ss, clustered_val);
+		copy_to_lsb(ss, internal_compression);
+		copy_to_lsb(ss, tile_compression);
+		copy_to_lsb(ss, tile_type);
+		copy_to_lsb(ss, min_zoom);
+		copy_to_lsb(ss, max_zoom);
+		copy_to_lsb(ss, min_lon_e7);
+		copy_to_lsb(ss, min_lat_e7);
+		copy_to_lsb(ss, max_lon_e7);
+		copy_to_lsb(ss, max_lat_e7);
+		copy_to_lsb(ss, center_zoom);
+		copy_to_lsb(ss, center_lon_e7);
+		copy_to_lsb(ss, center_lat_e7);
 
 		return ss.str();
 	}
@@ -101,6 +130,12 @@ struct pmtiles_version_exception : std::exception {
 	}
 };
 
+template<class T>
+inline void copy_from_lsb(T* ptr, const std::string &s, size_t offset) {
+    s.copy(reinterpret_cast<char *>(ptr), sizeof(T), offset);
+	swap_byte_order_if_msb(ptr);
+}
+
 inline headerv3 deserialize_header(const std::string &s) {
 	if (s.substr(0, 7) != "PMTiles") {
 		throw pmtiles_magic_number_exception{};
@@ -109,17 +144,17 @@ inline headerv3 deserialize_header(const std::string &s) {
 		throw pmtiles_version_exception{};
 	}
 	headerv3 h;
-	s.copy((char *) &h.root_dir_offset, 8, 8);
-	s.copy((char *) &h.root_dir_bytes, 8, 16);
-	s.copy((char *) &h.json_metadata_offset, 8, 24);
-	s.copy((char *) &h.json_metadata_bytes, 8, 32);
-	s.copy((char *) &h.leaf_dirs_offset, 8, 40);
-	s.copy((char *) &h.leaf_dirs_bytes, 8, 48);
-	s.copy((char *) &h.tile_data_offset, 8, 56);
-	s.copy((char *) &h.tile_data_bytes, 8, 64);
-	s.copy((char *) &h.addressed_tiles_count, 8, 72);
-	s.copy((char *) &h.tile_entries_count, 8, 80);
-	s.copy((char *) &h.tile_contents_count, 8, 88);
+	copy_from_lsb(&h.root_dir_offset, s, 8);
+	copy_from_lsb(&h.root_dir_bytes, s, 16);
+	copy_from_lsb(&h.json_metadata_offset, s, 24);
+	copy_from_lsb(&h.json_metadata_bytes, s, 32);
+	copy_from_lsb(&h.leaf_dirs_offset, s, 40);
+	copy_from_lsb(&h.leaf_dirs_bytes, s, 48);
+	copy_from_lsb(&h.tile_data_offset, s, 56);
+	copy_from_lsb(&h.tile_data_bytes, s, 64);
+	copy_from_lsb(&h.addressed_tiles_count, s, 72);
+	copy_from_lsb(&h.tile_entries_count, s, 80);
+	copy_from_lsb(&h.tile_contents_count, s, 88);
 	if (s[96] == 0x1) {
 		h.clustered = true;
 	} else {
@@ -130,13 +165,13 @@ inline headerv3 deserialize_header(const std::string &s) {
 	h.tile_type = s[99];
 	h.min_zoom = s[100];
 	h.max_zoom = s[101];
-	s.copy((char *) &h.min_lon_e7, 4, 102);
-	s.copy((char *) &h.min_lat_e7, 4, 106);
-	s.copy((char *) &h.max_lon_e7, 4, 110);
-	s.copy((char *) &h.max_lat_e7, 4, 114);
+	copy_from_lsb(&h.min_lon_e7, s, 102);
+	copy_from_lsb(&h.min_lat_e7, s, 106);
+	copy_from_lsb(&h.max_lon_e7, s, 110);
+	copy_from_lsb(&h.max_lat_e7, s, 114);
 	h.center_zoom = s[118];
-	s.copy((char *) &h.center_lon_e7, 4, 119);
-	s.copy((char *) &h.center_lat_e7, 4, 123);
+	copy_from_lsb(&h.center_lon_e7, s, 119);
+	copy_from_lsb(&h.center_lat_e7, s, 123);
 	return h;
 }
 
@@ -145,7 +180,7 @@ struct zxy {
 	uint32_t x;
 	uint32_t y;
 
-	zxy(int _z, int _x, int _y)
+	zxy(uint8_t _z, int _x, int _y)
 	    : z(_z), x(_x), y(_y) {
 	}
 };
@@ -312,7 +347,7 @@ zxy t_on_level(uint8_t z, uint64_t pos) {
 		ty += s * ry;
 		t /= 4;
 	}
-	return zxy(z, tx, ty);
+	return zxy(z, static_cast<int>(tx), static_cast<int>(ty));
 }
 
 int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
@@ -344,13 +379,12 @@ struct {
 // use a 0 length entry as a null value.
 entryv3 find_tile(const std::vector<entryv3> &entries, uint64_t tile_id) {
 	int m = 0;
-	int n = entries.size() - 1;
+	int n = static_cast<int>(entries.size()) - 1;
 	while (m <= n) {
 		int k = (n + m) >> 1;
-		int cmp = tile_id - entries[k].tile_id;
-		if (cmp > 0) {
+		if (tile_id > entries[k].tile_id) {
 			m = k + 1;
-		} else if (cmp < 0) {
+		} else if (tile_id < entries[k].tile_id) {
 			n = k - 1;
 		} else {
 			return entries[k];
@@ -387,7 +421,7 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 	if (z > 31) {
 		throw std::overflow_error("tile zoom exceeds 64-bit limit");
 	}
-	if (x > (1 << z) - 1 || y > (1 << z) - 1) {
+	if (x > (1U << z) - 1U || y > (1U << z) - 1U) {
 		throw std::overflow_error("tile x/y outside zoom level bounds");
 	}
 	uint64_t acc = 0;
@@ -436,35 +470,62 @@ inline std::string serialize_directory(const std::vector<entryv3> &entries) {
 	return data;
 }
 
+struct malformed_directory_exception : std::exception {
+	const char *what() const noexcept override {
+		return "malformed directory exception";
+	}
+};
+
 // takes an uncompressed byte buffer
 inline std::vector<entryv3> deserialize_directory(const std::string &decompressed) {
 	const char *t = decompressed.data();
 	const char *end = t + decompressed.size();
 
-	uint64_t num_entries = decode_varint(&t, end);
+	const uint64_t num_entries_64bit = decode_varint(&t, end);
+	// Sanity check to avoid excessive memory allocation attempt:
+	// each directory entry takes at least 4 bytes
+	if (num_entries_64bit / 4U > decompressed.size()) {
+		throw malformed_directory_exception();
+	}
+	const size_t num_entries = static_cast<size_t>(num_entries_64bit);
 
 	std::vector<entryv3> result;
 	result.resize(num_entries);
 
 	uint64_t last_id = 0;
 	for (size_t i = 0; i < num_entries; i++) {
-		uint64_t tile_id = last_id + decode_varint(&t, end);
+		const uint64_t val = decode_varint(&t, end);
+		if (val > std::numeric_limits<uint64_t>::max() - last_id) {
+			throw malformed_directory_exception();
+		}
+		const uint64_t tile_id = last_id + val;
 		result[i].tile_id = tile_id;
 		last_id = tile_id;
 	}
 
 	for (size_t i = 0; i < num_entries; i++) {
-		result[i].run_length = decode_varint(&t, end);
+		const uint64_t val = decode_varint(&t, end);
+		if (val > std::numeric_limits<uint32_t>::max()) {
+			throw malformed_directory_exception();
+		}
+		result[i].run_length = static_cast<uint32_t>(val);
 	}
 
 	for (size_t i = 0; i < num_entries; i++) {
-		result[i].length = decode_varint(&t, end);
+		const uint64_t val = decode_varint(&t, end);
+		if (val > std::numeric_limits<uint32_t>::max()) {
+			throw malformed_directory_exception();
+		}
+		result[i].length = static_cast<uint32_t>(val);
 	}
 
 	for (size_t i = 0; i < num_entries; i++) {
 		uint64_t tmp = decode_varint(&t, end);
 
 		if (i > 0 && tmp == 0) {
+			if (result[i - 1].offset > std::numeric_limits<uint64_t>::max() - result[i - 1].length) {
+				throw malformed_directory_exception();
+			}
 			result[i].offset = result[i - 1].offset + result[i - 1].length;
 		} else {
 			result[i].offset = tmp - 1;
@@ -473,8 +534,7 @@ inline std::vector<entryv3> deserialize_directory(const std::string &decompresse
 
 	// assert the directory has been fully consumed
 	if (t != end) {
-		fprintf(stderr, "Error: malformed pmtiles directory\n");
-		exit(EXIT_FAILURE);
+		throw malformed_directory_exception();
 	}
 
 	return result;
@@ -486,14 +546,14 @@ inline std::tuple<std::string, std::string, int> build_root_leaves(const std::fu
 	int num_leaves = 0;
 	for (size_t i = 0; i < entries.size(); i += leaf_size) {
 		num_leaves++;
-		int end = i + leaf_size;
+		size_t end = i + leaf_size;
 		if (i + leaf_size > entries.size()) {
 			end = entries.size();
 		}
 		std::vector<pmtiles::entryv3> subentries = {entries.begin() + i, entries.begin() + end};
 		auto uncompressed_leaf = pmtiles::serialize_directory(subentries);
 		auto compressed_leaf = mycompress(uncompressed_leaf, compression);
-		root_entries.emplace_back(entries[i].tile_id, leaves_bytes.size(), compressed_leaf.size(), 0);
+		root_entries.emplace_back(entries[i].tile_id, leaves_bytes.size(), static_cast<uint32_t>(compressed_leaf.size()), 0);
 		leaves_bytes += compressed_leaf;
 	}
 	auto uncompressed_root = pmtiles::serialize_directory(root_entries);
@@ -521,7 +581,7 @@ inline std::tuple<std::string, std::string, int> make_root_leaves(const std::fun
 }
 
 inline void collect_entries(const std::function<std::string(const std::string &, uint8_t)> decompress, std::vector<entry_zxy> &tile_entries, const char *pmtiles_map, const headerv3 &h, uint64_t dir_offset, uint64_t dir_len) {
-	std::string dir_s{pmtiles_map + dir_offset, dir_len};
+	std::string dir_s{pmtiles_map + dir_offset, static_cast<size_t>(dir_len)};
 	std::string decompressed_dir = decompress(dir_s, h.internal_compression);
 
 	auto dir_entries = pmtiles::deserialize_directory(decompressed_dir);
@@ -555,7 +615,10 @@ inline std::pair<uint64_t, uint32_t> get_tile(const std::function<std::string(co
 	auto h = pmtiles::deserialize_header(header_s);
 
 	uint64_t dir_offset = h.root_dir_offset;
-	uint32_t dir_length = h.root_dir_bytes;
+    if (h.root_dir_bytes > std::numeric_limits<uint32_t>::max()) {
+		throw malformed_directory_exception();
+	}
+	uint32_t dir_length = static_cast<uint32_t>(h.root_dir_bytes);
 	for (int depth = 0; depth <= 3; depth++) {
 		std::string dir_s{pmtiles_map + dir_offset, dir_length};
 		std::string decompressed_dir = decompress(dir_s, h.internal_compression);

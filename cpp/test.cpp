@@ -47,7 +47,7 @@ MU_TEST(test_zxy_to_tileid) {
 
 MU_TEST(test_roundtrip) {
 	for (int z = 0; z < 32; z++) {
-		uint64_t dim = (1 << z) - 1;
+		uint32_t dim = (1 << z) - 1;
 		auto tl = tileid_to_zxy(zxy_to_tileid(z, 0, 0));
 		mu_check(tl.z == z);
 		mu_check(tl.x == 0);
@@ -184,13 +184,13 @@ MU_TEST(test_deserialize_header) {
 	mu_check(deserialized.center_lat_e7 == 19);
 }
 
-string mycompress(const string &input, uint8_t compression) {
+static string mycompress(const string &input, uint8_t compression) {
 	if (compression != pmtiles::COMPRESSION_NONE)
 		throw runtime_error("Unsupported compression");
 	return input;
 }
 
-string mydecompress(const string &input, uint8_t compression) {
+static string mydecompress(const string &input, uint8_t compression) {
 	if (compression != pmtiles::COMPRESSION_NONE)
 		throw runtime_error("Unsupported compression");
 	return input;
@@ -238,7 +238,7 @@ MU_TEST(test_build_dirs) {
 	struct stat st;
 	int fd = open("tmp.pmtiles", O_RDONLY);
 	fstat(fd, &st);
-	char *map = (char *) mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	char *map = static_cast<char *>(mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
 
 	auto result = entries_tms(&mydecompress, map);
 	mu_check(result.size() == 100000);
@@ -272,7 +272,7 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_build_dirs_one);
 }
 
-int main(int argc, char *argv[]) {
+int main() {
 	MU_RUN_SUITE(test_suite);
 	MU_REPORT();
 	return MU_EXIT_CODE;

@@ -161,6 +161,7 @@ The field can have one of the following values:
 | `0x02` | PNG                |
 | `0x03` | JPEG               |
 | `0x04` | WebP               |
+| `0x05` | AVIF               |
 
 #### Min Zoom (MinZ)
 

@@ -330,7 +330,21 @@ _¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and O
 
 ## 5 JSON Metadata
 
-The meta data section may include additional meta data related to the tileset that is not already covered in the header section. This section allows for any valid JSON, thereby enabling flexibility in its structure. As a result, readers should refrain from assuming a predetermined format.
+The meta data section must contain a valid JSON object encoded in UTF-8, which may include additional meta data related to the tileset that is not already covered in the header section.
+
+If the [Tile Type](#tile-type-tt) in the header has a value of _Mapbox Vector Tile_, the object should contain a key of `vector_layers` as described in the [TileJSON 3.0 specification](https://github.com/mapbox/tilejson-spec/blob/22f5f91e643e8980ef2656674bef84c2869fbe76/3.0.0/README.md#33-vector_layers).
+
+Additionally, this specification defines the following keys, which may be included in the object:
+
+|Key|Description|Type|
+|--:|--|--|
+|`name`|A name describing the tileset|string|
+|`description`|A text description of the tileset|string|
+|`attribution`|An attribution to be displayed when the map is shown to a user. Implementations may decide to treat this as HTML or literal text. |string|
+|`type`|The type of the tileset |a string with a value of either `overlay` or `baselayer`|
+|`version`|The version number of the tileset|a string containing a valid version according to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) |
+
+The JSON object may also include any other keys with an arbitrary value. This specification recommends nesting all application-specific data in an object under a semi-unique key to avoid overlap with other application-specific data or keys that may be defined in future versions of this specification. For example, instead of including the custom fields `author` and `companyId` directly in the top level of the metadata object, they should be nested in another object under a key with your project or organization name.
 
 ---
 

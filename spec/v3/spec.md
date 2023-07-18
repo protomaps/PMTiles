@@ -79,7 +79,7 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Metadata Length
 
-The Metadata Length is an 8-byte field specifying the number of bytes reserved for the metadata. 
+The Metadata Length is an 8-byte field specifying the number of bytes of the metadata. 
 
 This field is encoded as a little-endian 64-bit unsigned integer.
 
@@ -91,7 +91,7 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Leaf Directories Length
 
-The Leaf Directories Length is an 8-byte field specifying the number of bytes reserved for leaf directories. A value of `0` indicates that there are no leaf directories included in this PMTiles archive.
+The Leaf Directories Length is an 8-byte field specifying the accumulated size (in bytes) of all leaf directories. A value of `0` indicates that there are no leaf directories included in this PMTiles archive.
 
 This field is encoded as a little-endian 64-bit unsigned integer.
 
@@ -103,7 +103,7 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Tile Data Length
 
-The Tile Data Length is an 8-byte field specifying the number of bytes reserved for the tile data.
+The Tile Data Length is an 8-byte field specifying the accumulated size (in bytes) of all tiles in the tile data section.
 
 This field is encoded as a little-endian 64-bit unsigned integer.
 
@@ -271,7 +271,7 @@ The Tile-ID corresponds to a cumulative position on the series of [Hilbert curve
 Specifies the offset of the first byte of the tile or leaf directory. This address offset is relative to the first byte of the _tile data section_ for tile-entries and relative to the first byte of the _leaf directories section_ for leaf-directory-entries.
 
 #### Length
-Specifies the number of bytes reserved for this tile or leaf directory. This size always indicates the compressed size, if the tile or leaf directory is compressed.
+Specifies the number of bytes of this tile or leaf directory. This size always indicates the compressed size, if the tile or leaf directory is compressed.
 
 #### Run-Length
 Specifies the number of tiles for which this entry is valid. A run length of `0` means that this entry is for a leaf directory and not for a tile.

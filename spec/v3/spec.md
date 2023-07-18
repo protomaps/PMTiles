@@ -1,5 +1,7 @@
 # PMTiles Version 3 Specification
 
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
+
 ## Changelog
 
 <details>
@@ -30,7 +32,7 @@ An archive consists of five main sections:
 1. The actual tile data
 
 These sections are normally in the same order as in the list above, but theoretically, it is possible to relocate all sections other than the header arbitrarily.
-The only two restrictions are that the header is at the start of the archive and the root directory must be contained in the first 16,384 bytes (16 KB) of the archive so that latency-optimized clients can retrieve the root directory in advance and ensure that it is complete.
+The only two restrictions are that the header is at the start of the archive and the root directory MUST be contained in the first 16,384 bytes (16 KB) of the archive so that latency-optimized clients can retrieve the root directory in advance and ensure that it is complete.
 
 ## 3 Header
 
@@ -204,13 +206,13 @@ The encoding of this field is described in [Chapter 3.4](#34-position).
 
 #### Center Zoom (CZ)
 
-The Center Zoom is a 1-byte field specifying the center zoom (LOD) of the tiles. A reader may use this as the initial zoom when displaying tiles from the PMTiles archive.
+The Center Zoom is a 1-byte field specifying the center zoom (LOD) of the tiles. A reader MAY use this as the initial zoom when displaying tiles from the PMTiles archive.
 
 This field is encoded as an 8-bit unsigned integer.
 
 #### Center Position
 
-The Center Position is an 8-byte field that includes the latitude and longitude of the center position. A reader may use this as the initial center position when displaying tiles from the PMTiles archive.
+The Center Position is an 8-byte field that includes the latitude and longitude of the center position. A reader MAY use this as the initial center position when displaying tiles from the PMTiles archive.
 
 The encoding of this field is described in [Chapter 3.4](#34-position).
 
@@ -249,7 +251,7 @@ To decode a latitude or a longitude from 4 bytes, use the following method:
 A directory is simply a list of entries. Each entry describes either where a specific tile can be found in the _tile data section_ or where a leaf directory can be found in the _leaf directories section_.  
 
 The number of entries in the root directory and in the leaf directories is left to the implementation and can vary drastically depending on what the writer has optimized for (cost, bandwidth, latency, etc.).  
-However, the size of the header plus the compressed size of the root directory must not exceed 16384 bytes to allow latency-optimized clients to retrieve the root directory in its entirety. Therefore, the **maximum compressed size of the root directory is 16257 bytes** (16384 bytes - 127 bytes). A sophisticated writer might need several attempts to optimize this.
+However, the size of the header plus the compressed size of the root directory MUST NOT exceed 16384 bytes to allow latency-optimized clients to retrieve the root directory in its entirety. Therefore, the **maximum compressed size of the root directory is 16257 bytes** (16384 bytes - 127 bytes). A sophisticated writer might need several attempts to optimize this.
 
 ### 4.1 Directory Entries
 
@@ -297,7 +299,7 @@ A directory can only be encoded in its entirety. It is not possible to encode a 
 [Appendix A.1](#a1-encode-a-directory) includes a pseudocode implementation of encoding a directory.
 
 An encoded directory consists of five parts in the following order:
-1. The number of entries contained in the directory (must be greater than 0)
+1. The number of entries contained in the directory (MUST be greater than 0)
 1. Tile-IDs of all entries
 1. Run-Lengths of all entries
 1. Lengths of all entries
@@ -321,7 +323,7 @@ The Run-Lengths are simply encoded as is, each as a little-endian [variable-widt
 
 #### Lengths
 
-The lengths are simply encoded as is, each as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints). Each length must be greater than 0.
+The lengths are simply encoded as is, each as a little-endian [variable-width integer](https://protobuf.dev/programming-guides/encoding/#varints). Each length MUST be greater than 0.
 
 #### Offsets
 Offsets are encoded either as `Offset + 1` or `0`, if they are equal to the sum of offset and length of the previous entry (tile blobs are contiguous).
@@ -345,21 +347,21 @@ _¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and O
 
 ## 5 JSON Metadata
 
-The meta data section must contain a valid JSON object encoded in UTF-8, which may include additional meta data related to the tileset that is not already covered in the header section.
+The meta data section MUST contain a valid JSON object encoded in UTF-8, which MAY include additional meta data related to the tileset that is not already covered in the header section.
 
-If the [Tile Type](#tile-type-tt) in the header has a value of _Mapbox Vector Tile_, the object should contain a key of `vector_layers` as described in the [TileJSON 3.0 specification](https://github.com/mapbox/tilejson-spec/blob/22f5f91e643e8980ef2656674bef84c2869fbe76/3.0.0/README.md#33-vector_layers).
+If the [Tile Type](#tile-type-tt) in the header has a value of _Mapbox Vector Tile_, the object SHOULD contain a key of `vector_layers` as described in the [TileJSON 3.0 specification](https://github.com/mapbox/tilejson-spec/blob/22f5f91e643e8980ef2656674bef84c2869fbe76/3.0.0/README.md#33-vector_layers).
 
-Additionally, this specification defines the following keys, which may be included in the object:
+Additionally, this specification defines the following keys, which MAY be included in the object:
 
 |Key|Description|Type|
 |--:|--|--|
 |`name`|A name describing the tileset|string|
 |`description`|A text description of the tileset|string|
-|`attribution`|An attribution to be displayed when the map is shown to a user. Implementations may decide to treat this as HTML or literal text. |string|
+|`attribution`|An attribution to be displayed when the map is shown to a user. Implementations MAY decide to treat this as HTML or literal text. |string|
 |`type`|The type of the tileset |a string with a value of either `overlay` or `baselayer`|
 |`version`|The version number of the tileset|a string containing a valid version according to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) |
 
-The JSON object may also include any other keys with an arbitrary value. This specification recommends nesting all application-specific data in an object under a semi-unique key to avoid overlap with other application-specific data or keys that may be defined in future versions of this specification. For example, instead of including the custom fields `author` and `companyId` directly in the top level of the metadata object, they should be nested in another object under a key with your project or organization name.
+The JSON object MAY also include any other keys with an arbitrary value. This specification recommends nesting all application-specific data in an object under a semi-unique key to avoid overlap with other application-specific data or keys that may be defined in future versions of this specification. For example, instead of including the custom fields `author` and `companyId` directly in the top level of the metadata object, they SHOULD be nested in another object under a key with your project or organization name.
 
 ---
 

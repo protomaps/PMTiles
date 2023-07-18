@@ -2,20 +2,10 @@
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
-## Changelog
+---
 
-<details>
-<summary><b>Version 3.2</b></summary>
-Complete rewrite to clarify many ambiguous wordings.
-</details>
+Please refer to the [change log](./CHANGELOG.md) for a documentation of changes to this specification.
 
-<details>
-<summary><b>Version 3.1</b></summary>
-
-- added `metadata` details about `vector_layers`.
-- Clarified that directory entry lengths must be nonzero, and directories must be non-empty.
-- add AVIF to TileTypes.
-</details>
 
 ## 1 Abstact
 

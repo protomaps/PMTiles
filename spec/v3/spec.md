@@ -17,7 +17,7 @@ Complete rewrite to clarify many ambiguous wordings.
 - add AVIF to TileTypes.
 </details>
 
-## 1 Introduction
+## 1 Abstact
 
 PMTiles is a single-file archive format for tiled data. It enables low-cost, zero-maintenance map applications for "serverless" environments without having to rely on a custom tile backend or a third-party provider. This is achieved by packing all tiles of a tileset into an archive so that all tiles can be accessed easily and without much overhead via HTTP range requests. By combining all the tiles into one archive, hosting costs are kept low, as it is usually a lot cheaper to update one large file than to update thousands or even millions of small files.
 

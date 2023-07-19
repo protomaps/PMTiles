@@ -25,9 +25,9 @@ These sections are normally in the same order as in the list above, but theoreti
 The only two restrictions are that the header is at the start of the archive and the root directory MUST be contained in the first 16,384 bytes (16 KB) of the archive so that latency-optimized clients can retrieve the root directory in advance and ensure that it is complete.
 
 ```
-  Header   Root Directory   Meta Data   Leaf Directories   Tile Data
-  Length       Length        Length          Length         Length
- <------> <--------------> <---------> <----------------> <--------->
+           Root Directory   Meta Data   Leaf Directories   Tile Data
+               Length        Length          Length         Length
+          <--------------> <---------> <----------------> <--------->
 +--------+----------------+-----------+------------------+-----------+
 |        |                |           |                  |           |
 | Header | Root Directory | Meta Data | Leaf Directories | Tile Data |

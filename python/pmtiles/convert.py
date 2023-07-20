@@ -177,4 +177,4 @@ def pmtiles_to_dir(input, output):
             path = os.path.join(directory, str(zxy[2]) + "." + "mvt")
             os.makedirs(directory, exist_ok=True)
             with open(path, "wb") as f:
-                f.write(data)
+                f.write(tile_data)

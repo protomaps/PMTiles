@@ -1,3 +1,7 @@
+2.10.0
+
+* Replace `DecompressionStream` polyfill with own `globalThis` detection because of web workers problems.
+
 2.9.0
 
 * Recognize AVIF TileType

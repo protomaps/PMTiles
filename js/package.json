@@ -1,6 +1,6 @@
 {
   "name": "pmtiles",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "description": "PMTiles archive decoder for browsers",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -32,7 +32,6 @@
     "typescript": "^4.5.5"
   },
   "dependencies": {
-    "compression-streams-polyfill": "^0.1.3",
     "fflate": "^0.8.0"
   }
 }

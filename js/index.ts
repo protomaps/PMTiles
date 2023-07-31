@@ -1,4 +1,4 @@
-import { makeDecompressionStream } from "compression-streams-polyfill/ponyfill";
+import { decompressSync } from "fflate";
 import v2 from "./v2";
 export * from "./adapters";
 
@@ -162,10 +162,15 @@ async function defaultDecompress(
   if (compression === Compression.None || compression === Compression.Unknown) {
     return buf;
   } else if (compression === Compression.Gzip) {
-    let stream = new Response(buf).body!;
-    const decompressionStream = makeDecompressionStream(TransformStream);
-    let result = stream.pipeThrough(new decompressionStream("gzip"));
-    return new Response(result).arrayBuffer();
+    if (typeof (globalThis as any).DecompressionStream == "undefined") {
+      return decompressSync(new Uint8Array(buf));
+    } else {
+      let stream = new Response(buf).body!;
+      let result: ReadableStream<Uint8Array> = stream.pipeThrough(
+        new (globalThis as any).DecompressionStream("gzip")
+      );
+      return new Response(result).arrayBuffer();
+    }
   } else {
     throw Error("Compression method not supported");
   }

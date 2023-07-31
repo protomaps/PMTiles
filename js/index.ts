@@ -166,7 +166,9 @@ async function defaultDecompress(
       return decompressSync(new Uint8Array(buf));
     } else {
       let stream = new Response(buf).body!;
-      let result = stream.pipeThrough(new (globalThis as any).DecompressionStream("gzip"));
+      let result: ReadableStream<Uint8Array> = stream.pipeThrough(
+        new (globalThis as any).DecompressionStream("gzip")
+      );
       return new Response(result).arrayBuffer();
     }
   } else {

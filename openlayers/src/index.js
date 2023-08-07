@@ -56,7 +56,7 @@ export class PMTilesVectorSource extends VectorTile {
           if (tile_result) {
             const format = tile.getFormat();
             tile.setFeatures(
-              format.readFeatures(tile_result.data.buffer, {
+              format.readFeatures(tile_result.data, {
                 extent: extent,
                 featureProjection: projection,
               })

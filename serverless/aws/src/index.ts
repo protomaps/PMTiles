@@ -208,7 +208,7 @@ export const handlerRaw = async (
       }
 
       headers["Cache-Control"] = `public, max-age=${process.env.CACHE_MAX_AGE || 86400}`;
-      headers["eTag"] = `"${createHash("sha256").update(Buffer.from(data)).digest("hex")}"`
+      headers["ETag"] = `"${createHash("sha256").update(Buffer.from(data)).digest("hex")}"`
 
       if (is_api_gateway) {
         // this is wasted work, but we need to force API Gateway to interpret the Lambda response as binary

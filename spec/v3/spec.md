@@ -6,14 +6,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 Please refer to the [change log](./CHANGELOG.md) for a documentation of changes to this specification.
 
+## 1 Abstract
 
-## 1 Abstact
-
-PMTiles is a single-file archive format for tiled data. It enables low-cost, zero-maintenance map applications for "serverless" environments without having to rely on a custom tile backend or a third-party provider. This is achieved by packing all tiles of a tileset into an archive so that all tiles can be accessed easily and without much overhead via HTTP range requests. By combining all the tiles into one archive, hosting costs are kept low, as it is usually a lot cheaper to update one large file than to update thousands or even millions of small files.
+PMTiles is a single-file archive format for tiled data.
 
 ## 2 Overview
 
-An archive consists of five main sections:
+A PMTiles archive consists of five main sections:
 
 1. A fixed-size 127-byte header (described in [Chapter 3](#3-header))
 1. A root directory (described in [Chapter 4](#4-directories))
@@ -365,8 +364,6 @@ Additionally, this specification defines the following keys, which MAY be includ
 |`attribution`|An attribution to be displayed when the map is shown to a user. Implementations MAY decide to treat this as HTML or literal text. |string|
 |`type`|The type of the tileset |a string with a value of either `overlay` or `baselayer`|
 |`version`|The version number of the tileset|a string containing a valid version according to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) |
-
-The JSON object MAY also include any other keys with an arbitrary value. This specification recommends nesting all application-specific data in an object under a semi-unique key to avoid overlap with other application-specific data or keys that may be defined in future versions of this specification. For example, instead of including the custom fields `author` and `companyId` directly in the top level of the metadata object, they SHOULD be nested in another object under a key with your project or organization name.
 
 ---
 

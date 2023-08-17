@@ -1,7 +1,7 @@
 # Changelog
 
 ## Version 3.2
-Complete rewrite to clarify many ambiguous wordings.
+- Detailed rewrite of spec by @DerZade to clarify ambiguity.
 
 ## Version 3.1
 - added `metadata` details about `vector_layers`.

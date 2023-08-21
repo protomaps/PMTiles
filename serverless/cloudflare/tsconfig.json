@@ -8,8 +8,7 @@
 		"module": "es2022",
 		"moduleResolution": "node",
 		"types": [
-			"@cloudflare/workers-types",
-			"node"
+			"@cloudflare/workers-types"
 		],
 		"resolveJsonModule": true,
 		"allowJs": true,

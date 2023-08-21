@@ -2,11 +2,13 @@ import unittest
 import sqlite3
 from io import BytesIO
 import os
+import shutil
 import json
 from pmtiles.writer import Writer
 from pmtiles.reader import Reader, MemorySource
 from pmtiles.convert import (
     pmtiles_to_mbtiles,
+    pmtiles_to_dir,
     mbtiles_to_pmtiles,
     mbtiles_to_header_json,
 )
@@ -25,6 +27,10 @@ class TestConvert(unittest.TestCase):
             pass
         try:
             os.remove("test_tmp_2.mbtiles")
+        except:
+            pass
+        try:
+            shutil.rmtree("test_dir")
         except:
             pass
 
@@ -67,6 +73,8 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(json_metadata['tilestats'], {'tile':'stats'})
 
         mbtiles_to_pmtiles("test_tmp.mbtiles", "test_tmp_2.pmtiles", 3)
+
+        pmtiles_to_dir("test_tmp.pmtiles","test_dir")
 
     def test_mbtiles_header(self):
         header, json_metadata = mbtiles_to_header_json(

@@ -1,7 +1,7 @@
-import DataTile from "ol/source/DataTile";
-import VectorTile from "ol/source/VectorTile";
-import TileState from "ol/TileState";
-import { MVT } from "ol/format";
+import DataTile from "ol/source/DataTile.js";
+import VectorTile from "ol/source/VectorTile.js";
+import TileState from "ol/TileState.js";
+import { MVT } from "ol/format.js";
 import * as pmtiles from "pmtiles";
 
 export class PMTilesRasterSource extends DataTile {

@@ -8,6 +8,8 @@ import { MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { schemeSet3 } from "d3-scale-chromatic";
 import base_theme from "protomaps-themes-base";
+import { MaplibreLegendControl } from "@watergis/maplibre-gl-legend";
+import "@watergis/maplibre-gl-legend/dist/maplibre-gl-legend.css";
 
 const INITIAL_ZOOM = 0;
 const INITIAL_LNG = 0;
@@ -380,6 +382,18 @@ function MaplibreMap(props: { file: PMTiles }) {
       },
     });
     map.addControl(new maplibregl.NavigationControl({}), "bottom-left");
+    map.addControl(
+      new MaplibreLegendControl(
+        {},
+        {
+          showDefault: true,
+          showCheckbox: false,
+          reverseOrder: true,
+          onlyRendered: false,
+        }
+      ),
+      "top-left"
+    );
     map.on("load", map.resize);
 
     const popup = new maplibregl.Popup({

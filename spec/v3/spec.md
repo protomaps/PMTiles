@@ -275,8 +275,8 @@ The Tile-ID corresponds to a cumulative position on the series of [Hilbert curve
 |0|0|0|0|
 |1|0|0|1|
 |1|0|1|2|
-|1|1|0|3|
-|1|1|1|4|
+|1|1|1|3|
+|1|1|0|4|
 |2|0|0|5|
 |...
 |12|3423|1763|19078479|

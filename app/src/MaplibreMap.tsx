@@ -319,7 +319,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
   };
 };
 
-function MaplibreMap(props: { file: PMTiles }) {
+function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
   let mapContainerRef = useRef<HTMLDivElement>(null);
   let [hamburgerOpen, setHamburgerOpen] = useState<boolean>(true);
   let [showAttributes, setShowAttributes] = useState<boolean>(false);
@@ -437,11 +437,7 @@ function MaplibreMap(props: { file: PMTiles }) {
       if (mapRef.current) {
         let map = mapRef.current;
         let header = await props.file.getHeader();
-        if (
-          map.getCenter().lng === INITIAL_LNG &&
-          map.getCenter().lat == INITIAL_LAT &&
-          map.getZoom() === INITIAL_ZOOM
-        ) {
+        if (!props.mapHashPassed) {
           // the map hash was not passed, so auto-detect the initial viewport based on metadata
           map.fitBounds(
             [

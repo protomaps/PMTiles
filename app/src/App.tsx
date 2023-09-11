@@ -59,6 +59,7 @@ function App() {
 
   let [errorDisplay, setErrorDisplay] = useState<string | undefined>();
   let [file, setFile] = useState<PMTiles | undefined>();
+  let [mapHashPassed, setMapHashPassed] = useState<boolean>(false);
 
   // initial load
   useEffect(() => {
@@ -66,6 +67,9 @@ function App() {
     if (loadUrl) {
       let initialValue = new PMTiles(loadUrl);
       setFile(initialValue);
+    }
+    if (location.hash.includes("map")) {
+      setMapHashPassed(true);
     }
   }, []);
 
@@ -110,7 +114,11 @@ function App() {
           </GithubA>
         </GithubLink>
       </Header>
-      {file ? <Loader file={file} /> : <Start setFile={setFile} />}
+      {file ? (
+        <Loader file={file} mapHashPassed={mapHashPassed} />
+      ) : (
+        <Start setFile={setFile} />
+      )}
       <DialogPrimitive.Root open={errorDisplay !== undefined}>
         <DialogPrimitive.Portal>
           <StyledOverlay />

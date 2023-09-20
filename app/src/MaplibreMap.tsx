@@ -144,7 +144,7 @@ const LayersVisibilityController = (props: {
         <em>All layers</em>
       </CheckboxLabel>
       <LayersVisibilityList>
-        {props.layers.map(({ id, visible }) => (
+        {props.layers.map(({ id, visible }, idx) => (
           <li key={id}>
             <CheckboxLabel style={{ paddingLeft: 8 }}>
               <input
@@ -152,6 +152,13 @@ const LayersVisibilityController = (props: {
                 checked={visible}
                 onChange={toggleLayer}
                 data-layer-id={id}
+              />
+              <span
+                style={{
+                  width: ".8rem",
+                  height: ".8rem",
+                  backgroundColor: schemeSet3[idx % 12],
+                }}
               />
               {id}
             </CheckboxLabel>

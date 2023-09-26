@@ -197,7 +197,7 @@ const rasterStyle = async (file: PMTiles): Promise<any> => {
       basemap: {
         type: "vector",
         tiles: [
-          "https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=1003762824b9687f",
+          "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f",
         ],
         maxzoom: 14,
       },
@@ -310,7 +310,7 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         basemap: {
           type: "vector",
           tiles: [
-            "https://api.protomaps.com/tiles/v2/{z}/{x}/{y}.pbf?key=1003762824b9687f",
+            "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f",
           ],
           maxzoom: 14,
           bounds: bounds,

@@ -8,10 +8,16 @@ import { MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { schemeSet3 } from "d3-scale-chromatic";
 import base_theme from "protomaps-themes-base";
+import {
+  StyleSpecification,
+  LayerSpecification,
+} from "@maplibre/maplibre-gl-style-spec";
 
 const INITIAL_ZOOM = 0;
 const INITIAL_LNG = 0;
 const INITIAL_LAT = 0;
+const BASEMAP_URL =
+  "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f";
 
 maplibregl.setRTLTextPlugin(
   "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
@@ -169,14 +175,13 @@ const LayersVisibilityController = (props: {
   );
 };
 
-const rasterStyle = async (file: PMTiles): Promise<any> => {
+const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
   let header = await file.getHeader();
   let metadata = await file.getMetadata();
-  let layers: any[] = [];
+  let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
     layers = base_theme("basemap", "black");
-    layers[0].paint["background-color"] = "black";
   }
 
   layers.push({
@@ -196,10 +201,8 @@ const rasterStyle = async (file: PMTiles): Promise<any> => {
       },
       basemap: {
         type: "vector",
-        tiles: [
-          "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f",
-        ],
-        maxzoom: 14,
+        tiles: [BASEMAP_URL],
+        maxzoom: 15,
       },
     },
     glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
@@ -207,18 +210,24 @@ const rasterStyle = async (file: PMTiles): Promise<any> => {
   };
 };
 
-const vectorStyle = async (file: PMTiles): Promise<any> => {
+const vectorStyle = async (
+  file: PMTiles
+): Promise<{
+  style: StyleSpecification;
+  layersVisibility: LayerVisibility[];
+}> => {
   let header = await file.getHeader();
   let metadata = await file.getMetadata();
-  let layers: any[] = [];
+  let layers: LayerSpecification[] = [];
+  let baseOpacity = 0.35;
 
   if (metadata.type !== "baselayer") {
     layers = base_theme("basemap", "black");
-    layers[0].paint["background-color"] = "black";
+    baseOpacity = 0.9;
   }
 
   var tilestats: any;
-  var vector_layers: any;
+  var vector_layers: LayerSpecification[];
   if (metadata.json) {
     let j = JSON.parse(metadata.json);
     tilestats = j.tilestats;
@@ -240,14 +249,14 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
           "fill-opacity": [
             "case",
             ["boolean", ["feature-state", "hover"], false],
-            0.35,
-            0.2,
+            baseOpacity,
+            baseOpacity - 0.15,
           ],
           "fill-outline-color": [
             "case",
             ["boolean", ["feature-state", "hover"], false],
             "hsl(0,100%,90%)",
-            "rgba(0,0,0,0)",
+            "rgba(0,0,0,0.2)",
           ],
         },
         filter: ["==", ["geometry-type"], "Polygon"],
@@ -287,14 +296,12 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
     }
   }
 
-  for (let layer of layers) {
-    if (layer["source-layer"] === "mask" && layer["type"] === "fill") {
-      layer.paint["fill-color"] = "black";
-      layer.paint["fill-opacity"] = 0.8;
-    }
-  }
-
-  const bounds = [header.minLon, header.minLat, header.maxLon, header.maxLat];
+  const bounds: [number, number, number, number] = [
+    header.minLon,
+    header.minLat,
+    header.maxLon,
+    header.maxLat,
+  ];
 
   return {
     style: {
@@ -309,17 +316,15 @@ const vectorStyle = async (file: PMTiles): Promise<any> => {
         },
         basemap: {
           type: "vector",
-          tiles: [
-            "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f",
-          ],
-          maxzoom: 14,
+          tiles: [BASEMAP_URL],
+          maxzoom: 15,
           bounds: bounds,
         },
       },
       glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
       layers: layers,
     },
-    layersVisibility: vector_layers.map((l: any) => ({
+    layersVisibility: vector_layers.map((l: LayerSpecification) => ({
       id: l.id,
       visible: true,
     })),
@@ -455,7 +460,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
           );
         }
 
-        let style: any; // TODO maplibre types (not any)
+        let style: StyleSpecification;
         if (
           header.tileType === TileType.Png ||
           header.tileType === TileType.Webp ||

@@ -293,7 +293,7 @@ export class FetchSource implements Source {
     return this.url;
   }
 
-  setHeaders(customHeaders:Headers) {
+  setHeaders(customHeaders: Headers) {
     this.customHeaders = customHeaders;
   }
 

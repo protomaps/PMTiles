@@ -1,3 +1,7 @@
+2.11.0
+
+* `FetchSource` takes optional 2nd param `Headers` to apply custom headers to all requests.
+
 2.10.0
 
 * Replace `DecompressionStream` polyfill with own `globalThis` detection because of web workers problems.

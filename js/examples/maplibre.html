@@ -23,12 +23,7 @@
 
             let PMTILES_URL = "https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles";
 
-            const p = new pmtiles.PMTiles(PMTILES_URL) // for short
-
-            // Alternative for setting custom headers:
-            // const headers = new Headers();
-            // const fetchSource = new pmtiles.FetchSource(PMTILES_URL, headers);
-            // const p = new pmtiles.PMTiles(fetchSource);
+            const p = new pmtiles.PMTiles(PMTILES_URL);
 
             // this is so we share one instance across the JS code and the map renderer
             protocol.add(p);

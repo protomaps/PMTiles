@@ -1,5 +1,8 @@
 // IMPORTANT: this file is manually edited!
 // copy any changes made from src/index.js to here
+// to automate this we need a rollup or esbuild script
+// to resolve the imports to the ol global correctly
+// as well as get the enum values of TileState, which is elided
 
 // import DataTile from "ol/source/DataTile";
 // import VectorTile from "ol/source/VectorTile";
@@ -25,7 +28,11 @@ export class PMTilesRasterSource extends ol.source.DataTile {
       },
     });
 
-    const p = new pmtiles.PMTiles(options.url);
+    const fetchSource = new pmtiles.FetchSource(
+      options.url,
+      new Headers(options.headers),
+    );
+    const p = new pmtiles.PMTiles(fetchSource);
     p.getHeader().then((h) => {
       this.tileGrid.minZoom = h.minZoom;
       this.tileGrid.maxZoom = h.maxZoom;
@@ -62,7 +69,7 @@ export class PMTilesVectorSource extends ol.source.VectorTile {
               format.readFeatures(tile_result.data, {
                 extent: extent,
                 featureProjection: projection,
-              })
+              }),
             );
             tile.setState(2);
           } else {
@@ -87,7 +94,11 @@ export class PMTilesVectorSource extends ol.source.VectorTile {
       },
     });
 
-    this.pmtiles_ = new pmtiles.PMTiles(options.url);
+    const fetchSource = new pmtiles.FetchSource(
+      options.url,
+      new Headers(options.headers),
+    );
+    this.pmtiles_ = new pmtiles.PMTiles(fetchSource);
     this.pmtiles_.getHeader().then((h) => {
       this.tileGrid.minZoom = h.minZoom;
       this.tileGrid.maxZoom = h.maxZoom;

@@ -22,7 +22,11 @@ export class PMTilesRasterSource extends DataTile {
       },
     });
 
-    const p = new pmtiles.PMTiles(options.url);
+    const fetchSource = new pmtiles.FetchSource(
+      options.url,
+      new Headers(options.headers),
+    );
+    const p = new pmtiles.PMTiles(fetchSource);
     p.getHeader().then((h) => {
       this.tileGrid.minZoom = h.minZoom;
       this.tileGrid.maxZoom = h.maxZoom;
@@ -59,7 +63,7 @@ export class PMTilesVectorSource extends VectorTile {
               format.readFeatures(tile_result.data, {
                 extent: extent,
                 featureProjection: projection,
-              })
+              }),
             );
             tile.setState(TileState.LOADED);
           } else {
@@ -84,7 +88,11 @@ export class PMTilesVectorSource extends VectorTile {
       },
     });
 
-    this.pmtiles_ = new pmtiles.PMTiles(options.url);
+    const fetchSource = new pmtiles.FetchSource(
+      options.url,
+      new Headers(options.headers),
+    );
+    this.pmtiles_ = new pmtiles.PMTiles(fetchSource);
     this.pmtiles_.getHeader().then((h) => {
       this.tileGrid.minZoom = h.minZoom;
       this.tileGrid.maxZoom = h.maxZoom;

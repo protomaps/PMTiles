@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 3.3
+- Narrow `clustered` meaning: first tile entry must be offset 0.
+- Add language discouraging the creation of nested leaf directories.
+
 ## Version 3.2
 - Detailed rewrite of spec by @DerZade to clarify ambiguity.
 

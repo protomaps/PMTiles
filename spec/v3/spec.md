@@ -123,7 +123,7 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Number of Addressed Tiles
 
-The Number of Addressed Tiles is an 8-byte field specifying the total number of tile entries in the PMTiles archive, before RunLength Encoding.
+The Number of Addressed Tiles is an 8-byte field specifying the total number of tiles in the PMTiles archive, before RunLength Encoding.
 
 A value of `0` indicates that the number is unknown.
 
@@ -131,7 +131,7 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 
 #### Number of Tile Entries
 
-The Number of Tile Entries is an 8-byte field specifying the total number of tile entries: entries where _RunLength_ is greater than 0).
+The Number of Tile Entries is an 8-byte field specifying the total number of tile entries: entries where _RunLength_ is greater than 0.
 
 A value of `0` indicates that the number is unknown.
 
@@ -186,13 +186,13 @@ The field can have one of the following values:
 
 #### Min Zoom (MinZ)
 
-The Min Zoom is a 1-byte field specifying the minimum zoom of the tiles, >= 0.
+The Min Zoom is a 1-byte field specifying the minimum zoom of the tiles.
 
 This field is encoded as an 8-bit unsigned integer.
 
 #### Max Zoom (MaxZ)
 
-The Max Zoom is a 1-byte field specifying the maximum zoom (LOD) of the tiles >= MinZ.
+The Max Zoom is a 1-byte field specifying the maximum zoom of the tiles. It must be greater than or equal to the min zoom.
 
 This field is encoded as an 8-bit unsigned integer.
 

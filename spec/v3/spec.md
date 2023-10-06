@@ -10,6 +10,8 @@ Please refer to the [change log](./CHANGELOG.md) for a documentation of changes 
 
 PMTiles is a single-file archive format for tiled data.
 
+The recommended MIME Type for PMTiles is `application/vnd.pmtiles`.
+
 ## 2 Overview
 
 A PMTiles archive consists of five main sections:
@@ -148,7 +150,10 @@ This field is encoded as a little-endian 64-bit unsigned integer.
 #### Clustered (C)
 
 Clustered is a 1-byte field specifying if the data of the individual tiles in the data section is ordered by their TileID (clustered) or not (not clustered).
-Therefore, Clustered means that offsets are either contiguous with the previous offset+length, or refer to a lesser offset when writing with deduplication.
+Therefore, Clustered means that:
+
+* offsets are either contiguous with the previous offset+length, or refer to a lesser offset when writing with deduplication.
+* the first tile entry in the directory has offset 0.
 
 The field can have one of the following values:
 
@@ -256,6 +261,8 @@ A directory is simply a list of entries. Each entry describes either where a spe
 
 The number of entries in the root directory and in the leaf directories is left to the implementation and can vary depending on what the writer has optimized for (cost, bandwidth, latency, etc.).
 However, the size of the header plus the compressed size of the root directory MUST NOT exceed 16384 bytes to allow latency-optimized clients to retrieve the root directory in its entirety. Therefore, the **maximum compressed size of the root directory is 16257 bytes** (16384 bytes - 127 bytes). A sophisticated writer might need several attempts to optimize this.
+
+It is discouraged to create an archive with more than one level of leaf directories. If you are implementing a writer and discover this need, please open an issue.
 
 ### 4.1 Directory Entries
 

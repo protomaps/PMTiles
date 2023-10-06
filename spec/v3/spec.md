@@ -10,6 +10,8 @@ Please refer to the [change log](./CHANGELOG.md) for a documentation of changes 
 
 PMTiles is a single-file archive format for tiled data.
 
+The recommended MIME Type for PMTiles is `application/vnd.pmtiles`.
+
 ## 2 Overview
 
 A PMTiles archive consists of five main sections:

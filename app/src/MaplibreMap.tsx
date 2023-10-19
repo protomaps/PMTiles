@@ -85,7 +85,9 @@ const FeaturesProperties = (props: { features: MapGeoJSONFeature[] }) => {
             {Object.entries(f.properties).map(([key, value], i) => (
               <tr key={i}>
                 <td>{key}</td>
-                <td>{value}</td>
+                <td>
+                  {typeof value === "boolean" ? JSON.stringify(value) : value}
+                </td>
               </tr>
             ))}
           </table>

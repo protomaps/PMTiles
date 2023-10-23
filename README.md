@@ -44,6 +44,10 @@ See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.
 
 See https://github.com/protomaps/PMTiles/tree/main/python/bin for library usage
 
+### Dart
+
+See unofficial package [pmtiles](https://pub.dev/packages/pmtiles).
+
 ### Serverless
 
 [PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/main/serverless/aws)

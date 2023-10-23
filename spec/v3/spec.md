@@ -239,7 +239,7 @@ Compression is an enum with the following values:
 
 ### 3.4 Position
 
-A Position is encoded into 8 bytes. Bytes 0 through 3 (the first 4 bytes) represent the latitude, and bytes 4 through 7 (the last 4 bytes) represent the longitude.
+A Position is encoded into 8 bytes. Bytes 0 through 3 (the first 4 bytes) represent the longitude, and bytes 4 through 7 (the last 4 bytes) represent the latitude.
 
 #### Encoding
 

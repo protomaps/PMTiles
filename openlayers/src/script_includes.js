@@ -84,13 +84,13 @@ export class PMTilesVectorSource extends ol.source.VectorTile {
     });
   };
 
-  constructor(options) {
+  constructor({ mvtOptions, ...options }) {
     super({
       ...options,
       ...{
         state: "loading",
         url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
-        format: new ol.format.MVT(),
+        format: new ol.format.MVT(mvtOptions),
       },
     });
 

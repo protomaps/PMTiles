@@ -78,13 +78,13 @@ export class PMTilesVectorSource extends VectorTile {
     });
   };
 
-  constructor(options) {
+  constructor({ mvtOptions, ...options }) {
     super({
       ...options,
       ...{
         state: "loading",
         url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
-        format: new MVT(),
+        format: new MVT(mvtOptions),
       },
     });
 

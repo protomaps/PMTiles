@@ -34,7 +34,8 @@ export async function getZxy(
   source: Source,
   tile: [number, number, number],
   ext: string,
-  allowed_origin: string
+  allowed_origin: string,
+  requestedEtag: string | null
 ): Promise<HttpResponseInit> {
   const cacheableResponse = (
     body: ArrayBuffer | string | undefined,
@@ -57,6 +58,10 @@ export async function getZxy(
   const p = new PMTiles(source, CACHE, nativeDecompress);
   try {
     const p_header = await p.getHeader();
+
+    if (requestedEtag && requestedEtag === p_header.etag) {
+      return cacheableResponse(undefined, cacheableHeaders, 304);
+    }
 
     if (tile[0] < p_header.minZoom || tile[0] > p_header.maxZoom) {
       return cacheableResponse(undefined, cacheableHeaders, 404);
@@ -96,6 +101,10 @@ export async function getZxy(
       case TileType.Webp:
         cacheableHeaders.set("Content-Type", "image/webp");
         break;
+    }
+
+    if (p_header.etag) {
+      cacheableHeaders.set("etag", p_header.etag);
     }
 
     if (tileData) {

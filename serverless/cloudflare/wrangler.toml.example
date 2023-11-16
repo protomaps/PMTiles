@@ -1,7 +1,7 @@
 name = "pmtiles-cloudflare"
 main = "src/index.ts"
 compatibility_date = "2022-10-18"
-minify = true
+minify = false
 
 r2_buckets  = [
   { binding = "BUCKET", preview_bucket_name = "my-bucket-development", bucket_name = "my-bucket-production" }

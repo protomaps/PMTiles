@@ -161,7 +161,7 @@ const FeatureProperties = (props: { feature: Feature }) => {
   const rows = tmp.map((d, i) => (
     <tr key={i}>
       <td>{d[0]}</td>
-      <td>{d[1]}</td>
+      <td>{typeof d[1] === "boolean" ? JSON.stringify(d[1]) : d[1]}</td>
     </tr>
   ));
 

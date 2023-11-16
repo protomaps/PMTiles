@@ -2,16 +2,16 @@
   "name": "pmtiles-cloudflare",
   "version": "0.0.0",
   "devDependencies": {
-    "@cloudflare/workers-types": "^3.17.0",
+    "@cloudflare/workers-types": "^4.20230518.0",
     "esbuild-runner": "^2.2.2",
     "typescript": "^4.8.4",
-    "wrangler": "2.18.0"
+    "wrangler": "3.1.1"
   },
   "private": true,
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler publish",
-    "test": "node -r esbuild-runner/register src/index.test.ts",
+    "test": "node -r esbuild-runner/register ../shared/index.test.ts",
     "tsc": "tsc --watch",
     "build": "wrangler publish --outdir dist --dry-run"
   }

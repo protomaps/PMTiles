@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import {
   Context,
   APIGatewayProxyResult,
@@ -12,9 +11,10 @@ import {
   Compression,
   TileType,
 } from "../../../js/index";
+import { pmtiles_path, tile_path, tileJSON } from "../../shared/index";
 
-import https from "https";
 import zlib from "zlib";
+import { createHash } from "crypto"
 
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
@@ -42,47 +42,6 @@ async function nativeDecompress(
 
 // Lambda needs to run with 512MB, empty function takes about 70
 const CACHE = new ResolvedValueCache(undefined, undefined, nativeDecompress);
-
-// duplicated code below
-export const pmtiles_path = (name: string, setting?: string): string => {
-  if (setting) {
-    return setting.replaceAll("{name}", name);
-  }
-  return name + ".pmtiles";
-};
-
-const TILE =
-  /^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(?<Z>\d+)\/(?<X>\d+)\/(?<Y>\d+).(?<EXT>[a-z]+)$/;
-
-export const tile_path = (
-  path: string,
-  setting?: string
-): {
-  ok: boolean;
-  name: string;
-  tile: [number, number, number];
-  ext: string;
-} => {
-  let pattern = TILE;
-  if (setting) {
-    // escape regex
-    setting = setting.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
-    setting = setting.replace("{name}", "(?<NAME>[0-9a-zA-Z/!-_.*'()]+)");
-    setting = setting.replace("{z}", "(?<Z>\\d+)");
-    setting = setting.replace("{x}", "(?<X>\\d+)");
-    setting = setting.replace("{y}", "(?<Y>\\d+)");
-    setting = setting.replace("{ext}", "(?<EXT>[a-z]+)");
-    pattern = new RegExp(setting);
-  }
-
-  let match = path.match(pattern);
-
-  if (match) {
-    const g = match.groups!;
-    return { ok: true, name: g.NAME, tile: [+g.Z, +g.X, +g.Y], ext: g.EXT };
-  }
-  return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
-};
 
 class S3Source implements Source {
   archive_name: string;
@@ -138,11 +97,11 @@ const apiResp = (
 // Does not work with CloudFront events/Lambda@Edge; see README
 export const handlerRaw = async (
   event: APIGatewayProxyEventV2,
-  context: Context,
+  _context: Context,
   tilePostprocess?: (a: ArrayBuffer, t: TileType) => ArrayBuffer
 ): Promise<APIGatewayProxyResult> => {
-  var path;
-  var is_api_gateway;
+  let path;
+  let is_api_gateway;
   if (event.pathParameters) {
     is_api_gateway = true;
     if (event.pathParameters.proxy) {
@@ -158,14 +117,13 @@ export const handlerRaw = async (
     return apiResp(500, "Invalid event configuration");
   }
 
-  var headers: Headers = {};
-  // TODO: metadata and TileJSON
+  const headers: Headers = {};
 
   if (process.env.CORS) {
     headers["Access-Control-Allow-Origin"] = process.env.CORS;
   }
 
-  const { ok, name, tile, ext } = tile_path(path, process.env.TILE_PATH);
+  const { ok, name, tile, ext } = tile_path(path);
 
   if (!ok) {
     return apiResp(400, "Invalid tile URL", false, headers);
@@ -175,6 +133,28 @@ export const handlerRaw = async (
   const p = new PMTiles(source, CACHE, nativeDecompress);
   try {
     const header = await p.getHeader();
+
+    if (!tile) {
+      if (!process.env.PUBLIC_HOSTNAME) {
+        return apiResp(
+          501,
+          "PUBLIC_HOSTNAME must be set for TileJSON",
+          false,
+          headers
+        );
+      }
+      headers["Content-Type"] = "application/json";
+
+      const t = tileJSON(
+        header,
+        await p.getMetadata(),
+        process.env.PUBLIC_HOSTNAME,
+        name
+      );
+
+      return apiResp(200, JSON.stringify(t), false, headers);
+    }
+
     if (tile[0] < header.minZoom || tile[0] > header.maxZoom) {
       return apiResp(404, "", false, headers);
     }
@@ -184,6 +164,7 @@ export const handlerRaw = async (
       [TileType.Png, "png"],
       [TileType.Jpeg, "jpg"],
       [TileType.Webp, "webp"],
+      [TileType.Avif, "avif"],
     ]) {
       if (header.tileType === pair[0] && ext !== pair[1]) {
         if (header.tileType == TileType.Mvt && ext === "pbf") {
@@ -215,6 +196,9 @@ export const handlerRaw = async (
         case TileType.Webp:
           headers["Content-Type"] = "image/webp";
           break;
+        case TileType.Avif:
+          headers["Content-Type"] = "image/avif";
+          break;
       }
 
       let data = tile_result.data;
@@ -222,6 +206,9 @@ export const handlerRaw = async (
       if (tilePostprocess) {
         data = tilePostprocess(data, header.tileType);
       }
+
+      headers["Cache-Control"] = `public, max-age=${process.env.CACHE_MAX_AGE || 86400}`;
+      headers["ETag"] = `"${createHash("sha256").update(Buffer.from(data)).digest("hex")}"`
 
       if (is_api_gateway) {
         // this is wasted work, but we need to force API Gateway to interpret the Lambda response as binary
@@ -252,12 +239,11 @@ export const handlerRaw = async (
     }
     throw e;
   }
-  return apiResp(404, "Invalid URL", false, headers);
 };
 
 export const handler = async (
   event: APIGatewayProxyEventV2,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  return handlerRaw(event, context);
+  return await handlerRaw(event, context);
 };

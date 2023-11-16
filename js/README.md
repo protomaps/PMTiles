@@ -25,7 +25,7 @@ pmtiles.leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org
 
 ### Leaflet: Vector tileset
 
-See [protomaps.js](https://github.com/protomaps/protomaps.js)
+See [protomaps-leaflet](https://github.com/protomaps/protomaps-leaflet)
 
 ## MapLibre GL JS
 

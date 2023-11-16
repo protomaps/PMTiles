@@ -21,8 +21,8 @@ jobs:
       - run: cd js && npm install && npm run build
       - run: echo "VITE_GIT_SHA=$(git rev-parse --short HEAD)" >> app/.env
       - run: cd app && npm install && ./node_modules/.bin/tsc && npm run prettier-check && ./node_modules/.bin/vite build --base=/PMTiles/
-      - run: cd serverless/aws && npm install && npm run build && cp dist/lambda_function.zip ../../app/dist
-      - run: cd serverless/cloudflare && cp wrangler.toml.example wrangler.toml && npm install && npm run build && cp dist/index.js ../../app/dist
+      - run: cd serverless/aws && npm install && npx tsc && npm run build && cp dist/lambda_function.zip ../../app/dist
+      - run: cd serverless/cloudflare && cp wrangler.toml.example wrangler.toml && npm install && npx tsc && npm run build && cp dist/index.js ../../app/dist
       - run: cd spec/v3 && cp *.pmtiles ../../app/dist
       - run: cd js/examples && mkdir ../../app/dist/examples && cp *.html ../../app/dist/examples/
       - run: cd openlayers/examples && mkdir ../../app/dist/examples/openlayers && cp *.html ../../app/dist/examples/openlayers

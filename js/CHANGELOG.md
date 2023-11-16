@@ -1,3 +1,21 @@
+2.11.0
+
+* `FetchSource` takes optional 2nd param `Headers` to apply custom headers to all requests.
+
+2.10.0
+
+* Replace `DecompressionStream` polyfill with own `globalThis` detection because of web workers problems.
+
+2.9.0
+
+* Recognize AVIF TileType
+* MapLibre adapter internally passes bounds from PMTiles header
+
+2.8.0
+
+* Polyfill `DecompressionStream` using 101arrowz/compression-streams-polyfill
+* Surface errors to MapLibre protocol instead of throwing raw exception
+
 2.7.2
 
 * `leafletRasterLayer` sets correct MIME types (via @bmcbride)

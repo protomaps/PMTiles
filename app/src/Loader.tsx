@@ -70,12 +70,14 @@ const ToolbarLink = StyledLink;
 const ToolbarToggleGroup = StyledToggleGroup;
 const ToolbarToggleItem = StyledToggleItem;
 
-function Loader(props: { file: PMTiles }) {
+function Loader(props: { file: PMTiles; mapHashPassed: boolean }) {
   let [tab, setTab] = useState("maplibre");
 
   let view;
   if (tab === "maplibre") {
-    view = <MaplibreMap file={props.file} />;
+    view = (
+      <MaplibreMap file={props.file} mapHashPassed={props.mapHashPassed} />
+    );
   } else if (tab === "inspector") {
     view = <Inspector file={props.file} />;
   } else {

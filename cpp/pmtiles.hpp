@@ -1,6 +1,7 @@
 #ifndef PMTILES_HPP
 #define PMTILES_HPP
 
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -16,6 +17,7 @@ const uint8_t TILETYPE_MVT = 0x1;
 const uint8_t TILETYPE_PNG = 0x2;
 const uint8_t TILETYPE_JPEG = 0x3;
 const uint8_t TILETYPE_WEBP = 0x4;
+const uint8_t TILETYPE_AVIF = 0x5;
 
 const uint8_t COMPRESSION_UNKNOWN = 0x0;
 const uint8_t COMPRESSION_NONE = 0x1;
@@ -25,7 +27,7 @@ const uint8_t COMPRESSION_ZSTD = 0x4;
 
 #ifdef PMTILES_MSB
 template<class T>
-inline void swap_byte_order(T* ptr) {
+inline void swap_byte_order_if_msb(T* ptr) {
     unsigned char* ptrBytes = reinterpret_cast<unsigned char*>(ptr);
     for (size_t i = 0; i < sizeof(T)/2; ++i) {
         std::swap(ptrBytes[i], ptrBytes[sizeof(T)-1-i]);
@@ -492,7 +494,11 @@ inline std::vector<entryv3> deserialize_directory(const std::string &decompresse
 
 	uint64_t last_id = 0;
 	for (size_t i = 0; i < num_entries; i++) {
-		uint64_t tile_id = last_id + decode_varint(&t, end);
+		const uint64_t val = decode_varint(&t, end);
+		if (val > std::numeric_limits<uint64_t>::max() - last_id) {
+			throw malformed_directory_exception();
+		}
+		const uint64_t tile_id = last_id + val;
 		result[i].tile_id = tile_id;
 		last_id = tile_id;
 	}

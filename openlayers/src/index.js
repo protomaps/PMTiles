@@ -1,7 +1,7 @@
-import DataTile from "ol/source/DataTile";
-import VectorTile from "ol/source/VectorTile";
-import TileState from "ol/TileState";
-import { MVT } from "ol/format";
+import DataTile from "ol/source/DataTile.js";
+import VectorTile from "ol/source/VectorTile.js";
+import TileState from "ol/TileState.js";
+import { MVT } from "ol/format.js";
 import * as pmtiles from "pmtiles";
 
 export class PMTilesRasterSource extends DataTile {
@@ -22,7 +22,11 @@ export class PMTilesRasterSource extends DataTile {
       },
     });
 
-    const p = new pmtiles.PMTiles(options.url);
+    const fetchSource = new pmtiles.FetchSource(
+      options.url,
+      new Headers(options.headers),
+    );
+    const p = new pmtiles.PMTiles(fetchSource);
     p.getHeader().then((h) => {
       this.tileGrid.minZoom = h.minZoom;
       this.tileGrid.maxZoom = h.maxZoom;
@@ -56,10 +60,10 @@ export class PMTilesVectorSource extends VectorTile {
           if (tile_result) {
             const format = tile.getFormat();
             tile.setFeatures(
-              format.readFeatures(tile_result.data.buffer, {
+              format.readFeatures(tile_result.data, {
                 extent: extent,
                 featureProjection: projection,
-              })
+              }),
             );
             tile.setState(TileState.LOADED);
           } else {
@@ -84,7 +88,11 @@ export class PMTilesVectorSource extends VectorTile {
       },
     });
 
-    this.pmtiles_ = new pmtiles.PMTiles(options.url);
+    const fetchSource = new pmtiles.FetchSource(
+      options.url,
+      new Headers(options.headers),
+    );
+    this.pmtiles_ = new pmtiles.PMTiles(fetchSource);
     this.pmtiles_.getHeader().then((h) => {
       this.tileGrid.minZoom = h.minZoom;
       this.tileGrid.maxZoom = h.maxZoom;

@@ -1,11 +1,18 @@
 {
   "compilerOptions": {
     "target": "es2021",
-    "module": "CommonJS",
-    "outDir": "dist",
     "strict": true,
+    "preserveConstEnums": true,
+    "noEmit": true,
     "sourceMap": false,
-    "rootDir": "../../../"
+    "module": "es2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "outDir": "dist"
   },
+  "include": ["./src/**.ts"],
   "exclude": ["node_modules"]
 }

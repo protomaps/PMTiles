@@ -4,13 +4,15 @@ You are probably best off following the guides at [Microsoft](https://learn.micr
 
 ## Development
 
-Remember to copy the `index.ts` and `v2.ts` from the top level `js/` directory and update the imports.
+Add reference to (pmtiles)[https://www.npmjs.com/package/pmtiles].
 
 ## Deployment
 
-Follow the instructions in the official documentation.
+Follow the instructions in the official Azure Functions documentation. The URL has the following pattern `{name}/{z:int}/{x:int}/{y:int}.{ext}`. Where `ext` is normally `mvt`.
 
-Add one setting to the function app called `PMTILES_PATH` which should contain the URL to the pmtiles file. The pmtiles file must be hosted at a provider that support the [`Range` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range), e.g. Azure Blob Storage (remember to set appropriate access level on the container)
+Add one setting to the function app called `PMTILES_PATH` which should contain the URL to the pmtiles file. The pmtiles file must be hosted at a provider that support the [`Range` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range), e.g. Azure Blob Storage (remember to set appropriate access level on the container). The name of the map in the URL is `default`.
+
+You can add more maps by adding `PMTILES_PATH_{name}`, where `{name}` corresponds to the map name in the URL.
 
 ## Notes
 

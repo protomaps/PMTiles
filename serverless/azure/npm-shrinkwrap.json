@@ -16,17 +16,18 @@
       },
       "devDependencies": {
         "@types/node": "^18.x",
-        "esbuild": "^0.15.11",
+        "esbuild": "^0.15.18",
+        "esbuild-runner": "^2.2.2",
         "rimraf": "^5.0.0",
         "typescript": "^4.8.4"
       }
     },
     "../../js": {
       "name": "pmtiles",
-      "version": "2.7.2",
+      "version": "2.11.0",
       "license": "BSD-3-Clause",
       "dependencies": {
-        "fflate": "^0.7.3"
+        "fflate": "^0.8.0"
       },
       "devDependencies": {
         "@types/node": "^18.11.9",
@@ -290,9 +291,9 @@
       }
     },
     "node_modules/@esbuild/android-arm": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.11.tgz",
-      "integrity": "sha512-PzMcQLazLBkwDEkrNPi9AbjFt6+3I7HKbiYF2XtWQ7wItrHvEOeO3T8Am434zAozWtVP7lrTue1bEfc2nYWeCA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.18.tgz",
+      "integrity": "sha512-5GT+kcs2WVGjVs7+boataCkO5Fg0y4kCjzkB5bAip7H4jfnOS3dA6KPiww9W1OEKTKeAcUVhdZGvgI65OXmUnw==",
       "cpu": [
         "arm"
       ],
@@ -306,9 +307,9 @@
       }
     },
     "node_modules/@esbuild/linux-loong64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.11.tgz",
-      "integrity": "sha512-geWp637tUhNmhL3Xgy4Bj703yXB9dqiLJe05lCUfjSFDrQf9C/8pArusyPUbUbPwlC/EAUjBw32sxuIl/11dZw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.18.tgz",
+      "integrity": "sha512-L4jVKS82XVhw2nvzLg/19ClLWg0y27ulRwuP7lcyL6AbUWB5aPglXY3M21mauDQMDfRLs8cQmeT03r/+X3cZYQ==",
       "cpu": [
         "loong64"
       ],
@@ -446,6 +447,12 @@
       "resolved": "https://registry.npmjs.org/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz",
       "integrity": "sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA=="
     },
+    "node_modules/buffer-from": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
+      "integrity": "sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==",
+      "dev": true
+    },
     "node_modules/busboy": {
       "version": "1.6.0",
       "resolved": "https://registry.npmjs.org/busboy/-/busboy-1.6.0.tgz",
@@ -553,9 +560,9 @@
       "dev": true
     },
     "node_modules/esbuild": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.11.tgz",
-      "integrity": "sha512-OgHGuhlfZ//mToxjte1D5iiiQgWfJ2GByVMwEC/IuoXsBGkuyK1+KrjYu0laSpnN/L1UmLUCv0s25vObdc1bVg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.18.tgz",
+      "integrity": "sha512-x/R72SmW3sSFRm5zrrIjAhCeQSAWoni3CmHEqfQrZIQTM3lVCdehdwuIqaOtfC2slvpdlLa62GYoN8SxT23m6Q==",
       "dev": true,
       "hasInstallScript": true,
       "bin": {
@@ -565,34 +572,34 @@
         "node": ">=12"
       },
       "optionalDependencies": {
-        "@esbuild/android-arm": "0.15.11",
-        "@esbuild/linux-loong64": "0.15.11",
-        "esbuild-android-64": "0.15.11",
-        "esbuild-android-arm64": "0.15.11",
-        "esbuild-darwin-64": "0.15.11",
-        "esbuild-darwin-arm64": "0.15.11",
-        "esbuild-freebsd-64": "0.15.11",
-        "esbuild-freebsd-arm64": "0.15.11",
-        "esbuild-linux-32": "0.15.11",
-        "esbuild-linux-64": "0.15.11",
-        "esbuild-linux-arm": "0.15.11",
-        "esbuild-linux-arm64": "0.15.11",
-        "esbuild-linux-mips64le": "0.15.11",
-        "esbuild-linux-ppc64le": "0.15.11",
-        "esbuild-linux-riscv64": "0.15.11",
-        "esbuild-linux-s390x": "0.15.11",
-        "esbuild-netbsd-64": "0.15.11",
-        "esbuild-openbsd-64": "0.15.11",
-        "esbuild-sunos-64": "0.15.11",
-        "esbuild-windows-32": "0.15.11",
-        "esbuild-windows-64": "0.15.11",
-        "esbuild-windows-arm64": "0.15.11"
+        "@esbuild/android-arm": "0.15.18",
+        "@esbuild/linux-loong64": "0.15.18",
+        "esbuild-android-64": "0.15.18",
+        "esbuild-android-arm64": "0.15.18",
+        "esbuild-darwin-64": "0.15.18",
+        "esbuild-darwin-arm64": "0.15.18",
+        "esbuild-freebsd-64": "0.15.18",
+        "esbuild-freebsd-arm64": "0.15.18",
+        "esbuild-linux-32": "0.15.18",
+        "esbuild-linux-64": "0.15.18",
+        "esbuild-linux-arm": "0.15.18",
+        "esbuild-linux-arm64": "0.15.18",
+        "esbuild-linux-mips64le": "0.15.18",
+        "esbuild-linux-ppc64le": "0.15.18",
+        "esbuild-linux-riscv64": "0.15.18",
+        "esbuild-linux-s390x": "0.15.18",
+        "esbuild-netbsd-64": "0.15.18",
+        "esbuild-openbsd-64": "0.15.18",
+        "esbuild-sunos-64": "0.15.18",
+        "esbuild-windows-32": "0.15.18",
+        "esbuild-windows-64": "0.15.18",
+        "esbuild-windows-arm64": "0.15.18"
       }
     },
     "node_modules/esbuild-android-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.11.tgz",
-      "integrity": "sha512-rrwoXEiuI1kaw4k475NJpexs8GfJqQUKcD08VR8sKHmuW9RUuTR2VxcupVvHdiGh9ihxL9m3lpqB1kju92Ialw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.18.tgz",
+      "integrity": "sha512-wnpt3OXRhcjfIDSZu9bnzT4/TNTDsOUvip0foZOUBG7QbSt//w3QV4FInVJxNhKc/ErhUxc5z4QjHtMi7/TbgA==",
       "cpu": [
         "x64"
       ],
@@ -606,9 +613,9 @@
       }
     },
     "node_modules/esbuild-android-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.11.tgz",
-      "integrity": "sha512-/hDubOg7BHOhUUsT8KUIU7GfZm5bihqssvqK5PfO4apag7YuObZRZSzViyEKcFn2tPeHx7RKbSBXvAopSHDZJQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.18.tgz",
+      "integrity": "sha512-G4xu89B8FCzav9XU8EjsXacCKSG2FT7wW9J6hOc18soEHJdtWu03L3TQDGf0geNxfLTtxENKBzMSq9LlbjS8OQ==",
       "cpu": [
         "arm64"
       ],
@@ -622,9 +629,9 @@
       }
     },
     "node_modules/esbuild-darwin-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.11.tgz",
-      "integrity": "sha512-1DqHD0ms3AhiwkKnjRUzmiW7JnaJJr5FKrPiR7xuyMwnjDqvNWDdMq4rKSD9OC0piFNK6n0LghsglNMe2MwJtA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.18.tgz",
+      "integrity": "sha512-2WAvs95uPnVJPuYKP0Eqx+Dl/jaYseZEUUT1sjg97TJa4oBtbAKnPnl3b5M9l51/nbx7+QAEtuummJZW0sBEmg==",
       "cpu": [
         "x64"
       ],
@@ -638,9 +645,9 @@
       }
     },
     "node_modules/esbuild-darwin-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.11.tgz",
-      "integrity": "sha512-OMzhxSbS0lwwrW40HHjRCeVIJTURdXFA8c3GU30MlHKuPCcvWNUIKVucVBtNpJySXmbkQMDJdJNrXzNDyvoqvQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.18.tgz",
+      "integrity": "sha512-tKPSxcTJ5OmNb1btVikATJ8NftlyNlc8BVNtyT/UAr62JFOhwHlnoPrhYWz09akBLHI9nElFVfWSTSRsrZiDUA==",
       "cpu": [
         "arm64"
       ],
@@ -654,9 +661,9 @@
       }
     },
     "node_modules/esbuild-freebsd-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.11.tgz",
-      "integrity": "sha512-8dKP26r0/Qyez8nTCwpq60QbuYKOeBygdgOAWGCRalunyeqWRoSZj9TQjPDnTTI9joxd3QYw3UhVZTKxO9QdRg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.18.tgz",
+      "integrity": "sha512-TT3uBUxkteAjR1QbsmvSsjpKjOX6UkCstr8nMr+q7zi3NuZ1oIpa8U41Y8I8dJH2fJgdC3Dj3CXO5biLQpfdZA==",
       "cpu": [
         "x64"
       ],
@@ -670,9 +677,9 @@
       }
     },
     "node_modules/esbuild-freebsd-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.11.tgz",
-      "integrity": "sha512-aSGiODiukLGGnSg/O9+cGO2QxEacrdCtCawehkWYTt5VX1ni2b9KoxpHCT9h9Y6wGqNHmXFnB47RRJ8BIqZgmQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.18.tgz",
+      "integrity": "sha512-R/oVr+X3Tkh+S0+tL41wRMbdWtpWB8hEAMsOXDumSSa6qJR89U0S/PpLXrGF7Wk/JykfpWNokERUpCeHDl47wA==",
       "cpu": [
         "arm64"
       ],
@@ -686,9 +693,9 @@
       }
     },
     "node_modules/esbuild-linux-32": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.11.tgz",
-      "integrity": "sha512-lsrAfdyJBGx+6aHIQmgqUonEzKYeBnyfJPkT6N2dOf1RoXYYV1BkWB6G02tjsrz1d5wZzaTc3cF+TKmuTo/ZwA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.18.tgz",
+      "integrity": "sha512-lphF3HiCSYtaa9p1DtXndiQEeQDKPl9eN/XNoBf2amEghugNuqXNZA/ZovthNE2aa4EN43WroO0B85xVSjYkbg==",
       "cpu": [
         "ia32"
       ],
@@ -702,9 +709,9 @@
       }
     },
     "node_modules/esbuild-linux-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.11.tgz",
-      "integrity": "sha512-Y2Rh+PcyVhQqXKBTacPCltINN3uIw2xC+dsvLANJ1SpK5NJUtxv8+rqWpjmBgaNWKQT1/uGpMmA9olALy9PLVA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.18.tgz",
+      "integrity": "sha512-hNSeP97IviD7oxLKFuii5sDPJ+QHeiFTFLoLm7NZQligur8poNOWGIgpQ7Qf8Balb69hptMZzyOBIPtY09GZYw==",
       "cpu": [
         "x64"
       ],
@@ -718,9 +725,9 @@
       }
     },
     "node_modules/esbuild-linux-arm": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.11.tgz",
-      "integrity": "sha512-TJllTVk5aSyqPFvvcHTvf6Wu1ZKhWpJ/qNmZO8LL/XeB+LXCclm7HQHNEIz6MT7IX8PmlC1BZYrOiw2sXSB95A==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.18.tgz",
+      "integrity": "sha512-UH779gstRblS4aoS2qpMl3wjg7U0j+ygu3GjIeTonCcN79ZvpPee12Qun3vcdxX+37O5LFxz39XeW2I9bybMVA==",
       "cpu": [
         "arm"
       ],
@@ -734,9 +741,9 @@
       }
     },
     "node_modules/esbuild-linux-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.11.tgz",
-      "integrity": "sha512-uhcXiTwTmD4OpxJu3xC5TzAAw6Wzf9O1XGWL448EE9bqGjgV1j+oK3lIHAfsHnuIn8K4nDW8yjX0Sv5S++oRuw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.18.tgz",
+      "integrity": "sha512-54qr8kg/6ilcxd+0V3h9rjT4qmjc0CccMVWrjOEM/pEcUzt8X62HfBSeZfT2ECpM7104mk4yfQXkosY8Quptug==",
       "cpu": [
         "arm64"
       ],
@@ -750,9 +757,9 @@
       }
     },
     "node_modules/esbuild-linux-mips64le": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.11.tgz",
-      "integrity": "sha512-WD61y/R1M4BLe4gxXRypoQ0Ci+Vjf714QYzcPNkiYv5I8K8WDz2ZR8Bm6cqKxd6rD+e/rZgPDbhQ9PCf7TMHmA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.18.tgz",
+      "integrity": "sha512-Mk6Ppwzzz3YbMl/ZZL2P0q1tnYqh/trYZ1VfNP47C31yT0K8t9s7Z077QrDA/guU60tGNp2GOwCQnp+DYv7bxQ==",
       "cpu": [
         "mips64el"
       ],
@@ -766,9 +773,9 @@
       }
     },
     "node_modules/esbuild-linux-ppc64le": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.11.tgz",
-      "integrity": "sha512-JVleZS9oPVLTlBhPTWgOwxFWU/wMUdlBwTbGA4GF8c38sLbS13cupj+C8bLq929jU7EMWry4SaL+tKGIaTlqKg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.18.tgz",
+      "integrity": "sha512-b0XkN4pL9WUulPTa/VKHx2wLCgvIAbgwABGnKMY19WhKZPT+8BxhZdqz6EgkqCLld7X5qiCY2F/bfpUUlnFZ9w==",
       "cpu": [
         "ppc64"
       ],
@@ -782,9 +789,9 @@
       }
     },
     "node_modules/esbuild-linux-riscv64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.11.tgz",
-      "integrity": "sha512-9aLIalZ2HFHIOZpmVU11sEAS9F8TnHw49daEjcgMpBXHFF57VuT9f9/9LKJhw781Gda0P9jDkuCWJ0tFbErvJw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.18.tgz",
+      "integrity": "sha512-ba2COaoF5wL6VLZWn04k+ACZjZ6NYniMSQStodFKH/Pu6RxzQqzsmjR1t9QC89VYJxBeyVPTaHuBMCejl3O/xg==",
       "cpu": [
         "riscv64"
       ],
@@ -798,9 +805,9 @@
       }
     },
     "node_modules/esbuild-linux-s390x": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.11.tgz",
-      "integrity": "sha512-sZHtiXXOKsLI3XGBGoYO4qKBzJlb8xNsWmvFiwFMHFzA4AXgDP1KDp7Dawe9C2pavTRBDvl+Ok4n/DHQ59oaTg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.18.tgz",
+      "integrity": "sha512-VbpGuXEl5FCs1wDVp93O8UIzl3ZrglgnSQ+Hu79g7hZu6te6/YHgVJxCM2SqfIila0J3k0csfnf8VD2W7u2kzQ==",
       "cpu": [
         "s390x"
       ],
@@ -814,9 +821,9 @@
       }
     },
     "node_modules/esbuild-netbsd-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.11.tgz",
-      "integrity": "sha512-hUC9yN06K9sg7ju4Vgu9ChAPdsEgtcrcLfyNT5IKwKyfpLvKUwCMZSdF+gRD3WpyZelgTQfJ+pDx5XFbXTlB0A==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.18.tgz",
+      "integrity": "sha512-98ukeCdvdX7wr1vUYQzKo4kQ0N2p27H7I11maINv73fVEXt2kyh4K4m9f35U1K43Xc2QGXlzAw0K9yoU7JUjOg==",
       "cpu": [
         "x64"
       ],
@@ -830,9 +837,9 @@
       }
     },
     "node_modules/esbuild-openbsd-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.11.tgz",
-      "integrity": "sha512-0bBo9SQR4t66Wd91LGMAqmWorzO0TTzVjYiifwoFtel8luFeXuPThQnEm5ztN4g0fnvcp7AnUPPzS/Depf17wQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.18.tgz",
+      "integrity": "sha512-yK5NCcH31Uae076AyQAXeJzt/vxIo9+omZRKj1pauhk3ITuADzuOx5N2fdHrAKPxN+zH3w96uFKlY7yIn490xQ==",
       "cpu": [
         "x64"
       ],
@@ -845,10 +852,32 @@
         "node": ">=12"
       }
     },
+    "node_modules/esbuild-runner": {
+      "version": "2.2.2",
+      "resolved": "https://registry.npmjs.org/esbuild-runner/-/esbuild-runner-2.2.2.tgz",
+      "integrity": "sha512-fRFVXcmYVmSmtYm2mL8RlUASt2TDkGh3uRcvHFOKNr/T58VrfVeKD9uT9nlgxk96u0LS0ehS/GY7Da/bXWKkhw==",
+      "dev": true,
+      "dependencies": {
+        "source-map-support": "0.5.21",
+        "tslib": "2.4.0"
+      },
+      "bin": {
+        "esr": "bin/esr.js"
+      },
+      "peerDependencies": {
+        "esbuild": "*"
+      }
+    },
+    "node_modules/esbuild-runner/node_modules/tslib": {
+      "version": "2.4.0",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz",
+      "integrity": "sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==",
+      "dev": true
+    },
     "node_modules/esbuild-sunos-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.11.tgz",
-      "integrity": "sha512-EuBdTGlsMTjEl1sQnBX2jfygy7iR6CKfvOzi+gEOfhDqbHXsmY1dcpbVtcwHAg9/2yUZSfMJHMAgf1z8M4yyyw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.18.tgz",
+      "integrity": "sha512-On22LLFlBeLNj/YF3FT+cXcyKPEI263nflYlAhz5crxtp3yRG1Ugfr7ITyxmCmjm4vbN/dGrb/B7w7U8yJR9yw==",
       "cpu": [
         "x64"
       ],
@@ -862,9 +891,9 @@
       }
     },
     "node_modules/esbuild-windows-32": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.11.tgz",
-      "integrity": "sha512-O0/Wo1Wk6dc0rZSxkvGpmTNIycEznHmkObTFz2VHBhjPsO4ZpCgfGxNkCpz4AdAIeMczpTXt/8d5vdJNKEGC+Q==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.18.tgz",
+      "integrity": "sha512-o+eyLu2MjVny/nt+E0uPnBxYuJHBvho8vWsC2lV61A7wwTWC3jkN2w36jtA+yv1UgYkHRihPuQsL23hsCYGcOQ==",
       "cpu": [
         "ia32"
       ],
@@ -878,9 +907,9 @@
       }
     },
     "node_modules/esbuild-windows-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.11.tgz",
-      "integrity": "sha512-x977Q4HhNjnHx00b4XLAnTtj5vfbdEvkxaQwC1Zh5AN8g5EX+izgZ6e5QgqJgpzyRNJqh4hkgIJF1pyy1be0mQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.18.tgz",
+      "integrity": "sha512-qinug1iTTaIIrCorAUjR0fcBk24fjzEedFYhhispP8Oc7SFvs+XeW3YpAKiKp8dRpizl4YYAhxMjlftAMJiaUw==",
       "cpu": [
         "x64"
       ],
@@ -894,9 +923,9 @@
       }
     },
     "node_modules/esbuild-windows-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.11.tgz",
-      "integrity": "sha512-VwUHFACuBahrvntdcMKZteUZ9HaYrBRODoKe4tIWxguQRvvYoYb7iu5LrcRS/FQx8KPZNaa72zuqwVtHeXsITw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.18.tgz",
+      "integrity": "sha512-q9bsYzegpZcLziq0zgUi5KqGVtfhjxGbnksaBFYmWLxeV/S1fK4OLdq2DFYnXcLMjlZw2L0jLsk1eGoB522WXQ==",
       "cpu": [
         "arm64"
       ],
@@ -1377,6 +1406,25 @@
       },
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
+      }
+    },
+    "node_modules/source-map": {
+      "version": "0.6.1",
+      "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz",
+      "integrity": "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==",
+      "dev": true,
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/source-map-support": {
+      "version": "0.5.21",
+      "resolved": "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.21.tgz",
+      "integrity": "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==",
+      "dev": true,
+      "dependencies": {
+        "buffer-from": "^1.0.0",
+        "source-map": "^0.6.0"
       }
     },
     "node_modules/stoppable": {
@@ -1902,16 +1950,16 @@
       }
     },
     "@esbuild/android-arm": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.11.tgz",
-      "integrity": "sha512-PzMcQLazLBkwDEkrNPi9AbjFt6+3I7HKbiYF2XtWQ7wItrHvEOeO3T8Am434zAozWtVP7lrTue1bEfc2nYWeCA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.18.tgz",
+      "integrity": "sha512-5GT+kcs2WVGjVs7+boataCkO5Fg0y4kCjzkB5bAip7H4jfnOS3dA6KPiww9W1OEKTKeAcUVhdZGvgI65OXmUnw==",
       "dev": true,
       "optional": true
     },
     "@esbuild/linux-loong64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.11.tgz",
-      "integrity": "sha512-geWp637tUhNmhL3Xgy4Bj703yXB9dqiLJe05lCUfjSFDrQf9C/8pArusyPUbUbPwlC/EAUjBw32sxuIl/11dZw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.18.tgz",
+      "integrity": "sha512-L4jVKS82XVhw2nvzLg/19ClLWg0y27ulRwuP7lcyL6AbUWB5aPglXY3M21mauDQMDfRLs8cQmeT03r/+X3cZYQ==",
       "dev": true,
       "optional": true
     },
@@ -2013,6 +2061,12 @@
       "resolved": "https://registry.npmjs.org/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz",
       "integrity": "sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA=="
     },
+    "buffer-from": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz",
+      "integrity": "sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==",
+      "dev": true
+    },
     "busboy": {
       "version": "1.6.0",
       "resolved": "https://registry.npmjs.org/busboy/-/busboy-1.6.0.tgz",
@@ -2094,172 +2148,190 @@
       "dev": true
     },
     "esbuild": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.11.tgz",
-      "integrity": "sha512-OgHGuhlfZ//mToxjte1D5iiiQgWfJ2GByVMwEC/IuoXsBGkuyK1+KrjYu0laSpnN/L1UmLUCv0s25vObdc1bVg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.18.tgz",
+      "integrity": "sha512-x/R72SmW3sSFRm5zrrIjAhCeQSAWoni3CmHEqfQrZIQTM3lVCdehdwuIqaOtfC2slvpdlLa62GYoN8SxT23m6Q==",
       "dev": true,
       "requires": {
-        "@esbuild/android-arm": "0.15.11",
-        "@esbuild/linux-loong64": "0.15.11",
-        "esbuild-android-64": "0.15.11",
-        "esbuild-android-arm64": "0.15.11",
-        "esbuild-darwin-64": "0.15.11",
-        "esbuild-darwin-arm64": "0.15.11",
-        "esbuild-freebsd-64": "0.15.11",
-        "esbuild-freebsd-arm64": "0.15.11",
-        "esbuild-linux-32": "0.15.11",
-        "esbuild-linux-64": "0.15.11",
-        "esbuild-linux-arm": "0.15.11",
-        "esbuild-linux-arm64": "0.15.11",
-        "esbuild-linux-mips64le": "0.15.11",
-        "esbuild-linux-ppc64le": "0.15.11",
-        "esbuild-linux-riscv64": "0.15.11",
-        "esbuild-linux-s390x": "0.15.11",
-        "esbuild-netbsd-64": "0.15.11",
-        "esbuild-openbsd-64": "0.15.11",
-        "esbuild-sunos-64": "0.15.11",
-        "esbuild-windows-32": "0.15.11",
-        "esbuild-windows-64": "0.15.11",
-        "esbuild-windows-arm64": "0.15.11"
+        "@esbuild/android-arm": "0.15.18",
+        "@esbuild/linux-loong64": "0.15.18",
+        "esbuild-android-64": "0.15.18",
+        "esbuild-android-arm64": "0.15.18",
+        "esbuild-darwin-64": "0.15.18",
+        "esbuild-darwin-arm64": "0.15.18",
+        "esbuild-freebsd-64": "0.15.18",
+        "esbuild-freebsd-arm64": "0.15.18",
+        "esbuild-linux-32": "0.15.18",
+        "esbuild-linux-64": "0.15.18",
+        "esbuild-linux-arm": "0.15.18",
+        "esbuild-linux-arm64": "0.15.18",
+        "esbuild-linux-mips64le": "0.15.18",
+        "esbuild-linux-ppc64le": "0.15.18",
+        "esbuild-linux-riscv64": "0.15.18",
+        "esbuild-linux-s390x": "0.15.18",
+        "esbuild-netbsd-64": "0.15.18",
+        "esbuild-openbsd-64": "0.15.18",
+        "esbuild-sunos-64": "0.15.18",
+        "esbuild-windows-32": "0.15.18",
+        "esbuild-windows-64": "0.15.18",
+        "esbuild-windows-arm64": "0.15.18"
       }
     },
     "esbuild-android-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.11.tgz",
-      "integrity": "sha512-rrwoXEiuI1kaw4k475NJpexs8GfJqQUKcD08VR8sKHmuW9RUuTR2VxcupVvHdiGh9ihxL9m3lpqB1kju92Ialw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.18.tgz",
+      "integrity": "sha512-wnpt3OXRhcjfIDSZu9bnzT4/TNTDsOUvip0foZOUBG7QbSt//w3QV4FInVJxNhKc/ErhUxc5z4QjHtMi7/TbgA==",
       "dev": true,
       "optional": true
     },
     "esbuild-android-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.11.tgz",
-      "integrity": "sha512-/hDubOg7BHOhUUsT8KUIU7GfZm5bihqssvqK5PfO4apag7YuObZRZSzViyEKcFn2tPeHx7RKbSBXvAopSHDZJQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.18.tgz",
+      "integrity": "sha512-G4xu89B8FCzav9XU8EjsXacCKSG2FT7wW9J6hOc18soEHJdtWu03L3TQDGf0geNxfLTtxENKBzMSq9LlbjS8OQ==",
       "dev": true,
       "optional": true
     },
     "esbuild-darwin-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.11.tgz",
-      "integrity": "sha512-1DqHD0ms3AhiwkKnjRUzmiW7JnaJJr5FKrPiR7xuyMwnjDqvNWDdMq4rKSD9OC0piFNK6n0LghsglNMe2MwJtA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.18.tgz",
+      "integrity": "sha512-2WAvs95uPnVJPuYKP0Eqx+Dl/jaYseZEUUT1sjg97TJa4oBtbAKnPnl3b5M9l51/nbx7+QAEtuummJZW0sBEmg==",
       "dev": true,
       "optional": true
     },
     "esbuild-darwin-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.11.tgz",
-      "integrity": "sha512-OMzhxSbS0lwwrW40HHjRCeVIJTURdXFA8c3GU30MlHKuPCcvWNUIKVucVBtNpJySXmbkQMDJdJNrXzNDyvoqvQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.18.tgz",
+      "integrity": "sha512-tKPSxcTJ5OmNb1btVikATJ8NftlyNlc8BVNtyT/UAr62JFOhwHlnoPrhYWz09akBLHI9nElFVfWSTSRsrZiDUA==",
       "dev": true,
       "optional": true
     },
     "esbuild-freebsd-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.11.tgz",
-      "integrity": "sha512-8dKP26r0/Qyez8nTCwpq60QbuYKOeBygdgOAWGCRalunyeqWRoSZj9TQjPDnTTI9joxd3QYw3UhVZTKxO9QdRg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.18.tgz",
+      "integrity": "sha512-TT3uBUxkteAjR1QbsmvSsjpKjOX6UkCstr8nMr+q7zi3NuZ1oIpa8U41Y8I8dJH2fJgdC3Dj3CXO5biLQpfdZA==",
       "dev": true,
       "optional": true
     },
     "esbuild-freebsd-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.11.tgz",
-      "integrity": "sha512-aSGiODiukLGGnSg/O9+cGO2QxEacrdCtCawehkWYTt5VX1ni2b9KoxpHCT9h9Y6wGqNHmXFnB47RRJ8BIqZgmQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.18.tgz",
+      "integrity": "sha512-R/oVr+X3Tkh+S0+tL41wRMbdWtpWB8hEAMsOXDumSSa6qJR89U0S/PpLXrGF7Wk/JykfpWNokERUpCeHDl47wA==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-32": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.11.tgz",
-      "integrity": "sha512-lsrAfdyJBGx+6aHIQmgqUonEzKYeBnyfJPkT6N2dOf1RoXYYV1BkWB6G02tjsrz1d5wZzaTc3cF+TKmuTo/ZwA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.18.tgz",
+      "integrity": "sha512-lphF3HiCSYtaa9p1DtXndiQEeQDKPl9eN/XNoBf2amEghugNuqXNZA/ZovthNE2aa4EN43WroO0B85xVSjYkbg==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.11.tgz",
-      "integrity": "sha512-Y2Rh+PcyVhQqXKBTacPCltINN3uIw2xC+dsvLANJ1SpK5NJUtxv8+rqWpjmBgaNWKQT1/uGpMmA9olALy9PLVA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.18.tgz",
+      "integrity": "sha512-hNSeP97IviD7oxLKFuii5sDPJ+QHeiFTFLoLm7NZQligur8poNOWGIgpQ7Qf8Balb69hptMZzyOBIPtY09GZYw==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-arm": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.11.tgz",
-      "integrity": "sha512-TJllTVk5aSyqPFvvcHTvf6Wu1ZKhWpJ/qNmZO8LL/XeB+LXCclm7HQHNEIz6MT7IX8PmlC1BZYrOiw2sXSB95A==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.18.tgz",
+      "integrity": "sha512-UH779gstRblS4aoS2qpMl3wjg7U0j+ygu3GjIeTonCcN79ZvpPee12Qun3vcdxX+37O5LFxz39XeW2I9bybMVA==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.11.tgz",
-      "integrity": "sha512-uhcXiTwTmD4OpxJu3xC5TzAAw6Wzf9O1XGWL448EE9bqGjgV1j+oK3lIHAfsHnuIn8K4nDW8yjX0Sv5S++oRuw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.18.tgz",
+      "integrity": "sha512-54qr8kg/6ilcxd+0V3h9rjT4qmjc0CccMVWrjOEM/pEcUzt8X62HfBSeZfT2ECpM7104mk4yfQXkosY8Quptug==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-mips64le": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.11.tgz",
-      "integrity": "sha512-WD61y/R1M4BLe4gxXRypoQ0Ci+Vjf714QYzcPNkiYv5I8K8WDz2ZR8Bm6cqKxd6rD+e/rZgPDbhQ9PCf7TMHmA==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.18.tgz",
+      "integrity": "sha512-Mk6Ppwzzz3YbMl/ZZL2P0q1tnYqh/trYZ1VfNP47C31yT0K8t9s7Z077QrDA/guU60tGNp2GOwCQnp+DYv7bxQ==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-ppc64le": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.11.tgz",
-      "integrity": "sha512-JVleZS9oPVLTlBhPTWgOwxFWU/wMUdlBwTbGA4GF8c38sLbS13cupj+C8bLq929jU7EMWry4SaL+tKGIaTlqKg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.18.tgz",
+      "integrity": "sha512-b0XkN4pL9WUulPTa/VKHx2wLCgvIAbgwABGnKMY19WhKZPT+8BxhZdqz6EgkqCLld7X5qiCY2F/bfpUUlnFZ9w==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-riscv64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.11.tgz",
-      "integrity": "sha512-9aLIalZ2HFHIOZpmVU11sEAS9F8TnHw49daEjcgMpBXHFF57VuT9f9/9LKJhw781Gda0P9jDkuCWJ0tFbErvJw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.18.tgz",
+      "integrity": "sha512-ba2COaoF5wL6VLZWn04k+ACZjZ6NYniMSQStodFKH/Pu6RxzQqzsmjR1t9QC89VYJxBeyVPTaHuBMCejl3O/xg==",
       "dev": true,
       "optional": true
     },
     "esbuild-linux-s390x": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.11.tgz",
-      "integrity": "sha512-sZHtiXXOKsLI3XGBGoYO4qKBzJlb8xNsWmvFiwFMHFzA4AXgDP1KDp7Dawe9C2pavTRBDvl+Ok4n/DHQ59oaTg==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.18.tgz",
+      "integrity": "sha512-VbpGuXEl5FCs1wDVp93O8UIzl3ZrglgnSQ+Hu79g7hZu6te6/YHgVJxCM2SqfIila0J3k0csfnf8VD2W7u2kzQ==",
       "dev": true,
       "optional": true
     },
     "esbuild-netbsd-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.11.tgz",
-      "integrity": "sha512-hUC9yN06K9sg7ju4Vgu9ChAPdsEgtcrcLfyNT5IKwKyfpLvKUwCMZSdF+gRD3WpyZelgTQfJ+pDx5XFbXTlB0A==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.18.tgz",
+      "integrity": "sha512-98ukeCdvdX7wr1vUYQzKo4kQ0N2p27H7I11maINv73fVEXt2kyh4K4m9f35U1K43Xc2QGXlzAw0K9yoU7JUjOg==",
       "dev": true,
       "optional": true
     },
     "esbuild-openbsd-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.11.tgz",
-      "integrity": "sha512-0bBo9SQR4t66Wd91LGMAqmWorzO0TTzVjYiifwoFtel8luFeXuPThQnEm5ztN4g0fnvcp7AnUPPzS/Depf17wQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.18.tgz",
+      "integrity": "sha512-yK5NCcH31Uae076AyQAXeJzt/vxIo9+omZRKj1pauhk3ITuADzuOx5N2fdHrAKPxN+zH3w96uFKlY7yIn490xQ==",
       "dev": true,
       "optional": true
     },
+    "esbuild-runner": {
+      "version": "2.2.2",
+      "resolved": "https://registry.npmjs.org/esbuild-runner/-/esbuild-runner-2.2.2.tgz",
+      "integrity": "sha512-fRFVXcmYVmSmtYm2mL8RlUASt2TDkGh3uRcvHFOKNr/T58VrfVeKD9uT9nlgxk96u0LS0ehS/GY7Da/bXWKkhw==",
+      "dev": true,
+      "requires": {
+        "source-map-support": "0.5.21",
+        "tslib": "2.4.0"
+      },
+      "dependencies": {
+        "tslib": {
+          "version": "2.4.0",
+          "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz",
+          "integrity": "sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==",
+          "dev": true
+        }
+      }
+    },
     "esbuild-sunos-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.11.tgz",
-      "integrity": "sha512-EuBdTGlsMTjEl1sQnBX2jfygy7iR6CKfvOzi+gEOfhDqbHXsmY1dcpbVtcwHAg9/2yUZSfMJHMAgf1z8M4yyyw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.18.tgz",
+      "integrity": "sha512-On22LLFlBeLNj/YF3FT+cXcyKPEI263nflYlAhz5crxtp3yRG1Ugfr7ITyxmCmjm4vbN/dGrb/B7w7U8yJR9yw==",
       "dev": true,
       "optional": true
     },
     "esbuild-windows-32": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.11.tgz",
-      "integrity": "sha512-O0/Wo1Wk6dc0rZSxkvGpmTNIycEznHmkObTFz2VHBhjPsO4ZpCgfGxNkCpz4AdAIeMczpTXt/8d5vdJNKEGC+Q==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.18.tgz",
+      "integrity": "sha512-o+eyLu2MjVny/nt+E0uPnBxYuJHBvho8vWsC2lV61A7wwTWC3jkN2w36jtA+yv1UgYkHRihPuQsL23hsCYGcOQ==",
       "dev": true,
       "optional": true
     },
     "esbuild-windows-64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.11.tgz",
-      "integrity": "sha512-x977Q4HhNjnHx00b4XLAnTtj5vfbdEvkxaQwC1Zh5AN8g5EX+izgZ6e5QgqJgpzyRNJqh4hkgIJF1pyy1be0mQ==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.18.tgz",
+      "integrity": "sha512-qinug1iTTaIIrCorAUjR0fcBk24fjzEedFYhhispP8Oc7SFvs+XeW3YpAKiKp8dRpizl4YYAhxMjlftAMJiaUw==",
       "dev": true,
       "optional": true
     },
     "esbuild-windows-arm64": {
-      "version": "0.15.11",
-      "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.11.tgz",
-      "integrity": "sha512-VwUHFACuBahrvntdcMKZteUZ9HaYrBRODoKe4tIWxguQRvvYoYb7iu5LrcRS/FQx8KPZNaa72zuqwVtHeXsITw==",
+      "version": "0.15.18",
+      "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.18.tgz",
+      "integrity": "sha512-q9bsYzegpZcLziq0zgUi5KqGVtfhjxGbnksaBFYmWLxeV/S1fK4OLdq2DFYnXcLMjlZw2L0jLsk1eGoB522WXQ==",
       "dev": true,
       "optional": true
     },
@@ -2531,7 +2603,7 @@
         "@types/node": "^18.11.9",
         "esbuild": "^0.15.11",
         "esbuild-runner": "^2.2.1",
-        "fflate": "^0.7.3",
+        "fflate": "^0.8.0",
         "prettier": "^2.8.4",
         "typescript": "^4.5.5"
       }
@@ -2598,6 +2670,22 @@
       "resolved": "https://registry.npmjs.org/signal-exit/-/signal-exit-4.0.2.tgz",
       "integrity": "sha512-MY2/qGx4enyjprQnFaZsHib3Yadh3IXyV2C321GY0pjGfVBu4un0uDJkwgdxqO+Rdx8JMT8IfJIRwbYVz3Ob3Q==",
       "dev": true
+    },
+    "source-map": {
+      "version": "0.6.1",
+      "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz",
+      "integrity": "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==",
+      "dev": true
+    },
+    "source-map-support": {
+      "version": "0.5.21",
+      "resolved": "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.21.tgz",
+      "integrity": "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==",
+      "dev": true,
+      "requires": {
+        "buffer-from": "^1.0.0",
+        "source-map": "^0.6.0"
+      }
     },
     "stoppable": {
       "version": "1.1.0",

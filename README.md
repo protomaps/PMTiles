@@ -26,7 +26,7 @@ See also:
 Download the `pmtiles` binary for your system at [go-pmtiles/Releases](https://github.com/protomaps/go-pmtiles/releases).
 
     pmtiles convert INPUT.mbtiles OUTPUT.pmtiles
-    pmtiles upload OUTPUT.mbtiles s3://my-bucket?region=us-west-2 // requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY env vars to be set
+    pmtiles upload OUTPUT.pmtiles s3://my-bucket?region=us-west-2 // requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY env vars to be set
 
 ## Consuming PMTiles
 

@@ -15,8 +15,6 @@ function streamToBuffer(stream: NodeJS.ReadableStream) {
   });
 }
 
-module.exports = { streamToBuffer };
-
 export class AzureStorageSource implements Source {
   readonly key: string;
   readonly accountName: string;
@@ -39,7 +37,7 @@ export class AzureStorageSource implements Source {
     offset: number,
     length: number,
     signal?: AbortSignal | undefined
-  ): Promise<RangeResponse> { 
+  ): Promise<RangeResponse> {
     const baseUrl = `https://${this.accountName}.blob.core.windows.net`;
 
     const containerClient = new ContainerClient(
@@ -59,7 +57,7 @@ export class AzureStorageSource implements Source {
     const data = await streamToBuffer(b.readableStreamBody);
 
     return {
-      data,
+      data: data.buffer,
       etag: b.etag,
       cacheControl: b.cacheControl,
     };

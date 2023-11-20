@@ -33,6 +33,8 @@ TLDR;
 - Enable managed identity on the app.
 - Give the identity access to the storage.
 
+NOTE: As of 2023-11-20, using managed identities seems a lot slower than using SAS token URL:s. Test and compare in your case before selecting a solution. 
+
 ### URL
 
 Add one setting to the function app called `PMTILES_PATH` which should contain the URL to the pmtiles file. The pmtiles file must be hosted at a provider that support the [`Range` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range), e.g. Azure Blob Storage (remember to set appropriate access level on the container). The name of the map in the URL is `default`.

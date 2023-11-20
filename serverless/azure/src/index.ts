@@ -8,31 +8,7 @@ import { Headers } from "undici";
 import { getZxy } from "./get";
 import { FetchSource, Source } from "pmtiles";
 import { tile_path } from "./tile_path";
-import { AzureStorageSource } from "./azure_source";
-
-function getAzureDetails(mapName: string) {
-  let accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-  let containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
-  let blobName = process.env.AZURE_STORAGE_BLOB_NAME;
-
-  if (!accountName) {
-    accountName = process.env[`AZURE_STORAGE_ACCOUNT_NAME_${mapName}`];
-  }
-
-  if (!containerName) {
-    containerName = process.env[`AZURE_STORAGE_CONTAINER_NAME_${mapName}`];
-  }
-
-  if (!blobName) {
-    blobName = process.env[`AZURE_STORAGE_BLOB_NAME_${mapName}`];
-  }
-
-  return {
-    accountName,
-    containerName,
-    blobName,
-  };
-}
+import { getAzureStorageSource } from "./azure_source";
 
 function getSource(name: string): Source | null {
   let mapUrl = process.env["PMTILES_PATH"];
@@ -46,18 +22,7 @@ function getSource(name: string): Source | null {
     return new FetchSource(mapUrl);
   }
 
-  const { accountName, containerName, blobName } = getAzureDetails(mapName);
-
-  if (accountName && containerName && blobName) {
-    return new AzureStorageSource(
-      mapName,
-      accountName,
-      containerName,
-      blobName
-    );
-  }
-
-  return null;
+  return getAzureStorageSource(mapName);
 }
 
 export async function httpTrigger(

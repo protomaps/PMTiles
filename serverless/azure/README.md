@@ -27,6 +27,12 @@ Resolve the details to get the blob in Azure storage
 
 Each variable can be override it for a specific map name, by adding another variable postfixes with `_{name}`, e.g. `AZURE_STORAGE_CONTAINER_NAME_europe` and `AZURE_STORAGE_BLOB_NAME_europe`. If no override exist, it will use the default value.
 
+Grant the function app access to the storage, link (this)[https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-app-access-storage-javascript].
+TLDR;
+
+- Enable managed identity on the app.
+- Give the identity access to the storage.
+
 ### URL
 
 Add one setting to the function app called `PMTILES_PATH` which should contain the URL to the pmtiles file. The pmtiles file must be hosted at a provider that support the [`Range` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range), e.g. Azure Blob Storage (remember to set appropriate access level on the container). The name of the map in the URL is `default`.

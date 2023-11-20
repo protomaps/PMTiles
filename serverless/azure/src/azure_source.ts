@@ -15,6 +15,33 @@ function streamToBuffer(stream: NodeJS.ReadableStream) {
   });
 }
 
+function getAzureDetails(mapName: string) {
+  let defaultAccountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+  let defaultContainerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+  let defaultBlobName = process.env.AZURE_STORAGE_BLOB_NAME;
+
+  const mapAccountName = process.env[`AZURE_STORAGE_ACCOUNT_NAME_${mapName}`];
+  const mapContainerName =
+    process.env[`AZURE_STORAGE_CONTAINER_NAME_${mapName}`];
+  const mapBlobName = process.env[`AZURE_STORAGE_BLOB_NAME_${mapName}`];
+
+  return {
+    accountName: mapAccountName ?? defaultAccountName,
+    containerName: mapContainerName ?? defaultContainerName,
+    blobName: mapBlobName ?? defaultBlobName,
+  };
+}
+
+export function getAzureStorageSource(key: string): AzureStorageSource | null {
+  const { accountName, containerName, blobName } = getAzureDetails(key);
+
+  if (!(accountName && containerName && blobName)) {
+    return null;
+  }
+
+  return new AzureStorageSource(key, accountName, containerName, blobName);
+}
+
 export class AzureStorageSource implements Source {
   readonly key: string;
   readonly accountName: string;

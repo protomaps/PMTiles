@@ -4,7 +4,7 @@ import { gunzipSync } from "zlib";
 import {
   Compression,
   PMTiles,
-  ResolvedValueCache,
+  SharedPromiseCache,
   Source,
   TileType,
 } from "pmtiles";
@@ -28,7 +28,7 @@ async function nativeDecompress(
   }
 }
 
-const CACHE = new ResolvedValueCache(25, undefined, nativeDecompress);
+const CACHE = new SharedPromiseCache(25, undefined, nativeDecompress);
 
 export async function getZxy(
   source: Source,

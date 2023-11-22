@@ -64,7 +64,13 @@ export async function httpTrigger(
     });
   }
 
-  return getZxy(source, tile, ext, allowed_origin, request.headers.get("etag"));
+  return getZxy(
+    source,
+    tile,
+    ext,
+    allowed_origin,
+    request.headers.get("If-None-Match")
+  );
 }
 
 app.http("tiles", {

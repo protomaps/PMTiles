@@ -1,3 +1,7 @@
+2.12.0
+
+* Added support for `Last-Modified` header in `RangeResponse` and `Header`.
+
 2.11.0
 
 * `FetchSource` takes optional 2nd param `Headers` to apply custom headers to all requests.
@@ -83,7 +87,7 @@ Clearer API names:
 ```
 
 
-1.0.0 
+1.0.0
 
 * Breaking change, introducing new TypeScript module with more clearly defined interfaces.
 * Leaflet plugin API changed:

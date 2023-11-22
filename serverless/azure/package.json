@@ -1,0 +1,27 @@
+{
+  "name": "pmtiles-azure",
+  "version": "0.1.0",
+  "devDependencies": {
+    "@types/node": "^18.x",
+    "esbuild": "^0.15.18",
+    "esbuild-runner": "^2.2.2",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.3.2"
+  },
+  "private": true,
+  "scripts": {
+    "esbuild": "esbuild src/index.ts --target=es2020 --outfile=dist/index.mjs",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rimraf dist",
+    "prestart": "npm run clean && npm run build",
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.1.0",
+    "@azure/identity": "^4.0.0",
+    "@azure/storage-blob": "^12.17.0",
+    "pmtiles": "file:../../js"
+  },
+  "main": "dist/src/index.js"
+}

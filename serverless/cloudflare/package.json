@@ -1,6 +1,7 @@
 {
   "name": "pmtiles-cloudflare",
   "version": "0.0.0",
+  "main": "dist/index.js",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",
     "esbuild-runner": "^2.2.2",
@@ -13,6 +14,6 @@
     "deploy": "wrangler publish",
     "test": "node -r esbuild-runner/register ../shared/index.test.ts",
     "tsc": "tsc --watch",
-    "build": "wrangler publish --outdir dist --dry-run"
+    "build": "wrangler deploy --outdir dist --dry-run"
   }
 }

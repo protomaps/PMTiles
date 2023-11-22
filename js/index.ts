@@ -214,6 +214,7 @@ export interface Header {
   centerLon: number;
   centerLat: number;
   etag?: string;
+  lastModified?: string;
 }
 
 export function findTile(entries: Entry[], tileId: number): Entry | null {
@@ -246,6 +247,7 @@ export function findTile(entries: Entry[], tileId: number): Entry | null {
 export interface RangeResponse {
   data: ArrayBuffer;
   etag?: string;
+  lastModified?: string;
   expires?: string;
   cacheControl?: string;
 }
@@ -356,6 +358,7 @@ export class FetchSource implements Source {
     return {
       data: a,
       etag: resp.headers.get("ETag") || undefined,
+      lastModified: resp.headers.get("Last-Modified") || undefined,
       cacheControl: resp.headers.get("Cache-Control") || undefined,
       expires: resp.headers.get("Expires") || undefined,
     };
@@ -368,7 +371,11 @@ export function getUint64(v: DataView, offset: number): number {
   return wh * Math.pow(2, 32) + wl;
 }
 
-export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
+export function bytesToHeader(
+  bytes: ArrayBuffer,
+  etag?: string,
+  lastModified?: string
+): Header {
   const v = new DataView(bytes);
   const spec_version = v.getUint8(7);
   if (spec_version > 3) {
@@ -404,6 +411,7 @@ export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
     centerLon: v.getInt32(119, true) / 10000000,
     centerLat: v.getInt32(123, true) / 10000000,
     etag: etag,
+    lastModified: lastModified,
   };
 }
 
@@ -504,7 +512,7 @@ async function getHeaderAndRoot(
     resp_etag = undefined;
   }
 
-  const header = bytesToHeader(headerData, resp_etag);
+  const header = bytesToHeader(headerData, resp_etag, resp.lastModified);
 
   // optimistically set the root directory
   // TODO check root bounds

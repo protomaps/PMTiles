@@ -908,6 +908,8 @@ export class PMTiles {
             data: await this.decompress(resp.data, header.tileCompression),
             cacheControl: resp.cacheControl,
             expires: resp.expires,
+            etag: resp.etag,
+            lastModified: resp.lastModified,
           };
         } else {
           d_o = header.leafDirectoryOffset + entry.offset;

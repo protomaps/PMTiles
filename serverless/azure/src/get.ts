@@ -1,6 +1,5 @@
 import { HttpResponseInit } from "@azure/functions";
 import { Headers } from "undici";
-import { gunzipSync } from "zlib";
 import {
   Compression,
   PMTiles,
@@ -22,12 +21,15 @@ async function nativeDecompress(
   if (compression === Compression.None || compression === Compression.Unknown) {
     return buf;
   } else if (compression === Compression.Gzip) {
-    return gunzipSync(buf);
+    let stream = new Response(buf).body!;
+    let result = stream.pipeThrough(new DecompressionStream("gzip"));
+    return new Response(result).arrayBuffer();
   } else {
     throw Error("Compression method not supported");
   }
 }
 
+//const CACHE = new ResolvedValueCache(25, undefined, nativeDecompress);
 const CACHE = new SharedPromiseCache(25, undefined, nativeDecompress);
 
 export async function getZxy(

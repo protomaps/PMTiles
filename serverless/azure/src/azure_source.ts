@@ -1,15 +1,15 @@
 import { RangeResponse, Source } from "pmtiles";
-import { ContainerClient } from "@azure/storage-blob";
+import { BlobClient, ContainerClient } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 
 function streamToBuffer(stream: NodeJS.ReadableStream) {
-  return new Promise<Buffer>((resolve, reject) => {
+  return new Promise<Uint8Array>((resolve, reject) => {
     const chunks: Uint8Array[] = [];
     stream.on("data", (data) => {
       chunks.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
     });
     stream.on("end", () => {
-      resolve(Buffer.concat(chunks));
+      resolve(new Uint8Array(Buffer.concat(chunks)));
     });
     stream.on("error", reject);
   });
@@ -48,6 +48,8 @@ export class AzureStorageSource implements Source {
   readonly containerName: string;
   readonly blobName: string;
 
+  _blobClient?: BlobClient;
+
   constructor(
     key: string,
     accountName: string,
@@ -65,14 +67,7 @@ export class AzureStorageSource implements Source {
     length: number,
     signal?: AbortSignal | undefined
   ): Promise<RangeResponse> {
-    const baseUrl = `https://${this.accountName}.blob.core.windows.net`;
-
-    const containerClient = new ContainerClient(
-      `${baseUrl}/${this.containerName}`,
-      new DefaultAzureCredential()
-    );
-
-    const blobClient = containerClient.getBlobClient(this.blobName);
+    const blobClient = this._getBlobClient();
     const b = await blobClient.download(offset, length, {
       abortSignal: signal,
     });
@@ -92,5 +87,21 @@ export class AzureStorageSource implements Source {
 
   getKey() {
     return this.key;
+  }
+
+  _getBlobClient() {
+    if (this._blobClient) {
+      return this._blobClient;
+    }
+    const baseUrl = `https://${this.accountName}.blob.core.windows.net`;
+
+    const containerClient = new ContainerClient(
+      `${baseUrl}/${this.containerName}`,
+      new DefaultAzureCredential()
+    );
+
+    this._blobClient = containerClient.getBlobClient(this.blobName);
+
+    return this._blobClient;
   }
 }

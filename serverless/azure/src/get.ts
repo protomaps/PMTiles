@@ -37,7 +37,7 @@ export async function getZxy(
   tile: [number, number, number],
   ext: string,
   allowed_origin: string,
-  requestedEtag: string | null
+  ifNonMatchEtag: string | null
 ): Promise<HttpResponseInit> {
   const cacheableResponse = (
     body: ArrayBuffer | string | undefined,
@@ -61,7 +61,10 @@ export async function getZxy(
   try {
     const p_header = await p.getHeader();
 
-    if (requestedEtag && requestedEtag === p_header.etag) {
+    if (
+      (ifNonMatchEtag && ifNonMatchEtag === p_header.etag) ||
+      !(ifNonMatchEtag && p_header.etag)
+    ) {
       return cacheableResponse(undefined, cacheableHeaders, 304);
     }
 
@@ -105,8 +108,8 @@ export async function getZxy(
         break;
     }
 
-    if (p_header.etag) {
-      cacheableHeaders.set("etag", p_header.etag);
+    if (tileData?.etag) {
+      cacheableHeaders.set("ETag", tileData.etag);
     }
 
     if (tileData) {

@@ -7,18 +7,14 @@ import {
 import { Headers } from "undici";
 import { getZxy } from "./get";
 import { FetchSource, Source } from "pmtiles";
-import { tile_path } from "./tile_path";
+import { pmtiles_path, tile_path } from "../../shared/index";
 import { getAzureStorageSource } from "./azure_source";
 
 function getSource(name: string): Source | null {
-  let mapUrl = process.env["PMTILES_PATH"];
   const mapName = name ?? "default";
+  const mapUrl = pmtiles_path(mapName, process.env.FETCH_PMTILES_PATH);
 
-  if (mapName !== "default") {
-    mapUrl = process.env[`PMTILES_PATH_${name}`];
-  }
-
-  if (mapUrl) {
+  if (process.env.FETCH_PMTILES_PATH) {
     return new FetchSource(mapUrl);
   }
 
@@ -30,14 +26,11 @@ export async function httpTrigger(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   const url = new URL(request.url);
-  const { ok, name, tile, ext } = tile_path(
-    url.pathname,
-    process.env["TILE_PATH"]
-  );
+  const { ok, name, tile, ext } = tile_path(url.pathname);
 
   let allowed_origin = "*";
-  if (typeof process.env["ALLOWED_ORIGINS"] !== "undefined") {
-    for (let o of process.env["ALLOWED_ORIGINS"].split(",")) {
+  if (typeof process.env.ALLOWED_ORIGINS !== "undefined") {
+    for (let o of process.env.ALLOWED_ORIGINS.split(",")) {
       if (o === request.headers.get("Origin") || o === "*") {
         allowed_origin = o;
       }
@@ -69,6 +62,7 @@ export async function httpTrigger(
     tile,
     ext,
     allowed_origin,
+    process.env.PUBLIC_HOSTNAME || url.hostname,
     request.headers.get("If-None-Match")
   );
 }

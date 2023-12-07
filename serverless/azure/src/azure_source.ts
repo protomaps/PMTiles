@@ -1,6 +1,7 @@
 import { RangeResponse, Source } from "pmtiles";
 import { BlobClient, ContainerClient } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
+import { pmtiles_path } from "../../shared/index";
 
 function streamToBuffer(stream: NodeJS.ReadableStream) {
   return new Promise<Uint8Array>((resolve, reject) => {
@@ -16,19 +17,14 @@ function streamToBuffer(stream: NodeJS.ReadableStream) {
 }
 
 function getAzureDetails(mapName: string) {
-  let defaultAccountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-  let defaultContainerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
-  let defaultBlobName = process.env.AZURE_STORAGE_BLOB_NAME;
-
-  const mapAccountName = process.env[`AZURE_STORAGE_ACCOUNT_NAME_${mapName}`];
-  const mapContainerName =
-    process.env[`AZURE_STORAGE_CONTAINER_NAME_${mapName}`];
-  const mapBlobName = process.env[`AZURE_STORAGE_BLOB_NAME_${mapName}`];
+  const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+  const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+  const blobName = pmtiles_path(mapName, process.env.AZURE_STORAGE_BLOB_NAME);
 
   return {
-    accountName: mapAccountName ?? defaultAccountName,
-    containerName: mapContainerName ?? defaultContainerName,
-    blobName: mapBlobName ?? defaultBlobName,
+    accountName,
+    containerName,
+    blobName,
   };
 }
 

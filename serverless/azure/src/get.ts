@@ -7,6 +7,7 @@ import {
   Source,
   TileType,
 } from "pmtiles";
+import { tileJSON } from "../../shared";
 
 class KeyNotFoundError extends Error {
   constructor(message: string) {
@@ -34,9 +35,10 @@ const CACHE = new SharedPromiseCache(25, undefined, nativeDecompress);
 
 export async function getZxy(
   source: Source,
-  tile: [number, number, number],
+  tile: [number, number, number] | undefined,
   ext: string,
   allowed_origin: string,
+  hostname: string,
   ifNonMatchEtag: string | null
 ): Promise<HttpResponseInit> {
   const cacheableResponse = (
@@ -50,7 +52,7 @@ export async function getZxy(
     resp_headers.set("Vary", "Origin");
     resp_headers.set(
       "Cache-Control",
-      "max-age=" + (process.env["CACHE_MAX_AGE"] ?? 86400)
+      "max-age=" + (process.env.CACHE_MAX_AGE ?? 86400)
     );
     return { body, headers: resp_headers, status: status };
   };
@@ -66,6 +68,19 @@ export async function getZxy(
       !(ifNonMatchEtag && p_header.etag)
     ) {
       return cacheableResponse(undefined, cacheableHeaders, 304);
+    }
+
+    if (!tile) {
+      cacheableHeaders.set("Content-Type", "application/json");
+
+      const t = tileJSON(
+        p_header,
+        await p.getMetadata(),
+        hostname,
+        source.getKey()
+      );
+
+      return cacheableResponse(JSON.stringify(t), cacheableHeaders, 200);
     }
 
     if (tile[0] < p_header.minZoom || tile[0] > p_header.maxZoom) {

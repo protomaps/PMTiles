@@ -123,20 +123,38 @@ export class Protocol {
         this.tiles.set(pmtiles_url, instance);
       }
 
-      instance
-        .getHeader()
-        .then((h) => {
+      const loadTileJSON = async (i: PMTiles) => {
+        try {
+          const header = await i.getHeader();
+          const hash = new URLSearchParams(
+            new URL(pmtiles_url).hash.substring(1)
+          );
+          let metadata: any = {};
+          if (hash.get("metadata")) {
+            metadata = await i.getMetadata();
+          }
+
           const tilejson = {
             tiles: [params.url + "/{z}/{x}/{y}"],
-            minzoom: h.minZoom,
-            maxzoom: h.maxZoom,
-            bounds: [h.minLon, h.minLat, h.maxLon, h.maxLat],
+            minzoom: header.minZoom,
+            maxzoom: header.maxZoom,
+            bounds: [
+              header.minLon,
+              header.minLat,
+              header.maxLon,
+              header.maxLat,
+            ],
+            attribution: metadata.attribution,
+            vector_layers: metadata.vector_layers,
           };
+
           callback(null, tilejson, null, null);
-        })
-        .catch((e) => {
+        } catch (e: any) {
           callback(e, null, null, null);
-        });
+        }
+      };
+
+      loadTileJSON(instance);
 
       return {
         cancel: () => {},

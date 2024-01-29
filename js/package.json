@@ -19,7 +19,7 @@
     "build-cjs": "esbuild index.ts --outfile=dist/index.cjs --target=es6 --global-name=pmtiles --bundle --format=cjs",
     "build-tsc": "tsc --declaration --emitDeclarationOnly --outdir dist",
     "build": "npm run build-iife && npm run build-esm && npm run build-cjs && npm run build-tsc",
-    "test": "node -r esbuild-runner/register test/index.test.ts",
+    "test": "tsx test/index.test.ts",
     "tsc": "tsc --noEmit --watch",
     "prettier": "prettier --write *.ts test/*.ts",
     "prettier-check": "prettier --check *.ts test/*.ts"
@@ -30,8 +30,8 @@
   "devDependencies": {
     "@types/node": "^18.11.9",
     "esbuild": "^0.15.11",
-    "esbuild-runner": "^2.2.1",
     "prettier": "^2.8.4",
+    "tsx": "^4.7.0",
     "typescript": "^4.5.5"
   },
   "dependencies": {

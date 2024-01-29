@@ -296,10 +296,13 @@ export class FetchSource implements Source {
   async getBytes(
     offset: number,
     length: number,
-    signal?: AbortSignal
+    passedSignal?: AbortSignal
   ): Promise<RangeResponse> {
-    let controller;
-    if (!signal) {
+    let controller: AbortController | undefined;
+    let signal: AbortSignal | undefined;
+    if (passedSignal) {
+      signal = passedSignal;
+    } else {
       // TODO check this works or assert 206
       controller = new AbortController();
       signal = controller.signal;
@@ -567,9 +570,10 @@ export class ResolvedValueCache {
 
   async getHeader(source: Source, currentEtag?: string): Promise<Header> {
     const cacheKey = source.getKey();
-    if (this.cache.has(cacheKey)) {
-      this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = this.cache.get(cacheKey)?.data;
+    const cacheValue = this.cache.get(cacheKey);
+    if (cacheValue) {
+      cacheValue.lastUsed = this.counter++;
+      const data = cacheValue.data;
       return data as Header;
     }
 
@@ -603,9 +607,10 @@ export class ResolvedValueCache {
     const cacheKey = `${source.getKey()}|${
       header.etag || ""
     }|${offset}|${length}`;
-    if (this.cache.has(cacheKey)) {
-      this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = this.cache.get(cacheKey)?.data;
+    const cacheValue = this.cache.get(cacheKey);
+    if (cacheValue) {
+      cacheValue.lastUsed = this.counter++;
+      const data = cacheValue.data;
       return data as Entry[];
     }
 
@@ -634,9 +639,10 @@ export class ResolvedValueCache {
     const cacheKey = `${source.getKey()}|${
       header.etag || ""
     }|${offset}|${length}`;
-    if (this.cache.has(cacheKey)) {
-      this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)?.data;
+    const cacheValue = this.cache.get(cacheKey);
+    if (cacheValue) {
+      cacheValue.lastUsed = this.counter++;
+      const data = await cacheValue.data;
       return data as ArrayBuffer;
     }
 
@@ -704,9 +710,10 @@ export class SharedPromiseCache {
 
   async getHeader(source: Source, currentEtag?: string): Promise<Header> {
     const cacheKey = source.getKey();
-    if (this.cache.has(cacheKey)) {
-      this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)?.data;
+    const cacheValue = this.cache.get(cacheKey);
+    if (cacheValue) {
+      cacheValue.lastUsed = this.counter++;
+      const data = await cacheValue.data;
       return data as Header;
     }
 
@@ -739,9 +746,10 @@ export class SharedPromiseCache {
     const cacheKey = `${source.getKey()}|${
       header.etag || ""
     }|${offset}|${length}`;
-    if (this.cache.has(cacheKey)) {
-      this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)?.data;
+    const cacheValue = this.cache.get(cacheKey);
+    if (cacheValue) {
+      cacheValue.lastUsed = this.counter++;
+      const data = await cacheValue.data;
       return data as Entry[];
     }
 
@@ -769,9 +777,10 @@ export class SharedPromiseCache {
     const cacheKey = `${source.getKey()}|${
       header.etag || ""
     }|${offset}|${length}`;
-    if (this.cache.has(cacheKey)) {
-      this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)?.data;
+    const cacheValue = this.cache.get(cacheKey);
+    if (cacheValue) {
+      cacheValue.lastUsed = this.counter++;
+      const data = await cacheValue.data;
       return data as ArrayBuffer;
     }
 
@@ -817,6 +826,7 @@ export class SharedPromiseCache {
   }
 }
 
+// biome-ignore lint: that's just how its capitalized
 export class PMTiles {
   source: Source;
   cache: Cache;

@@ -17,17 +17,17 @@ export const leafletRasterLayer = (source: PMTiles, options: any) => {
       };
       if (!loaded) {
         source.getHeader().then((header) => {
-          if (header.tileType == TileType.Mvt) {
+          if (header.tileType === TileType.Mvt) {
             console.error(
               "Error: archive contains MVT vector tiles, but leafletRasterLayer is for displaying raster tiles. See https://github.com/protomaps/PMTiles/tree/main/js for details."
             );
-          } else if (header.tileType == 2) {
+          } else if (header.tileType === 2) {
             mimeType = "image/png";
-          } else if (header.tileType == 3) {
+          } else if (header.tileType === 3) {
             mimeType = "image/jpeg";
-          } else if (header.tileType == 4) {
+          } else if (header.tileType === 4) {
             mimeType = "image/webp";
-          } else if (header.tileType == 5) {
+          } else if (header.tileType === 5) {
             mimeType = "image/avif";
           }
         });
@@ -115,7 +115,7 @@ export class Protocol {
     params: RequestParameters,
     callback: ResponseCallback
   ): Cancelable => {
-    if (params.type == "json") {
+    if (params.type === "json") {
       const pmtilesUrl = params.url.substr(10);
       let instance = this.tiles.get(pmtilesUrl);
       if (!instance) {
@@ -127,7 +127,7 @@ export class Protocol {
         .getHeader()
         .then((h) => {
           const tilejson = {
-            tiles: [params.url + "/{z}/{x}/{y}"],
+            tiles: [`${params.url}/{z}/{x}/{y}`],
             minzoom: h.minZoom,
             maxzoom: h.maxZoom,
             bounds: [h.minLon, h.minLat, h.maxLon, h.maxLat],
@@ -141,60 +141,56 @@ export class Protocol {
       return {
         cancel: () => {},
       };
-    } else {
-      const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
-      const result = params.url.match(re);
-      if (!result) {
-        throw new Error("Invalid PMTiles protocol URL");
-        return {
-          cancel: () => {},
-        };
-      }
-      const pmtilesUrl = result[1];
-
-      let instance = this.tiles.get(pmtilesUrl);
-      if (!instance) {
-        instance = new PMTiles(pmtilesUrl);
-        this.tiles.set(pmtilesUrl, instance);
-      }
-      const z = result[2];
-      const x = result[3];
-      const y = result[4];
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const cancel = () => {
-        controller.abort();
-      };
-
-      instance.getHeader().then((header) => {
-        instance!
-          .getZxy(+z, +x, +y, signal)
-          .then((resp) => {
-            if (resp) {
-              callback(
-                null,
-                new Uint8Array(resp.data),
-                resp.cacheControl,
-                resp.expires
-              );
-            } else {
-              if (header.tileType == TileType.Mvt) {
-                callback(null, new Uint8Array(), null, null);
-              } else {
-                callback(null, null, null, null);
-              }
-            }
-          })
-          .catch((e) => {
-            if ((e as Error).name !== "AbortError") {
-              callback(e, null, null, null);
-            }
-          });
-      });
-      return {
-        cancel: cancel,
-      };
     }
+    const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
+    const result = params.url.match(re);
+    if (!result) {
+      throw new Error("Invalid PMTiles protocol URL");
+    }
+    const pmtilesUrl = result[1];
+
+    let instance = this.tiles.get(pmtilesUrl);
+    if (!instance) {
+      instance = new PMTiles(pmtilesUrl);
+      this.tiles.set(pmtilesUrl, instance);
+    }
+    const z = result[2];
+    const x = result[3];
+    const y = result[4];
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const cancel = () => {
+      controller.abort();
+    };
+
+    instance.getHeader().then((header) => {
+      instance
+        ?.getZxy(+z, +x, +y, signal)
+        .then((resp) => {
+          if (resp) {
+            callback(
+              null,
+              new Uint8Array(resp.data),
+              resp.cacheControl,
+              resp.expires
+            );
+          } else {
+            if (header.tileType === TileType.Mvt) {
+              callback(null, new Uint8Array(), null, null);
+            } else {
+              callback(null, null, null, null);
+            }
+          }
+        })
+        .catch((e) => {
+          if ((e as Error).name !== "AbortError") {
+            callback(e, null, null, null);
+          }
+        });
+    });
+    return {
+      cancel: cancel,
+    };
   };
 }

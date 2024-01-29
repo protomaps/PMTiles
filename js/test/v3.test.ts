@@ -64,8 +64,8 @@ test("a lot of tiles", () => {
 });
 
 test("tile extremes", () => {
-  for (var z = 0; z < 27; z++) {
-    const dim = Math.pow(2, z) - 1;
+  for (let z = 0; z < 27; z++) {
+    const dim = 2 ** z - 1;
     const tl = tileIdToZxy(zxyToTileId(z, 0, 0));
     assert.deepEqual([z, 0, 0], tl);
     const tr = tileIdToZxy(zxyToTileId(z, dim, 0));
@@ -100,9 +100,9 @@ test("tile search for first entry == id", () => {
   const entries: Entry[] = [
     { tileId: 100, offset: 1, length: 1, runLength: 1 },
   ];
-  const entry = findTile(entries, 100)!;
-  assert.strictEqual(entry.offset, 1);
-  assert.strictEqual(entry.length, 1);
+  const entry = findTile(entries, 100);
+  assert.strictEqual(entry?.offset, 1);
+  assert.strictEqual(entry?.length, 1);
   assert.strictEqual(findTile(entries, 101), null);
 });
 
@@ -111,32 +111,32 @@ test("tile search with runlength", () => {
     { tileId: 3, offset: 3, length: 1, runLength: 2 },
     { tileId: 5, offset: 5, length: 1, runLength: 2 },
   ];
-  const entry = findTile(entries, 4)!;
-  assert.strictEqual(entry.offset, 3);
+  const entry = findTile(entries, 4);
+  assert.strictEqual(entry?.offset, 3);
 });
 
 test("tile search with multiple tile entries", () => {
   let entries: Entry[] = [{ tileId: 100, offset: 1, length: 1, runLength: 2 }];
-  let entry = findTile(entries, 101)!;
-  assert.strictEqual(entry.offset, 1);
-  assert.strictEqual(entry.length, 1);
+  let entry = findTile(entries, 101);
+  assert.strictEqual(entry?.offset, 1);
+  assert.strictEqual(entry?.length, 1);
 
   entries = [
     { tileId: 100, offset: 1, length: 1, runLength: 1 },
     { tileId: 150, offset: 2, length: 2, runLength: 2 },
   ];
-  entry = findTile(entries, 151)!;
-  assert.strictEqual(entry.offset, 2);
-  assert.strictEqual(entry.length, 2);
+  entry = findTile(entries, 151);
+  assert.strictEqual(entry?.offset, 2);
+  assert.strictEqual(entry?.length, 2);
 
   entries = [
     { tileId: 50, offset: 1, length: 1, runLength: 2 },
     { tileId: 100, offset: 2, length: 2, runLength: 1 },
     { tileId: 150, offset: 3, length: 3, runLength: 1 },
   ];
-  entry = findTile(entries, 51)!;
-  assert.strictEqual(entry.offset, 1);
-  assert.strictEqual(entry.length, 1);
+  entry = findTile(entries, 51);
+  assert.strictEqual(entry?.offset, 1);
+  assert.strictEqual(entry?.length, 1);
 });
 
 test("leaf search", () => {
@@ -144,8 +144,8 @@ test("leaf search", () => {
     { tileId: 100, offset: 1, length: 1, runLength: 0 },
   ];
   const entry = findTile(entries, 150);
-  assert.strictEqual(entry!.offset, 1);
-  assert.strictEqual(entry!.length, 1);
+  assert.strictEqual(entry?.offset, 1);
+  assert.strictEqual(entry?.length, 1);
 });
 
 // inefficient method only for testing

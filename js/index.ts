@@ -13,9 +13,8 @@ function toNum(low: number, high: number): number {
 
 function readVarintRemainder(l: number, p: BufferPosition): number {
   const buf = p.buf;
-  let h, b;
-  b = buf[p.pos++];
-  h = (b & 0x70) >> 4;
+  let b = buf[p.pos++];
+  let h = (b & 0x70) >> 4;
   if (b < 0x80) return toNum(l, h);
   b = buf[p.pos++];
   h |= (b & 0x7f) << 3;
@@ -37,10 +36,8 @@ function readVarintRemainder(l: number, p: BufferPosition): number {
 
 export function readVarint(p: BufferPosition): number {
   const buf = p.buf;
-  let val, b;
-
-  b = buf[p.pos++];
-  val = b & 0x7f;
+  let b = buf[p.pos++];
+  let val = b & 0x7f;
   if (b < 0x80) return val;
   b = buf[p.pos++];
   val |= (b & 0x7f) << 7;
@@ -58,8 +55,8 @@ export function readVarint(p: BufferPosition): number {
 }
 
 function rotate(n: number, xy: number[], rx: number, ry: number): void {
-  if (ry == 0) {
-    if (rx == 1) {
+  if (ry === 0) {
+    if (rx === 1) {
       xy[0] = n - 1 - xy[0];
       xy[1] = n - 1 - xy[1];
     }
@@ -70,7 +67,7 @@ function rotate(n: number, xy: number[], rx: number, ry: number): void {
 }
 
 function idOnLevel(z: number, pos: number): [number, number, number] {
-  const n = Math.pow(2, z);
+  const n = 2 ** z;
   let rx = pos;
   let ry = pos;
   let t = pos;
@@ -99,12 +96,12 @@ export function zxyToTileId(z: number, x: number, y: number): number {
   if (z > 26) {
     throw Error("Tile zoom level exceeds max safe number limit (26)");
   }
-  if (x > Math.pow(2, z) - 1 || y > Math.pow(2, z) - 1) {
+  if (x > 2 ** z - 1 || y > 2 ** z - 1) {
     throw Error("tile x/y outside zoom level bounds");
   }
 
   const acc = tzValues[z];
-  const n = Math.pow(2, z);
+  const n = 2 ** z;
   let rx = 0;
   let ry = 0;
   let d = 0;
@@ -161,19 +158,18 @@ async function defaultDecompress(
 ): Promise<ArrayBuffer> {
   if (compression === Compression.None || compression === Compression.Unknown) {
     return buf;
-  } else if (compression === Compression.Gzip) {
-    if (typeof (globalThis as any).DecompressionStream == "undefined") {
-      return decompressSync(new Uint8Array(buf));
-    } else {
-      const stream = new Response(buf).body!;
-      const result: ReadableStream<Uint8Array> = stream.pipeThrough(
-        new (globalThis as any).DecompressionStream("gzip")
-      );
-      return new Response(result).arrayBuffer();
-    }
-  } else {
-    throw Error("Compression method not supported");
   }
+  if (compression === Compression.Gzip) {
+    if (typeof (globalThis as any).DecompressionStream === "undefined") {
+      return decompressSync(new Uint8Array(buf));
+    }
+    const stream = new Response(buf).body!;
+    const result: ReadableStream<Uint8Array> = stream.pipeThrough(
+      new (globalThis as any).DecompressionStream("gzip")
+    );
+    return new Response(result).arrayBuffer();
+  }
+  throw Error("Compression method not supported");
 }
 
 export enum TileType {
@@ -310,10 +306,7 @@ export class FetchSource implements Source {
     }
 
     const requestHeaders = new Headers(this.customHeaders);
-    requestHeaders.set(
-      "Range",
-      "bytes=" + offset + "-" + (offset + length - 1)
-    );
+    requestHeaders.set("Range", `bytes=${offset}-${offset + length - 1}`);
 
     let resp = await fetch(this.url, {
       signal: signal,
@@ -333,12 +326,12 @@ export class FetchSource implements Source {
       const actualLength = +contentRange.substr(8);
       resp = await fetch(this.url, {
         signal: signal,
-        headers: { Range: "bytes=0-" + (actualLength - 1) },
+        headers: { range: `bytes=0-${actualLength - 1}` },
       });
     }
 
     if (resp.status >= 300) {
-      throw Error("Bad response code: " + resp.status);
+      throw Error(`Bad response code: ${resp.status}`);
     }
 
     const contentLength = resp.headers.get("Content-Length");
@@ -365,7 +358,7 @@ export class FetchSource implements Source {
 export function getUint64(v: DataView, offset: number): number {
   const wh = v.getUint32(offset + 4, true);
   const wl = v.getUint32(offset + 0, true);
-  return wh * Math.pow(2, 32) + wl;
+  return wh * 2 ** 32 + wl;
 }
 
 export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
@@ -447,7 +440,8 @@ function detectVersion(a: ArrayBuffer): number {
       "PMTiles spec version 2 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade"
     );
     return 2;
-  } else if (v.getUint16(2, true) === 1) {
+  }
+  if (v.getUint16(2, true) === 1) {
     console.warn(
       "PMTiles spec version 1 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade"
     );
@@ -496,10 +490,9 @@ async function getHeaderAndRoot(
   const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
 
   let respEtag = resp.etag;
-  if (currentEtag && resp.etag != currentEtag) {
+  if (currentEtag && resp.etag !== currentEtag) {
     console.warn(
-      "ETag conflict detected; your HTTP server might not support content-based ETag headers. ETags disabled for " +
-        source.getKey()
+      `ETag conflict detected; your HTTP server might not support content-based ETag headers. ETags disabled for ${source.getKey()}`
     );
     respEtag = undefined;
   }
@@ -513,14 +506,9 @@ async function getHeaderAndRoot(
       header.rootDirectoryOffset,
       header.rootDirectoryOffset + header.rootDirectoryLength
     );
-    const dirKey =
-      source.getKey() +
-      "|" +
-      (header.etag || "") +
-      "|" +
-      header.rootDirectoryOffset +
-      "|" +
-      header.rootDirectoryLength;
+    const dirKey = `${source.getKey()}|${header.etag || ""}|${
+      header.rootDirectoryOffset
+    }|${header.rootDirectoryLength}`;
 
     const rootDir = deserializeIndex(
       await decompress(rootDirData, header.internalCompression)
@@ -581,7 +569,7 @@ export class ResolvedValueCache {
     const cacheKey = source.getKey();
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = this.cache.get(cacheKey)!.data;
+      const data = this.cache.get(cacheKey)?.data;
       return data as Header;
     }
 
@@ -612,11 +600,12 @@ export class ResolvedValueCache {
     length: number,
     header: Header
   ): Promise<Entry[]> {
-    const cacheKey =
-      source.getKey() + "|" + (header.etag || "") + "|" + offset + "|" + length;
+    const cacheKey = `${source.getKey()}|${
+      header.etag || ""
+    }|${offset}|${length}`;
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = this.cache.get(cacheKey)!.data;
+      const data = this.cache.get(cacheKey)?.data;
       return data as Entry[];
     }
 
@@ -642,11 +631,12 @@ export class ResolvedValueCache {
     length: number,
     header: Header
   ): Promise<ArrayBuffer> {
-    const cacheKey =
-      source.getKey() + "|" + (header.etag || "") + "|" + offset + "|" + length;
+    const cacheKey = `${source.getKey()}|${
+      header.etag || ""
+    }|${offset}|${length}`;
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)!.data;
+      const data = await this.cache.get(cacheKey)?.data;
       return data as ArrayBuffer;
     }
 
@@ -716,7 +706,7 @@ export class SharedPromiseCache {
     const cacheKey = source.getKey();
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)!.data;
+      const data = await this.cache.get(cacheKey)?.data;
       return data as Header;
     }
 
@@ -746,11 +736,12 @@ export class SharedPromiseCache {
     length: number,
     header: Header
   ): Promise<Entry[]> {
-    const cacheKey =
-      source.getKey() + "|" + (header.etag || "") + "|" + offset + "|" + length;
+    const cacheKey = `${source.getKey()}|${
+      header.etag || ""
+    }|${offset}|${length}`;
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)!.data;
+      const data = await this.cache.get(cacheKey)?.data;
       return data as Entry[];
     }
 
@@ -775,11 +766,12 @@ export class SharedPromiseCache {
     length: number,
     header: Header
   ): Promise<ArrayBuffer> {
-    const cacheKey =
-      source.getKey() + "|" + (header.etag || "") + "|" + offset + "|" + length;
+    const cacheKey = `${source.getKey()}|${
+      header.etag || ""
+    }|${offset}|${length}`;
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
-      const data = await this.cache.get(cacheKey)!.data;
+      const data = await this.cache.get(cacheKey)?.data;
       return data as ArrayBuffer;
     }
 
@@ -899,10 +891,9 @@ export class PMTiles {
             cacheControl: resp.cacheControl,
             expires: resp.expires,
           };
-        } else {
-          dO = header.leafDirectoryOffset + entry.offset;
-          dL = entry.length;
         }
+        dO = header.leafDirectoryOffset + entry.offset;
+        dL = entry.length;
       } else {
         // TODO: We should in fact return a valid RangeResponse
         // with empty data, but filled in cache control / expires headers
@@ -924,9 +915,8 @@ export class PMTiles {
       if (e instanceof EtagMismatch) {
         this.cache.invalidate(this.source, e.message);
         return await this.getZxyAttempt(z, x, y, signal);
-      } else {
-        throw e;
       }
+      throw e;
     }
   }
 
@@ -955,9 +945,8 @@ export class PMTiles {
       if (e instanceof EtagMismatch) {
         this.cache.invalidate(this.source, e.message);
         return await this.getMetadataAttempt();
-      } else {
-        throw e;
       }
+      throw e;
     }
   }
 }

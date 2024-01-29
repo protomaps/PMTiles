@@ -9,11 +9,11 @@ import {
 } from "./index";
 
 export const shift = (n: number, shift: number) => {
-  return n * Math.pow(2, shift);
+  return n * 2 ** shift;
 };
 
 export const unshift = (n: number, shift: number) => {
-  return Math.floor(n / Math.pow(2, shift));
+  return Math.floor(n / 2 ** shift);
 };
 
 export const getUint24 = (view: DataView, pos: number) => {
@@ -36,7 +36,7 @@ export interface EntryV2 {
   y: number;
   offset: number;
   length: number;
-  is_dir: boolean;
+  isDir: boolean;
 }
 
 const compare = (
@@ -46,11 +46,11 @@ const compare = (
   view: DataView,
   i: number
 ) => {
-  if (tz != view.getUint8(i)) return tz - view.getUint8(i);
+  if (tz !== view.getUint8(i)) return tz - view.getUint8(i);
   const x = getUint24(view, i + 1);
-  if (tx != x) return tx - x;
+  if (tx !== x) return tx - x;
   const y = getUint24(view, i + 4);
-  if (ty != y) return ty - y;
+  if (ty !== y) return ty - y;
   return 0;
 };
 
@@ -68,7 +68,7 @@ export const queryLeafdir = (
       y: y,
       offset: offsetLen[0],
       length: offsetLen[1],
-      is_dir: true,
+      isDir: true,
     };
   }
   return null;
@@ -83,7 +83,7 @@ export const queryTile = (view: DataView, z: number, x: number, y: number) => {
       y: y,
       offset: offsetLen[0],
       length: offsetLen[1],
-      is_dir: false,
+      isDir: false,
     };
   }
   return null;
@@ -112,10 +112,10 @@ const queryView = (
 };
 
 const entrySort = (a: EntryV2, b: EntryV2): number => {
-  if (a.is_dir && !b.is_dir) {
+  if (a.isDir && !b.isDir) {
     return 1;
   }
-  if (!a.is_dir && b.is_dir) {
+  if (!a.isDir && b.isDir) {
     return -1;
   }
   if (a.z !== b.z) {
@@ -136,7 +136,7 @@ export const parseEntry = (dataview: DataView, i: number): EntryV2 => {
     y: getUint24(dataview, i * 17 + 4),
     offset: getUint48(dataview, i * 17 + 7),
     length: dataview.getUint32(i * 17 + 13, true),
-    is_dir: zRaw >> 7 === 1,
+    isDir: zRaw >> 7 === 1,
   };
 };
 
@@ -157,7 +157,7 @@ export const createDirectory = (entries: EntryV2[]): ArrayBuffer => {
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     let z = entry.z;
-    if (entry.is_dir) z = z | 0x80;
+    if (entry.isDir) z = z | 0x80;
     arr[i * 17] = z;
 
     arr[i * 17 + 1] = entry.x & 0xff;
@@ -187,7 +187,7 @@ export const deriveLeaf = (view: DataView, tile: Zxy): Zxy | null => {
   if (view.byteLength < 17) return null;
   const numEntries = view.byteLength / 17;
   const entry = parseEntry(view, numEntries - 1);
-  if (entry.is_dir) {
+  if (entry.isDir) {
     const leafLevel = entry.z;
     const levelDiff = tile.z - leafLevel;
     const leafX = Math.trunc(tile.x / (1 << levelDiff));
@@ -303,7 +303,7 @@ async function getZxy(
     let tileData = resp.data;
 
     const view = new DataView(tileData);
-    if (view.getUint8(0) == 0x1f && view.getUint8(1) == 0x8b) {
+    if (view.getUint8(0) === 0x1f && view.getUint8(1) === 0x8b) {
       tileData = decompressSync(new Uint8Array(tileData));
     }
 
@@ -341,7 +341,7 @@ async function getZxy(
         let tileData = resp.data;
 
         const view = new DataView(tileData);
-        if (view.getUint8(0) == 0x1f && view.getUint8(1) == 0x8b) {
+        if (view.getUint8(0) === 0x1f && view.getUint8(1) === 0x8b) {
           tileData = decompressSync(new Uint8Array(tileData));
         }
         return {

@@ -1,20 +1,18 @@
-import { test } from "node:test";
 import assert from "node:assert";
+import { test } from "node:test";
 
 import {
-  unshift,
+  createDirectory,
+  deriveLeaf,
   getUint24,
   getUint48,
-  deriveLeaf,
+  parseEntry,
   queryLeafdir,
   queryTile,
-  parseEntry,
-  EntryV2,
-  createDirectory,
 } from "../v2";
 
 test("stub data", () => {
-  let dataview = new DataView(
+  const dataview = new DataView(
     createDirectory([
       { z: 5, x: 1000, y: 2000, offset: 1000, length: 2000, is_dir: false },
       {
@@ -27,18 +25,18 @@ test("stub data", () => {
       },
     ])
   );
-  var z_raw = dataview.getUint8(17 + 0);
+  var zRaw = dataview.getUint8(17 + 0);
   var x = getUint24(dataview, 17 + 1);
   var y = getUint24(dataview, 17 + 4);
   var offset = getUint48(dataview, 17 + 7);
   var length = dataview.getUint32(17 + 13, true);
-  assert.strictEqual(z_raw, 14);
+  assert.strictEqual(zRaw, 14);
   assert.strictEqual(x, 16383);
   assert.strictEqual(y, 16383);
 });
 
 test("get entry", () => {
-  let view = new DataView(
+  const view = new DataView(
     createDirectory([
       { z: 5, x: 1000, y: 2000, offset: 1000, length: 2000, is_dir: false },
       {
@@ -51,7 +49,7 @@ test("get entry", () => {
       },
     ])
   );
-  let entry = queryTile(view, 14, 16383, 16383);
+  const entry = queryTile(view, 14, 16383, 16383);
   assert.strictEqual(entry!.z, 14);
   assert.strictEqual(entry!.x, 16383);
   assert.strictEqual(entry!.y, 16383);
@@ -62,7 +60,7 @@ test("get entry", () => {
 });
 
 test("get leafdir", () => {
-  let view = new DataView(
+  const view = new DataView(
     createDirectory([
       {
         z: 14,
@@ -74,7 +72,7 @@ test("get leafdir", () => {
       },
     ])
   );
-  let entry = queryLeafdir(view, 14, 16383, 16383);
+  const entry = queryLeafdir(view, 14, 16383, 16383);
   assert.strictEqual(entry!.z, 14);
   assert.strictEqual(entry!.x, 16383);
   assert.strictEqual(entry!.y, 16383);
@@ -118,7 +116,7 @@ test("derive the leaf level", () => {
 });
 
 test("convert spec v1 directory to spec v2 directory", () => {
-  let view = new DataView(
+  const view = new DataView(
     createDirectory([
       {
         z: 7,

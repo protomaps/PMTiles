@@ -77,7 +77,7 @@ export const leafletRasterLayer = (source: PMTiles, options: any) => {
 // copied from MapLibre /util/ajax.ts
 type RequestParameters = {
   url: string;
-  headers?: any;
+  headers?: unknown;
   method?: "GET" | "POST" | "PUT";
   body?: string;
   type?: "string" | "json" | "arrayBuffer" | "image";
@@ -87,7 +87,7 @@ type RequestParameters = {
 
 type ResponseCallback = (
   error?: Error | null,
-  data?: any | null,
+  data?: unknown | null,
   cacheControl?: string | null,
   expires?: string | null
 ) => void;

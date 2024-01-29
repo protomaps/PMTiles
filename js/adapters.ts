@@ -2,13 +2,13 @@ declare const L: any;
 declare const window: any;
 declare const document: any;
 
-import { PMTiles, Source, TileType } from "./index";
+import { PMTiles, TileType } from "./index";
 
 export const leafletRasterLayer = (source: PMTiles, options: any) => {
   let loaded = false;
-  let mimeType: string = "";
+  let mimeType = "";
   const cls = L.GridLayer.extend({
-    createTile: function (coord: any, done: any) {
+    createTile: (coord: any, done: any) => {
       const el: any = document.createElement("img");
       const controller = new AbortController();
       const signal = controller.signal;
@@ -116,11 +116,11 @@ export class Protocol {
     callback: ResponseCallback
   ): Cancelable => {
     if (params.type == "json") {
-      const pmtiles_url = params.url.substr(10);
-      let instance = this.tiles.get(pmtiles_url);
+      const pmtilesUrl = params.url.substr(10);
+      let instance = this.tiles.get(pmtilesUrl);
       if (!instance) {
-        instance = new PMTiles(pmtiles_url);
-        this.tiles.set(pmtiles_url, instance);
+        instance = new PMTiles(pmtilesUrl);
+        this.tiles.set(pmtilesUrl, instance);
       }
 
       instance
@@ -150,12 +150,12 @@ export class Protocol {
           cancel: () => {},
         };
       }
-      const pmtiles_url = result[1];
+      const pmtilesUrl = result[1];
 
-      let instance = this.tiles.get(pmtiles_url);
+      let instance = this.tiles.get(pmtilesUrl);
       if (!instance) {
-        instance = new PMTiles(pmtiles_url);
-        this.tiles.set(pmtiles_url, instance);
+        instance = new PMTiles(pmtilesUrl);
+        this.tiles.set(pmtilesUrl, instance);
       }
       const z = result[2];
       const x = result[3];
@@ -163,7 +163,7 @@ export class Protocol {
 
       const controller = new AbortController();
       const signal = controller.signal;
-      let cancel = () => {
+      const cancel = () => {
         controller.abort();
       };
 

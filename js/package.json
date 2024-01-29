@@ -28,6 +28,7 @@
   "author": "Brandon Liu",
   "license": "BSD-3-Clause",
   "devDependencies": {
+    "@biomejs/biome": "^1.5.3",
     "@types/node": "^18.11.9",
     "esbuild": "^0.15.11",
     "prettier": "^2.8.4",

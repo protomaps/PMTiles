@@ -1,20 +1,19 @@
-import { test } from "node:test";
-import assert from "node:assert";
 import fs from "fs";
+import assert from "node:assert";
+import { test } from "node:test";
 
 import {
-  Entry,
-  zxyToTileId,
-  tileIdToZxy,
-  findTile,
-  readVarint,
-  SharedPromiseCache,
   BufferPosition,
-  Source,
-  RangeResponse,
-  EtagMismatch,
+  Entry,
   PMTiles,
+  RangeResponse,
+  SharedPromiseCache,
+  Source,
+  findTile,
   getUint64,
+  readVarint,
+  tileIdToZxy,
+  zxyToTileId,
 } from "../index";
 
 test("varint", () => {

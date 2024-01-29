@@ -122,14 +122,14 @@ export function zxyToTileId(z: number, x: number, y: number): number {
 
 export function tileIdToZxy(i: number): [number, number, number] {
   let acc = 0;
-  let z = 0;
+  const z = 0;
 
   for (let z = 0; z < 27; z++) {
-    const num_tiles = (0x1 << z) * (0x1 << z);
-    if (acc + num_tiles > i) {
+    const numTiles = (0x1 << z) * (0x1 << z);
+    if (acc + numTiles > i) {
       return idOnLevel(z, i - acc);
     }
-    acc += num_tiles;
+    acc += numTiles;
   }
 
   throw Error("Tile zoom level exceeds max safe number limit (26)");
@@ -165,8 +165,8 @@ async function defaultDecompress(
     if (typeof (globalThis as any).DecompressionStream == "undefined") {
       return decompressSync(new Uint8Array(buf));
     } else {
-      let stream = new Response(buf).body!;
-      let result: ReadableStream<Uint8Array> = stream.pipeThrough(
+      const stream = new Response(buf).body!;
+      const result: ReadableStream<Uint8Array> = stream.pipeThrough(
         new (globalThis as any).DecompressionStream("gzip")
       );
       return new Response(result).arrayBuffer();
@@ -326,14 +326,14 @@ export class FetchSource implements Source {
     if (resp.status === 416 && offset === 0) {
       // some HTTP servers don't accept ranges beyond the end of the resource.
       // Retry with the exact length
-      const content_range = resp.headers.get("Content-Range");
-      if (!content_range || !content_range.startsWith("bytes */")) {
+      const contentRange = resp.headers.get("Content-Range");
+      if (!contentRange || !contentRange.startsWith("bytes */")) {
         throw Error("Missing content-length on 416 response");
       }
-      const actual_length = +content_range.substr(8);
+      const actualLength = +contentRange.substr(8);
       resp = await fetch(this.url, {
         signal: signal,
-        headers: { Range: "bytes=0-" + (actual_length - 1) },
+        headers: { Range: "bytes=0-" + (actualLength - 1) },
       });
     }
 
@@ -341,11 +341,11 @@ export class FetchSource implements Source {
       throw Error("Bad response code: " + resp.status);
     }
 
-    const content_length = resp.headers.get("Content-Length");
+    const contentLength = resp.headers.get("Content-Length");
 
     // some well-behaved backends, e.g. DigitalOcean CDN, respond with 200 instead of 206
     // but we also need to detect no support for Byte Serving which is returning the whole file
-    if (resp.status === 200 && (!content_length || +content_length > length)) {
+    if (resp.status === 200 && (!contentLength || +contentLength > length)) {
       if (controller) controller.abort();
       throw Error(
         "Server returned no content-length header or content-length exceeding request. Check that your storage backend supports HTTP Byte Serving."
@@ -370,15 +370,15 @@ export function getUint64(v: DataView, offset: number): number {
 
 export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
   const v = new DataView(bytes);
-  const spec_version = v.getUint8(7);
-  if (spec_version > 3) {
+  const specVersion = v.getUint8(7);
+  if (specVersion > 3) {
     throw Error(
-      `Archive is spec version ${spec_version} but this library supports up to spec version 3`
+      `Archive is spec version ${specVersion} but this library supports up to spec version 3`
     );
   }
 
   return {
-    specVersion: spec_version,
+    specVersion: specVersion,
     rootDirectoryOffset: getUint64(v, 8),
     rootDirectoryLength: getUint64(v, 16),
     jsonMetadataOffset: getUint64(v, 24),
@@ -459,7 +459,7 @@ function detectVersion(a: ArrayBuffer): number {
 export class EtagMismatch extends Error {}
 
 export interface Cache {
-  getHeader: (source: Source, current_etag?: string) => Promise<Header>;
+  getHeader: (source: Source, currentEtag?: string) => Promise<Header>;
   getDirectory: (
     source: Source,
     offset: number,
@@ -472,14 +472,14 @@ export interface Cache {
     length: number,
     header: Header
   ) => Promise<ArrayBuffer>;
-  invalidate: (source: Source, current_etag: string) => Promise<void>;
+  invalidate: (source: Source, currentEtag: string) => Promise<void>;
 }
 
 async function getHeaderAndRoot(
   source: Source,
   decompress: DecompressFunc,
   prefetch: boolean,
-  current_etag?: string
+  currentEtag?: string
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
   const resp = await source.getBytes(0, 16384);
 
@@ -495,16 +495,16 @@ async function getHeaderAndRoot(
 
   const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
 
-  let resp_etag = resp.etag;
-  if (current_etag && resp.etag != current_etag) {
+  let respEtag = resp.etag;
+  if (currentEtag && resp.etag != currentEtag) {
     console.warn(
       "ETag conflict detected; your HTTP server might not support content-based ETag headers. ETags disabled for " +
         source.getKey()
     );
-    resp_etag = undefined;
+    respEtag = undefined;
   }
 
-  const header = bytesToHeader(headerData, resp_etag);
+  const header = bytesToHeader(headerData, respEtag);
 
   // optimistically set the root directory
   // TODO check root bounds
@@ -577,7 +577,7 @@ export class ResolvedValueCache {
     this.decompress = decompress;
   }
 
-  async getHeader(source: Source, current_etag?: string): Promise<Header> {
+  async getHeader(source: Source, currentEtag?: string): Promise<Header> {
     const cacheKey = source.getKey();
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
@@ -589,7 +589,7 @@ export class ResolvedValueCache {
       source,
       this.decompress,
       this.prefetch,
-      current_etag
+      currentEtag
     );
     if (res[1]) {
       this.cache.set(res[1][0], {
@@ -666,9 +666,9 @@ export class ResolvedValueCache {
     if (this.cache.size > this.maxCacheEntries) {
       let minUsed = Infinity;
       let minKey = undefined;
-      this.cache.forEach((cache_value: ResolvedValue, key: string) => {
-        if (cache_value.lastUsed < minUsed) {
-          minUsed = cache_value.lastUsed;
+      this.cache.forEach((cacheValue: ResolvedValue, key: string) => {
+        if (cacheValue.lastUsed < minUsed) {
+          minUsed = cacheValue.lastUsed;
           minKey = key;
         }
       });
@@ -678,9 +678,9 @@ export class ResolvedValueCache {
     }
   }
 
-  async invalidate(source: Source, current_etag: string) {
+  async invalidate(source: Source, currentEtag: string) {
     this.cache.delete(source.getKey());
-    await this.getHeader(source, current_etag);
+    await this.getHeader(source, currentEtag);
   }
 }
 
@@ -712,7 +712,7 @@ export class SharedPromiseCache {
     this.decompress = decompress;
   }
 
-  async getHeader(source: Source, current_etag?: string): Promise<Header> {
+  async getHeader(source: Source, currentEtag?: string): Promise<Header> {
     const cacheKey = source.getKey();
     if (this.cache.has(cacheKey)) {
       this.cache.get(cacheKey)!.lastUsed = this.counter++;
@@ -721,7 +721,7 @@ export class SharedPromiseCache {
     }
 
     const p = new Promise<Header>((resolve, reject) => {
-      getHeaderAndRoot(source, this.decompress, this.prefetch, current_etag)
+      getHeaderAndRoot(source, this.decompress, this.prefetch, currentEtag)
         .then((res) => {
           if (res[1]) {
             this.cache.set(res[1][0], {
@@ -807,23 +807,21 @@ export class SharedPromiseCache {
     if (this.cache.size >= this.maxCacheEntries) {
       let minUsed = Infinity;
       let minKey = undefined;
-      this.cache.forEach(
-        (cache_value: SharedPromiseCacheValue, key: string) => {
-          if (cache_value.lastUsed < minUsed) {
-            minUsed = cache_value.lastUsed;
-            minKey = key;
-          }
+      this.cache.forEach((cacheValue: SharedPromiseCacheValue, key: string) => {
+        if (cacheValue.lastUsed < minUsed) {
+          minUsed = cacheValue.lastUsed;
+          minKey = key;
         }
-      );
+      });
       if (minKey) {
         this.cache.delete(minKey);
       }
     }
   }
 
-  async invalidate(source: Source, current_etag: string) {
+  async invalidate(source: Source, currentEtag: string) {
     this.cache.delete(source.getKey());
-    await this.getHeader(source, current_etag);
+    await this.getHeader(source, currentEtag);
   }
 }
 
@@ -864,7 +862,7 @@ export class PMTiles {
     y: number,
     signal?: AbortSignal
   ): Promise<RangeResponse | undefined> {
-    const tile_id = zxyToTileId(z, x, y);
+    const tileId = zxyToTileId(z, x, y);
     const header = await this.cache.getHeader(this.source);
 
     // V2 COMPATIBILITY
@@ -876,16 +874,16 @@ export class PMTiles {
       return undefined;
     }
 
-    let d_o = header.rootDirectoryOffset;
-    let d_l = header.rootDirectoryLength;
+    let dO = header.rootDirectoryOffset;
+    let dL = header.rootDirectoryLength;
     for (let depth = 0; depth <= 3; depth++) {
       const directory = await this.cache.getDirectory(
         this.source,
-        d_o,
-        d_l,
+        dO,
+        dL,
         header
       );
-      const entry = findTile(directory, tile_id);
+      const entry = findTile(directory, tileId);
       if (entry) {
         if (entry.runLength > 0) {
           const resp = await this.source.getBytes(
@@ -902,8 +900,8 @@ export class PMTiles {
             expires: resp.expires,
           };
         } else {
-          d_o = header.leafDirectoryOffset + entry.offset;
-          d_l = entry.length;
+          dO = header.leafDirectoryOffset + entry.offset;
+          dL = entry.length;
         }
       } else {
         // TODO: We should in fact return a valid RangeResponse

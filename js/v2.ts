@@ -1,12 +1,12 @@
+import { decompressSync } from "fflate";
 import {
-  Source,
-  Header,
   Cache,
-  RangeResponse,
   Compression,
+  Header,
+  RangeResponse,
+  Source,
   TileType,
 } from "./index";
-import { decompressSync } from "fflate";
 
 export const shift = (n: number, shift: number) => {
   return n * Math.pow(2, shift);
@@ -60,14 +60,14 @@ export const queryLeafdir = (
   x: number,
   y: number
 ): EntryV2 | null => {
-  const offset_len = queryView(view, z | 0x80, x, y);
-  if (offset_len) {
+  const offsetLen = queryView(view, z | 0x80, x, y);
+  if (offsetLen) {
     return {
       z: z,
       x: x,
       y: y,
-      offset: offset_len[0],
-      length: offset_len[1],
+      offset: offsetLen[0],
+      length: offsetLen[1],
       is_dir: true,
     };
   }
@@ -75,14 +75,14 @@ export const queryLeafdir = (
 };
 
 export const queryTile = (view: DataView, z: number, x: number, y: number) => {
-  const offset_len = queryView(view, z, x, y);
-  if (offset_len) {
+  const offsetLen = queryView(view, z, x, y);
+  if (offsetLen) {
     return {
       z: z,
       x: x,
       y: y,
-      offset: offset_len[0],
-      length: offset_len[1],
+      offset: offsetLen[0],
+      length: offsetLen[1],
       is_dir: false,
     };
   }
@@ -128,15 +128,15 @@ const entrySort = (a: EntryV2, b: EntryV2): number => {
 };
 
 export const parseEntry = (dataview: DataView, i: number): EntryV2 => {
-  const z_raw = dataview.getUint8(i * 17);
-  const z = z_raw & 127;
+  const zRaw = dataview.getUint8(i * 17);
+  const z = zRaw & 127;
   return {
     z: z,
     x: getUint24(dataview, i * 17 + 1),
     y: getUint24(dataview, i * 17 + 4),
     offset: getUint48(dataview, i * 17 + 7),
     length: dataview.getUint32(i * 17 + 13, true),
-    is_dir: z_raw >> 7 === 1,
+    is_dir: zRaw >> 7 === 1,
   };
 };
 
@@ -188,11 +188,11 @@ export const deriveLeaf = (view: DataView, tile: Zxy): Zxy | null => {
   const numEntries = view.byteLength / 17;
   const entry = parseEntry(view, numEntries - 1);
   if (entry.is_dir) {
-    const leaf_level = entry.z;
-    const level_diff = tile.z - leaf_level;
-    const leaf_x = Math.trunc(tile.x / (1 << level_diff));
-    const leaf_y = Math.trunc(tile.y / (1 << level_diff));
-    return { z: leaf_level, x: leaf_x, y: leaf_y };
+    const leafLevel = entry.z;
+    const levelDiff = tile.z - leafLevel;
+    const leafX = Math.trunc(tile.x / (1 << levelDiff));
+    const leafY = Math.trunc(tile.y / (1 << levelDiff));
+    return { z: leafLevel, x: leafX, y: leafY };
   }
   return null;
 };
@@ -202,57 +202,57 @@ async function getHeader(source: Source): Promise<Header> {
 
   const dataview = new DataView(resp.data);
 
-  const json_size = dataview.getUint32(4, true);
-  const root_entries = dataview.getUint16(8, true);
+  const jsonSize = dataview.getUint32(4, true);
+  const rootEntries = dataview.getUint16(8, true);
 
   const dec = new TextDecoder("utf-8");
-  const json_metadata = JSON.parse(
-    dec.decode(new DataView(resp.data, 10, json_size))
+  const jsonMetadata = JSON.parse(
+    dec.decode(new DataView(resp.data, 10, jsonSize))
   );
-  let tile_compression = Compression.Unknown;
-  if (json_metadata.compression === "gzip") {
-    tile_compression = Compression.Gzip;
+  let tileCompression = Compression.Unknown;
+  if (jsonMetadata.compression === "gzip") {
+    tileCompression = Compression.Gzip;
   }
 
   let minzoom = 0;
-  if ("minzoom" in json_metadata) {
-    minzoom = +json_metadata.minzoom;
+  if ("minzoom" in jsonMetadata) {
+    minzoom = +jsonMetadata.minzoom;
   }
 
   let maxzoom = 0;
-  if ("maxzoom" in json_metadata) {
-    maxzoom = +json_metadata.maxzoom;
+  if ("maxzoom" in jsonMetadata) {
+    maxzoom = +jsonMetadata.maxzoom;
   }
 
-  let center_lon = 0;
-  let center_lat = 0;
-  let center_zoom = 0;
-  let min_lon = -180.0;
-  let min_lat = -85.0;
-  let max_lon = 180.0;
-  let max_lat = 85.0;
+  let centerLon = 0;
+  let centerLat = 0;
+  let centerZoom = 0;
+  let minLon = -180.0;
+  let minLat = -85.0;
+  let maxLon = 180.0;
+  let maxLat = 85.0;
 
-  if (json_metadata.bounds) {
-    const split = json_metadata.bounds.split(",");
-    min_lon = +split[0];
-    min_lat = +split[1];
-    max_lon = +split[2];
-    max_lat = +split[3];
+  if (jsonMetadata.bounds) {
+    const split = jsonMetadata.bounds.split(",");
+    minLon = +split[0];
+    minLat = +split[1];
+    maxLon = +split[2];
+    maxLat = +split[3];
   }
 
-  if (json_metadata.center) {
-    const split = json_metadata.center.split(",");
-    center_lon = +split[0];
-    center_lat = +split[1];
-    center_zoom = +split[2];
+  if (jsonMetadata.center) {
+    const split = jsonMetadata.center.split(",");
+    centerLon = +split[0];
+    centerLat = +split[1];
+    centerZoom = +split[2];
   }
 
   const header = {
     specVersion: dataview.getUint16(2, true),
-    rootDirectoryOffset: 10 + json_size,
-    rootDirectoryLength: root_entries * 17,
+    rootDirectoryOffset: 10 + jsonSize,
+    rootDirectoryLength: rootEntries * 17,
     jsonMetadataOffset: 10,
-    jsonMetadataLength: json_size,
+    jsonMetadataLength: jsonSize,
     leafDirectoryOffset: 0,
     leafDirectoryLength: undefined,
     tileDataOffset: 0,
@@ -262,17 +262,17 @@ async function getHeader(source: Source): Promise<Header> {
     numTileContents: 0,
     clustered: false,
     internalCompression: Compression.None,
-    tileCompression: tile_compression,
+    tileCompression: tileCompression,
     tileType: TileType.Mvt,
     minZoom: minzoom,
     maxZoom: maxzoom,
-    minLon: min_lon,
-    minLat: min_lat,
-    maxLon: max_lon,
-    maxLat: max_lat,
-    centerZoom: center_zoom,
-    centerLon: center_lon,
-    centerLat: center_lat,
+    minLon: minLon,
+    minLat: minLat,
+    maxLon: maxLon,
+    maxLat: maxLat,
+    centerZoom: centerZoom,
+    centerLon: centerLon,
+    centerLat: centerLat,
     etag: resp.etag,
   };
   return header;
@@ -287,65 +287,65 @@ async function getZxy(
   y: number,
   signal?: AbortSignal
 ): Promise<RangeResponse | undefined> {
-  let root_dir = await cache.getArrayBuffer(
+  let rootDir = await cache.getArrayBuffer(
     source,
     header.rootDirectoryOffset,
     header.rootDirectoryLength,
     header
   );
   if (header.specVersion === 1) {
-    root_dir = sortDir(root_dir);
+    rootDir = sortDir(rootDir);
   }
 
-  const entry = queryTile(new DataView(root_dir), z, x, y);
+  const entry = queryTile(new DataView(rootDir), z, x, y);
   if (entry) {
     const resp = await source.getBytes(entry.offset, entry.length, signal);
-    let tile_data = resp.data;
+    let tileData = resp.data;
 
-    const view = new DataView(tile_data);
+    const view = new DataView(tileData);
     if (view.getUint8(0) == 0x1f && view.getUint8(1) == 0x8b) {
-      tile_data = decompressSync(new Uint8Array(tile_data));
+      tileData = decompressSync(new Uint8Array(tileData));
     }
 
     return {
-      data: tile_data,
+      data: tileData,
     };
   }
-  const leafcoords = deriveLeaf(new DataView(root_dir), { z: z, x: x, y: y });
+  const leafcoords = deriveLeaf(new DataView(rootDir), { z: z, x: x, y: y });
 
   if (leafcoords) {
-    const leafdir_entry = queryLeafdir(
-      new DataView(root_dir),
+    const leafdirEntry = queryLeafdir(
+      new DataView(rootDir),
       leafcoords.z,
       leafcoords.x,
       leafcoords.y
     );
-    if (leafdir_entry) {
-      let leaf_dir = await cache.getArrayBuffer(
+    if (leafdirEntry) {
+      let leafDir = await cache.getArrayBuffer(
         source,
-        leafdir_entry.offset,
-        leafdir_entry.length,
+        leafdirEntry.offset,
+        leafdirEntry.length,
         header
       );
 
       if (header.specVersion === 1) {
-        leaf_dir = sortDir(leaf_dir);
+        leafDir = sortDir(leafDir);
       }
-      const tile_entry = queryTile(new DataView(leaf_dir), z, x, y);
-      if (tile_entry) {
+      const tileEntry = queryTile(new DataView(leafDir), z, x, y);
+      if (tileEntry) {
         const resp = await source.getBytes(
-          tile_entry.offset,
-          tile_entry.length,
+          tileEntry.offset,
+          tileEntry.length,
           signal
         );
-        let tile_data = resp.data;
+        let tileData = resp.data;
 
-        const view = new DataView(tile_data);
+        const view = new DataView(tileData);
         if (view.getUint8(0) == 0x1f && view.getUint8(1) == 0x8b) {
-          tile_data = decompressSync(new Uint8Array(tile_data));
+          tileData = decompressSync(new Uint8Array(tileData));
         }
         return {
-          data: tile_data,
+          data: tileData,
         };
       }
     }

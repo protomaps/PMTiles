@@ -1,3 +1,8 @@
+3.0.0-alpha.0
+
+* package.json defaults to ES6 module, fixing issues related to named imports [#317, #248]
+* Internal code has consistent naming and style conventions [#287]
+
 2.11.0
 
 * `FetchSource` takes optional 2nd param `Headers` to apply custom headers to all requests.

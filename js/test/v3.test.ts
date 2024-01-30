@@ -312,7 +312,7 @@ test("etags are part of key", async () => {
     );
   });
 
-  cache.invalidate(source, "etag_2");
+  cache.invalidate(source);
   header = await cache.getHeader(source);
   assert.ok(
     await cache.getDirectory(
@@ -346,7 +346,7 @@ test("soft failure on etag weirdness", async () => {
   });
 
   source.etag = "etag_1";
-  cache.invalidate(source, "etag_2");
+  cache.invalidate(source);
 
   header = await cache.getHeader(source);
   assert.strictEqual(header.etag, undefined);

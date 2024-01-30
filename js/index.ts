@@ -257,7 +257,8 @@ export interface Source {
   getBytes: (
     offset: number,
     length: number,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    etag?: string
   ) => Promise<RangeResponse>;
 
   getKey: () => string;
@@ -304,6 +305,7 @@ export class FetchSource implements Source {
     offset: number,
     length: number,
     passedSignal?: AbortSignal
+    etag?: string
   ): Promise<RangeResponse> {
     let controller: AbortController | undefined;
     let signal: AbortSignal | undefined;
@@ -316,19 +318,34 @@ export class FetchSource implements Source {
     }
 
     const requestHeaders = new Headers(this.customHeaders);
-    requestHeaders.set("Range", `bytes=${offset}-${offset + length - 1}`);
+    requestHeaders.set("range", `bytes=${offset}-${offset + length - 1}`);
+    if (etag) {
+      requestHeaders.set("if-match", etag);
+    }
+
+    // We're asking for the header, and we don't want a response from the browser
+    // cache, because we might be re-validating the entire resource
+    // so we need to always ask for the header from the origin.
+    // to avoid this we'd need to change all APIs to store whether or not we're
+    // making a revalidation request.
+    let cache:string | undefined;
+    if (offset === 0) {
+      cache = "reload";
+    }
 
     let resp = await fetch(this.url, {
       signal: signal,
+      cache: cache,
       headers: requestHeaders,
     });
 
-    // TODO: can return 416 with offset > 0 if content changed, which will have a blank etag.
-    // See https://github.com/protomaps/PMTiles/issues/90
+    if (resp.status === 412) {
+      throw new EtagMismatch(etag);
+    }
 
+    // handle edge case where the archive is < 16384 kb total.
+    // Retry with the exact length
     if (resp.status === 416 && offset === 0) {
-      // some HTTP servers don't accept ranges beyond the end of the resource.
-      // Retry with the exact length
       const contentRange = resp.headers.get("Content-Range");
       if (!contentRange || !contentRange.startsWith("bytes */")) {
         throw Error("Missing content-length on 416 response");
@@ -344,10 +361,9 @@ export class FetchSource implements Source {
       throw Error(`Bad response code: ${resp.status}`);
     }
 
-    const contentLength = resp.headers.get("Content-Length");
-
     // some well-behaved backends, e.g. DigitalOcean CDN, respond with 200 instead of 206
     // but we also need to detect no support for Byte Serving which is returning the whole file
+    const contentLength = resp.headers.get("Content-Length");
     if (resp.status === 200 && (!contentLength || +contentLength > length)) {
       if (controller) controller.abort();
       throw Error(
@@ -355,10 +371,16 @@ export class FetchSource implements Source {
       );
     }
 
+    // if it's a weak etag, it's not useful for us, so ignore it.
+    let new_etag = response.headers.get("Etag");
+    if (new_etag.startsWith("W/")) {
+      new_etag = undefined;
+    }
+
     const a = await resp.arrayBuffer();
     return {
       data: a,
-      etag: resp.headers.get("ETag") || undefined,
+      etag: new_etag || undefined,
       cacheControl: resp.headers.get("Cache-Control") || undefined,
       expires: resp.headers.get("Expires") || undefined,
     };
@@ -463,7 +485,7 @@ function detectVersion(a: ArrayBuffer): number {
 export class EtagMismatch extends Error {}
 
 export interface Cache {
-  getHeader: (source: Source, currentEtag?: string) => Promise<Header>;
+  getHeader: (source: Source) => Promise<Header>;
   getDirectory: (
     source: Source,
     offset: number,
@@ -476,14 +498,13 @@ export interface Cache {
     length: number,
     header: Header
   ) => Promise<ArrayBuffer>;
-  invalidate: (source: Source, currentEtag: string) => Promise<void>;
+  invalidate: (source: Source) => Promise<void>;
 }
 
 async function getHeaderAndRoot(
   source: Source,
   decompress: DecompressFunc,
-  prefetch: boolean,
-  currentEtag?: string
+  prefetch: boolean
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
   const resp = await source.getBytes(0, 16384);
 
@@ -499,15 +520,7 @@ async function getHeaderAndRoot(
 
   const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
 
-  let respEtag = resp.etag;
-  if (currentEtag && resp.etag !== currentEtag) {
-    console.warn(
-      `ETag conflict detected; your HTTP server might not support content-based ETag headers. ETags disabled for ${source.getKey()}`
-    );
-    respEtag = undefined;
-  }
-
-  const header = bytesToHeader(headerData, respEtag);
+  const header = bytesToHeader(headerData, resp.etag);
 
   // optimistically set the root directory
   // TODO check root bounds
@@ -536,12 +549,7 @@ async function getDirectory(
   length: number,
   header: Header
 ): Promise<Entry[]> {
-  const resp = await source.getBytes(offset, length);
-
-  if (header.etag && header.etag !== resp.etag) {
-    throw new EtagMismatch(resp.etag);
-  }
-
+  const resp = await source.getBytes(offset, length, undefined, header.etag);
   const data = await decompress(resp.data, header.internalCompression);
   const directory = deserializeIndex(data);
   if (directory.length === 0) {
@@ -584,12 +592,7 @@ export class ResolvedValueCache {
       return data as Header;
     }
 
-    const res = await getHeaderAndRoot(
-      source,
-      this.decompress,
-      this.prefetch,
-      currentEtag
-    );
+    const res = await getHeaderAndRoot(source, this.decompress, this.prefetch);
     if (res[1]) {
       this.cache.set(res[1][0], {
         lastUsed: this.counter++,
@@ -653,10 +656,8 @@ export class ResolvedValueCache {
       return data as ArrayBuffer;
     }
 
-    const resp = await source.getBytes(offset, length);
-    if (header.etag && header.etag !== resp.etag) {
-      throw new EtagMismatch(header.etag);
-    }
+    const resp = await source.getBytes(offset, length, undefined, header.etag);
+
     this.cache.set(cacheKey, {
       lastUsed: this.counter++,
       data: resp.data,
@@ -681,9 +682,9 @@ export class ResolvedValueCache {
     }
   }
 
-  async invalidate(source: Source, currentEtag: string) {
+  async invalidate(source: Source) {
     this.cache.delete(source.getKey());
-    await this.getHeader(source, currentEtag);
+    await this.getHeader(source);
   }
 }
 
@@ -725,7 +726,7 @@ export class SharedPromiseCache {
     }
 
     const p = new Promise<Header>((resolve, reject) => {
-      getHeaderAndRoot(source, this.decompress, this.prefetch, currentEtag)
+      getHeaderAndRoot(source, this.decompress, this.prefetch)
         .then((res) => {
           if (res[1]) {
             this.cache.set(res[1][0], {
@@ -793,11 +794,8 @@ export class SharedPromiseCache {
 
     const p = new Promise<ArrayBuffer>((resolve, reject) => {
       source
-        .getBytes(offset, length)
+        .getBytes(offset, length, undefined, header.etag)
         .then((resp) => {
-          if (header.etag && header.etag !== resp.etag) {
-            throw new EtagMismatch(resp.etag);
-          }
           resolve(resp.data);
           if (this.cache.has(cacheKey)) {
           }
@@ -827,9 +825,9 @@ export class SharedPromiseCache {
     }
   }
 
-  async invalidate(source: Source, currentEtag: string) {
+  async invalidate(source: Source) {
     this.cache.delete(source.getKey());
-    await this.getHeader(source, currentEtag);
+    await this.getHeader(source);
   }
 }
 
@@ -898,11 +896,9 @@ export class PMTiles {
           const resp = await this.source.getBytes(
             header.tileDataOffset + entry.offset,
             entry.length,
-            signal
+            signal,
+            header.etag
           );
-          if (header.etag && header.etag !== resp.etag) {
-            throw new EtagMismatch(resp.etag);
-          }
           return {
             data: await this.decompress(resp.data, header.tileCompression),
             cacheControl: resp.cacheControl,
@@ -930,7 +926,7 @@ export class PMTiles {
       return await this.getZxyAttempt(z, x, y, signal);
     } catch (e) {
       if (e instanceof EtagMismatch) {
-        this.cache.invalidate(this.source, e.message);
+        this.cache.invalidate(this.source);
         return await this.getZxyAttempt(z, x, y, signal);
       }
       throw e;
@@ -942,11 +938,10 @@ export class PMTiles {
 
     const resp = await this.source.getBytes(
       header.jsonMetadataOffset,
-      header.jsonMetadataLength
+      header.jsonMetadataLength,
+      undefined,
+      header.etag
     );
-    if (header.etag && header.etag !== resp.etag) {
-      throw new EtagMismatch(resp.etag);
-    }
     const decompressed = await this.decompress(
       resp.data,
       header.internalCompression
@@ -960,7 +955,7 @@ export class PMTiles {
       return await this.getMetadataAttempt();
     } catch (e) {
       if (e instanceof EtagMismatch) {
-        this.cache.invalidate(this.source, e.message);
+        this.cache.invalidate(this.source);
         return await this.getMetadataAttempt();
       }
       throw e;

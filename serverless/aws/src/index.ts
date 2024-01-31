@@ -54,7 +54,7 @@ class S3Source implements Source {
     return this.archive_name;
   }
 
-  async getBytes(offset: number, length: number): Promise<RangeResponse> {
+  async getBytes(offset: number, length: number, signal?:AbortSignal, etag?: string): Promise<RangeResponse> {
     const resp = await s3client.send(
       new GetObjectCommand({
         Bucket: process.env.BUCKET!,

@@ -327,8 +327,7 @@ export class FetchSource implements Source {
     // * it requires CORS configuration becasue If-Match is not a CORs-safelisted header
     // CORs configuration should expose ETag.
     // if any etag mismatch is detected, we need to ignore the browser cache
-    //biome-ignore lint: the type of "cache" is incompatible between cloudflare workers and browser
-    let cache: any;
+    let cache: string | undefined;
     if (this.revalidating) {
       cache = "reload";
     }
@@ -337,7 +336,8 @@ export class FetchSource implements Source {
       signal: signal,
       cache: cache,
       headers: requestHeaders,
-    });
+      //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
+    } as any);
 
     // handle edge case where the archive is < 16384 kb total.
     if (offset === 0 && resp.status === 416) {
@@ -350,7 +350,8 @@ export class FetchSource implements Source {
         signal: signal,
         cache: "reload",
         headers: { range: `bytes=0-${actualLength - 1}` },
-      });
+        //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
+      } as any);
     }
 
     // if it's a weak etag, it's not useful for us, so ignore it.

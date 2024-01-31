@@ -131,7 +131,8 @@ const v3compat =
   (v4: AddProtocolAction): V3OrV4Protocol =>
   (requestParameters, arg2) => {
     if (arg2 instanceof AbortController) {
-      return v4(requestParameters, arg2);
+      // biome-ignore lint: overloading return type not handled by compiler
+      return v4(requestParameters, arg2) as any;
     }
     const abortController = new AbortController();
     v4(requestParameters, abortController)

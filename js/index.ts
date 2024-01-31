@@ -160,11 +160,16 @@ async function defaultDecompress(
     return buf;
   }
   if (compression === Compression.Gzip) {
+    // biome-ignore lint: needed to detect DecompressionStream in browser+node+cloudflare workers
     if (typeof (globalThis as any).DecompressionStream === "undefined") {
       return decompressSync(new Uint8Array(buf));
     }
-    const stream = new Response(buf).body!;
+    const stream = new Response(buf).body;
+    if (!stream) {
+      throw Error("Failed to read response stream");
+    }
     const result: ReadableStream<Uint8Array> = stream.pipeThrough(
+      // biome-ignore lint: needed to detect DecompressionStream in browser+node+cloudflare workers
       new (globalThis as any).DecompressionStream("gzip")
     );
     return new Response(result).arrayBuffer();
@@ -258,7 +263,9 @@ export interface Source {
   getKey: () => string;
 }
 
-export class FileAPISource implements Source {
+// uses the Browser's File API, which is different from the NodeJS file API.
+// see https://developer.mozilla.org/en-US/docs/Web/API/File_API
+export class FileSource implements Source {
   file: File;
 
   constructor(file: File) {
@@ -930,7 +937,7 @@ export class PMTiles {
     }
   }
 
-  async getMetadataAttempt(): Promise<any> {
+  async getMetadataAttempt(): Promise<unknown> {
     const header = await this.cache.getHeader(this.source);
 
     const resp = await this.source.getBytes(
@@ -948,7 +955,7 @@ export class PMTiles {
     return JSON.parse(dec.decode(decompressed));
   }
 
-  async getMetadata(): Promise<any> {
+  async getMetadata(): Promise<unknown> {
     try {
       return await this.getMetadataAttempt();
     } catch (e) {

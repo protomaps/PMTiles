@@ -1,6 +1,6 @@
 import { useState, Dispatch, SetStateAction, useCallback } from "react";
 import maplibregl from "maplibre-gl";
-import { PMTiles, FileAPISource } from "../../js/index";
+import { PMTiles, FileSource } from "../../js/index";
 import { styled } from "./stitches.config";
 import { useDropzone } from "react-dropzone";
 
@@ -108,7 +108,7 @@ function Start(props: {
   setFile: Dispatch<SetStateAction<PMTiles | undefined>>;
 }) {
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    props.setFile(new PMTiles(new FileAPISource(acceptedFiles[0])));
+    props.setFile(new PMTiles(new FileSource(acceptedFiles[0])));
   }, []);
 
   const { acceptedFiles, getRootProps, getInputProps } = useDropzone({

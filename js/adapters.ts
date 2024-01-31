@@ -1,15 +1,26 @@
+// biome-ignore lint: needed for Leaflet + IIFE to work
 declare const L: any;
+// biome-ignore lint: needed for window.URL to disambiguate from cloudflare workers
 declare const window: any;
-declare const document: any;
+declare const document: DocumentLike;
 
+import type { Coords } from "leaflet";
 import { PMTiles, TileType } from "./index";
 
-export const leafletRasterLayer = (source: PMTiles, options: any) => {
+interface DocumentLike {
+  // biome-ignore lint: we don't want to bring in the entire document type
+  createElement: (s: string) => any;
+}
+
+// biome-ignore lint: we don't want to bring in the entire document type
+type DoneCallback = (error?: Error, tile?: any) => void;
+
+export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
   let loaded = false;
   let mimeType = "";
   const cls = L.GridLayer.extend({
-    createTile: (coord: any, done: any) => {
-      const el: any = document.createElement("img");
+    createTile: (coord: Coords, done: DoneCallback) => {
+      const el = document.createElement("img");
       const controller = new AbortController();
       const signal = controller.signal;
       el.cancel = () => {
@@ -40,8 +51,8 @@ export const leafletRasterLayer = (source: PMTiles, options: any) => {
             const blob = new Blob([arr.data], { type: mimeType });
             const imageUrl = window.URL.createObjectURL(blob);
             el.src = imageUrl;
-            el.cancel = null;
-            done(null, el);
+            el.cancel = undefined;
+            done(undefined, el);
           }
         })
         .catch((e) => {

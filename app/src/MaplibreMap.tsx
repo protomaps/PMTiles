@@ -102,6 +102,13 @@ interface LayerVisibility {
   visible: boolean;
 }
 
+interface PMTilesMetadata {
+  name?: string;
+  type?: string;
+  tilestats?: unknown;
+  vector_layers: LayerSpecification[];
+}
+
 const LayersVisibilityController = (props: {
   layers: LayerVisibility[];
   onChange: (layers: LayerVisibility[]) => void;
@@ -181,7 +188,7 @@ const LayersVisibilityController = (props: {
 
 const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
   let header = await file.getHeader();
-  let metadata = await file.getMetadata();
+  let metadata = (await file.getMetadata()) as PMTilesMetadata;
   let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
@@ -222,7 +229,7 @@ const vectorStyle = async (
   layersVisibility: LayerVisibility[];
 }> => {
   let header = await file.getHeader();
-  let metadata = await file.getMetadata();
+  let metadata = (await file.getMetadata()) as PMTilesMetadata;
   let layers: LayerSpecification[] = [];
   let baseOpacity = 0.35;
 
@@ -233,14 +240,8 @@ const vectorStyle = async (
 
   var tilestats: any;
   var vector_layers: LayerSpecification[];
-  if (metadata.json) {
-    let j = JSON.parse(metadata.json);
-    tilestats = j.tilestats;
-    vector_layers = j.vector_layers;
-  } else {
-    tilestats = metadata.tilestats;
-    vector_layers = metadata.vector_layers;
-  }
+  tilestats = metadata.tilestats;
+  vector_layers = metadata.vector_layers;
 
   if (vector_layers) {
     for (let [i, layer] of vector_layers.entries()) {

@@ -327,7 +327,8 @@ export class FetchSource implements Source {
     // * it requires CORS configuration becasue If-Match is not a CORs-safelisted header
     // CORs configuration should expose ETag.
     // if any etag mismatch is detected, we need to ignore the browser cache
-    let cache: "reload" | undefined;
+    //biome-ignore lint: the type of "cache" is incompatible between cloudflare workers and browser
+    let cache: any;
     if (this.revalidating) {
       cache = "reload";
     }

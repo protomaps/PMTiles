@@ -1,8 +1,11 @@
-3.0.1-alpha.1
+3.0.1-alpha.2
 
 * FileApiSource renamed to FileSource
-* package.json defaults to ES6 module, fixing issues related to named imports [#317, #248]
+* package.json defines **ES6 module only** (no CommonJS), fixing issues related to named imports [#317, #248]
 * support MapLibre GL v4.x
+* `Source` API changed to take ETag, making conditional `If-Match` requests possible [#90]
+* FetchSource includes cachebuster logic for browser cache only on ETag change
+* Ignore weak ETags, greatly simplify ETag logic
 * Internal code has consistent naming and style conventions, change to biome linter [#287]
 
 2.11.0

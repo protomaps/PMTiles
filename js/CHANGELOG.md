@@ -1,7 +1,9 @@
-3.0.0-alpha.0
+3.0.1-alpha.1
 
+* FileApiSource renamed to FileSource
 * package.json defaults to ES6 module, fixing issues related to named imports [#317, #248]
-* Internal code has consistent naming and style conventions [#287]
+* support MapLibre GL v4.x
+* Internal code has consistent naming and style conventions, change to biome linter [#287]
 
 2.11.0
 

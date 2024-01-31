@@ -287,12 +287,12 @@ export class FileSource implements Source {
 export class FetchSource implements Source {
   url: string;
   customHeaders: Headers;
-  revalidating: boolean;
+  mustReload: boolean;
 
   constructor(url: string, customHeaders: Headers = new Headers()) {
     this.url = url;
     this.customHeaders = customHeaders;
-    this.revalidating = false;
+    this.mustReload = false;
   }
 
   getKey() {
@@ -328,7 +328,7 @@ export class FetchSource implements Source {
     // CORs configuration should expose ETag.
     // if any etag mismatch is detected, we need to ignore the browser cache
     let cache: string | undefined;
-    if (this.revalidating) {
+    if (this.mustReload) {
       cache = "reload";
     }
 
@@ -362,7 +362,7 @@ export class FetchSource implements Source {
 
     // some storage systems are misbehaved (Cloudflare R2)
     if (resp.status === 416 || (etag && newEtag && newEtag !== etag)) {
-      this.revalidating = true;
+      this.mustReload = true;
       throw new EtagMismatch(etag);
     }
 

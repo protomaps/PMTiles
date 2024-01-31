@@ -371,7 +371,7 @@ test("pmtiles get metadata", async () => {
   );
   const p = new PMTiles(source);
   const metadata = await p.getMetadata();
-  assert.ok(metadata.name);
+  assert.ok((metadata as { name: string }).name);
 });
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_2.pmtiles
@@ -383,7 +383,7 @@ test("pmtiles handle retries", async () => {
   source.etag = "1";
   const p = new PMTiles(source);
   const metadata = await p.getMetadata();
-  assert.ok(metadata.name);
+  assert.ok((metadata as { name: string }).name);
   source.etag = "2";
   source.replaceData("test/data/test_fixture_2.pmtiles");
   assert.ok(await p.getZxy(0, 0, 0));

@@ -304,7 +304,7 @@ export class FetchSource implements Source {
   async getBytes(
     offset: number,
     length: number,
-    passedSignal?: AbortSignal
+    passedSignal?: AbortSignal,
     etag?: string
   ): Promise<RangeResponse> {
     let controller: AbortController | undefined;
@@ -328,16 +328,24 @@ export class FetchSource implements Source {
     // so we need to always ask for the header from the origin.
     // to avoid this we'd need to change all APIs to store whether or not we're
     // making a revalidation request.
-    let cache:string | undefined;
+    let cache: "reload" | undefined;
     if (offset === 0) {
       cache = "reload";
     }
 
-    let resp = await fetch(this.url, {
-      signal: signal,
-      cache: cache,
-      headers: requestHeaders,
-    });
+    let resp: Response;
+    try {
+      resp = await fetch(this.url, {
+        signal: signal,
+        cache: cache,
+        headers: requestHeaders,
+      });
+    } catch (e) {
+      console.error(
+        "pmtiles js v3 now requires the If-Match header in CORS configuration: see https://docs.protomaps.com/pmtiles/"
+      );
+      throw e;
+    }
 
     if (resp.status === 412) {
       throw new EtagMismatch(etag);
@@ -372,15 +380,15 @@ export class FetchSource implements Source {
     }
 
     // if it's a weak etag, it's not useful for us, so ignore it.
-    let new_etag = response.headers.get("Etag");
-    if (new_etag.startsWith("W/")) {
-      new_etag = undefined;
+    let newEtag = resp.headers.get("Etag");
+    if (newEtag?.startsWith("W/")) {
+      newEtag = null;
     }
 
     const a = await resp.arrayBuffer();
     return {
       data: a,
-      etag: new_etag || undefined,
+      etag: newEtag || undefined,
       cacheControl: resp.headers.get("Cache-Control") || undefined,
       expires: resp.headers.get("Expires") || undefined,
     };

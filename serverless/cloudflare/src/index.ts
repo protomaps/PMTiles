@@ -52,7 +52,7 @@ class R2Source implements Source {
     return this.archive_name;
   }
 
-  async getBytes(offset: number, length: number): Promise<RangeResponse> {
+  async getBytes(offset: number, length: number, signal?: AbortSignal, etag?: string): Promise<RangeResponse> {
     const resp = await this.env.BUCKET.get(
       pmtiles_path(this.archive_name, this.env.PMTILES_PATH),
       {

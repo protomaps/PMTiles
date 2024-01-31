@@ -1,6 +1,8 @@
 import fs from "fs";
 import assert from "node:assert";
 import { test } from "node:test";
+import { http, HttpResponse } from "msw";
+import { setupServer } from "msw/node";
 
 import {
   BufferPosition,
@@ -15,6 +17,45 @@ import {
   tileIdToZxy,
   zxyToTileId,
 } from "../index";
+
+class MockServer {
+  etag?: string;
+  numRequests: number;
+
+  reset() {
+    this.numRequests = 0;
+    this.etag = undefined;
+  }
+
+  constructor() {
+    this.numRequests = 0;
+    this.etag = undefined;
+    const serverBuffer = fs.readFileSync("test/data/test_fixture_1.pmtiles");
+    const server = setupServer(
+      http.get(
+        "http://localhost:1337/example.pmtiles",
+        ({ request, params }) => {
+          this.numRequests++;
+          const range = request.headers.get("range")?.substr(6).split("-");
+          if (!range) {
+            throw Error("invalid range");
+          }
+          const offset = +range[0];
+          const length = +range[1];
+          const body = serverBuffer.slice(offset, offset + length - 1);
+          return new HttpResponse(body, {
+            status: 206,
+            statusText: "OK",
+            headers: { etag: this.etag } as HeadersInit,
+          });
+        }
+      )
+    );
+    server.listen({ onUnhandledRequest: "error" });
+  }
+}
+
+const mockserver = new MockServer();
 
 test("varint", () => {
   let b: BufferPosition = {
@@ -291,66 +332,30 @@ test("multiple sources in a single cache", async () => {
   assert.strictEqual(cache.cache.size, 4);
 });
 
-test("etags are part of key", async () => {
-  const cache = new SharedPromiseCache(6400, false);
-  const source = new TestNodeFileSource(
-    "test/data/test_fixture_1.pmtiles",
-    "1"
-  );
-  source.etag = "etag_1";
-  let header = await cache.getHeader(source);
-  assert.strictEqual(header.etag, "etag_1");
-
-  source.etag = "etag_2";
-
-  assert.rejects(async () => {
-    await cache.getDirectory(
-      source,
-      header.rootDirectoryOffset,
-      header.rootDirectoryLength,
-      header
-    );
-  });
-
-  cache.invalidate(source, "etag_2");
-  header = await cache.getHeader(source);
-  assert.ok(
-    await cache.getDirectory(
-      source,
-      header.rootDirectoryOffset,
-      header.rootDirectoryLength,
-      header
-    )
-  );
+test("etag change", async () => {
+  const p = new PMTiles("http://localhost:1337/example.pmtiles");
+  const tile = await p.getZxy(0, 0, 0);
+  // header + tile
+  assert.strictEqual(2, mockserver.numRequests);
+  mockserver.etag = "etag_2";
+  await p.getZxy(0, 0, 0);
+  // tile + header again + tile
+  assert.strictEqual(5, mockserver.numRequests);
 });
 
-test("soft failure on etag weirdness", async () => {
-  const cache = new SharedPromiseCache(6400, false);
-  const source = new TestNodeFileSource(
-    "test/data/test_fixture_1.pmtiles",
-    "1"
-  );
-  source.etag = "etag_1";
-  let header = await cache.getHeader(source);
-  assert.strictEqual(header.etag, "etag_1");
-
-  source.etag = "etag_2";
-
-  assert.rejects(async () => {
-    await cache.getDirectory(
-      source,
-      header.rootDirectoryOffset,
-      header.rootDirectoryLength,
-      header
-    );
-  });
-
-  source.etag = "etag_1";
-  cache.invalidate(source, "etag_2");
-
-  header = await cache.getHeader(source);
-  assert.strictEqual(header.etag, undefined);
+test("weak etags", async () => {
+  mockserver.reset();
+  const p = new PMTiles("http://localhost:1337/example.pmtiles");
+  const tile = await p.getZxy(0, 0, 0);
+  // header + tile
+  assert.strictEqual(2, mockserver.numRequests);
+  mockserver.etag = "W/weak_etag";
+  await p.getZxy(0, 0, 0);
+  assert.strictEqual(3, mockserver.numRequests);
 });
+
+// handle < 16384 bytes archive case
+// handle DigitalOcean case returning 200 instead of 206
 
 test("cache pruning by byte size", async () => {
   const cache = new SharedPromiseCache(2, false);
@@ -375,16 +380,3 @@ test("pmtiles get metadata", async () => {
 });
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_2.pmtiles
-test("pmtiles handle retries", async () => {
-  const source = new TestNodeFileSource(
-    "test/data/test_fixture_1.pmtiles",
-    "1"
-  );
-  source.etag = "1";
-  const p = new PMTiles(source);
-  const metadata = await p.getMetadata();
-  assert.ok((metadata as { name: string }).name);
-  source.etag = "2";
-  source.replaceData("test/data/test_fixture_2.pmtiles");
-  assert.ok(await p.getZxy(0, 0, 0));
-});

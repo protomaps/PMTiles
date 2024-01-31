@@ -1,5 +1,7 @@
 // biome-ignore lint: needed for Leaflet + IIFE to work
 declare const L: any;
+// biome-ignore lint: needed for window.URL to disambiguate from cloudflare workers
+declare const window: any;
 declare const document: DocumentLike;
 
 import type { Coords } from "leaflet";

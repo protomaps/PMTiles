@@ -85,6 +85,19 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
   return new cls(options);
 };
 
+type GetResourceResponse<T> = ExpiryData & {
+  data: T;
+};
+type AddProtocolAction = (
+  requestParameters: RequestParameters,
+  abortController: AbortController
+) => Promise<GetResourceResponse<unknown>>;
+
+type ExpiryData = {
+  cacheControl?: string | null;
+  expires?: string | null; // MapLibre can be a Date object
+};
+
 // copied from MapLibre /util/ajax.ts
 type RequestParameters = {
   url: string;
@@ -96,16 +109,50 @@ type RequestParameters = {
   collectResourceTiming?: boolean;
 };
 
-type ResponseCallback = (
-  error?: Error | null,
-  data?: unknown | null,
-  cacheControl?: string | null,
-  expires?: string | null
+// for legacy maplibre-3 interop
+type ResponseCallbackV3 = (
+  error?: Error | undefined,
+  data?: unknown | undefined,
+  cacheControl?: string | undefined,
+  expires?: string | undefined
 ) => void;
 
-type Cancelable = {
-  cancel: () => void;
-};
+type V3OrV4Protocol = <
+  T extends AbortController | ResponseCallbackV3,
+  R = T extends AbortController
+    ? Promise<GetResourceResponse<unknown>>
+    : { cancel: () => void },
+>(
+  requestParameters: RequestParameters,
+  arg2: T
+) => R;
+
+const v3compat =
+  (v4: AddProtocolAction): V3OrV4Protocol =>
+  (requestParameters, arg2) => {
+    if (arg2 instanceof AbortController) {
+      return v4(requestParameters, arg2);
+    }
+    const abortController = new AbortController();
+    v4(requestParameters, abortController)
+      .then(
+        (result) => {
+          return arg2(
+            undefined,
+            result.data,
+            result.cacheControl || "",
+            result.expires || ""
+          );
+        },
+        (err) => {
+          return arg2(err);
+        }
+      )
+      .catch((e) => {
+        return arg2(e);
+      });
+    return { cancel: () => abortController.abort() };
+  };
 
 export class Protocol {
   tiles: Map<string, PMTiles>;
@@ -122,10 +169,10 @@ export class Protocol {
     return this.tiles.get(url);
   }
 
-  tile = (
+  tilev4 = async (
     params: RequestParameters,
-    callback: ResponseCallback
-  ): Cancelable => {
+    abortController: AbortController
+  ) => {
     if (params.type === "json") {
       const pmtilesUrl = params.url.substr(10);
       let instance = this.tiles.get(pmtilesUrl);
@@ -134,23 +181,15 @@ export class Protocol {
         this.tiles.set(pmtilesUrl, instance);
       }
 
-      instance
-        .getHeader()
-        .then((h) => {
-          const tilejson = {
-            tiles: [`${params.url}/{z}/{x}/{y}`],
-            minzoom: h.minZoom,
-            maxzoom: h.maxZoom,
-            bounds: [h.minLon, h.minLat, h.maxLon, h.maxLat],
-          };
-          callback(null, tilejson, null, null);
-        })
-        .catch((e) => {
-          callback(e, null, null, null);
-        });
+      const h = await instance.getHeader();
 
       return {
-        cancel: () => {},
+        data: {
+          tiles: [`${params.url}/{z}/{x}/{y}`],
+          minzoom: h.minZoom,
+          maxzoom: h.maxZoom,
+          bounds: [h.minLon, h.minLat, h.maxLon, h.maxLat],
+        },
       };
     }
     const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
@@ -169,39 +208,20 @@ export class Protocol {
     const x = result[3];
     const y = result[4];
 
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const cancel = () => {
-      controller.abort();
-    };
-
-    instance.getHeader().then((header) => {
-      instance
-        ?.getZxy(+z, +x, +y, signal)
-        .then((resp) => {
-          if (resp) {
-            callback(
-              null,
-              new Uint8Array(resp.data),
-              resp.cacheControl,
-              resp.expires
-            );
-          } else {
-            if (header.tileType === TileType.Mvt) {
-              callback(null, new Uint8Array(), null, null);
-            } else {
-              callback(null, null, null, null);
-            }
-          }
-        })
-        .catch((e) => {
-          if ((e as Error).name !== "AbortError") {
-            callback(e, null, null, null);
-          }
-        });
-    });
-    return {
-      cancel: cancel,
-    };
+    const header = await instance.getHeader();
+    const resp = await instance?.getZxy(+z, +x, +y, abortController.signal);
+    if (resp) {
+      return {
+        data: new Uint8Array(resp.data),
+        cacheControl: resp.cacheControl,
+        expires: resp.expires,
+      };
+    }
+    if (header.tileType === TileType.Mvt) {
+      return { data: new Uint8Array() };
+    }
+    return { data: null };
   };
+
+  tile = v3compat(this.tilev4);
 }

@@ -287,10 +287,12 @@ export class FileSource implements Source {
 export class FetchSource implements Source {
   url: string;
   customHeaders: Headers;
+  revalidating: boolean;
 
   constructor(url: string, customHeaders: Headers = new Headers()) {
     this.url = url;
     this.customHeaders = customHeaders;
+    this.revalidating = false;
   }
 
   getKey() {
@@ -312,48 +314,32 @@ export class FetchSource implements Source {
     if (passedSignal) {
       signal = passedSignal;
     } else {
-      // TODO check this works or assert 206
       controller = new AbortController();
       signal = controller.signal;
     }
 
     const requestHeaders = new Headers(this.customHeaders);
     requestHeaders.set("range", `bytes=${offset}-${offset + length - 1}`);
-    if (etag) {
-      requestHeaders.set("if-match", etag);
-    }
 
-    // We're asking for the header, and we don't want a response from the browser
-    // cache, because we might be re-validating the entire resource
-    // so we need to always ask for the header from the origin.
-    // to avoid this we'd need to change all APIs to store whether or not we're
-    // making a revalidation request.
+    // we don't send if match because:
+    // * it disables browser caching completely (Chromium)
+    // * it requires a preflight request for every tile request
+    // * it requires CORS configuration becasue If-Match is not a CORs-safelisted header
+    // CORs configuration should expose ETag.
+    // if any etag mismatch is detected, we need to ignore the browser cache
     let cache: "reload" | undefined;
-    if (offset === 0) {
+    if (this.revalidating) {
       cache = "reload";
     }
 
-    let resp: Response;
-    try {
-      resp = await fetch(this.url, {
-        signal: signal,
-        cache: cache,
-        headers: requestHeaders,
-      });
-    } catch (e) {
-      console.error(
-        "pmtiles js v3 now requires the If-Match header in CORS configuration: see https://docs.protomaps.com/pmtiles/"
-      );
-      throw e;
-    }
-
-    if (resp.status === 412) {
-      throw new EtagMismatch(etag);
-    }
+    let resp = await fetch(this.url, {
+      signal: signal,
+      cache: cache,
+      headers: requestHeaders,
+    });
 
     // handle edge case where the archive is < 16384 kb total.
-    // Retry with the exact length
-    if (resp.status === 416 && offset === 0) {
+    if (offset === 0 && resp.status === 416) {
       const contentRange = resp.headers.get("Content-Range");
       if (!contentRange || !contentRange.startsWith("bytes */")) {
         throw Error("Missing content-length on 416 response");
@@ -361,8 +347,21 @@ export class FetchSource implements Source {
       const actualLength = +contentRange.substr(8);
       resp = await fetch(this.url, {
         signal: signal,
+        cache: "reload",
         headers: { range: `bytes=0-${actualLength - 1}` },
       });
+    }
+
+    // if it's a weak etag, it's not useful for us, so ignore it.
+    let newEtag = resp.headers.get("Etag");
+    if (newEtag?.startsWith("W/")) {
+      newEtag = null;
+    }
+
+    // some storage systems are misbehaved (Cloudflare R2)
+    if (resp.status === 416 || (etag && newEtag && newEtag !== etag)) {
+      this.revalidating = true;
+      throw new EtagMismatch(etag);
     }
 
     if (resp.status >= 300) {
@@ -377,12 +376,6 @@ export class FetchSource implements Source {
       throw Error(
         "Server returned no content-length header or content-length exceeding request. Check that your storage backend supports HTTP Byte Serving."
       );
-    }
-
-    // if it's a weak etag, it's not useful for us, so ignore it.
-    let newEtag = resp.headers.get("Etag");
-    if (newEtag?.startsWith("W/")) {
-      newEtag = null;
     }
 
     const a = await resp.arrayBuffer();

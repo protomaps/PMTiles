@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { PMTiles, Header } from "../../js/index";
-import { styled } from "./stitches.config";
 import { JsonViewer } from "@textea/json-viewer";
+import { useEffect, useState } from "react";
+import { Header, PMTiles } from "../../js/index";
+import { styled } from "./stitches.config";
 
 const Padded = styled("div", {
   padding: "2rem",
@@ -13,11 +13,11 @@ const Heading = styled("div", {
 });
 
 function Metadata(props: { file: PMTiles }) {
-  let [metadata, setMetadata] = useState<any>();
-  let [header, setHeader] = useState<Header | null>(null);
+  const [metadata, setMetadata] = useState<unknown>();
+  const [header, setHeader] = useState<Header | null>(null);
 
   useEffect(() => {
-    let pmtiles = props.file;
+    const pmtiles = props.file;
     const fetchData = async () => {
       setMetadata(await pmtiles.getMetadata());
       setHeader(await pmtiles.getHeader());

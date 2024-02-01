@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-import { renderToString } from "react-dom/server";
-import { PMTiles, TileType } from "../../js/index";
-import { Protocol } from "../../js/adapters";
-import { styled } from "./stitches.config";
+import {
+  LayerSpecification,
+  StyleSpecification,
+} from "@maplibre/maplibre-gl-style-spec";
+import { schemeSet3 } from "d3-scale-chromatic";
 import maplibregl from "maplibre-gl";
 import { MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { schemeSet3 } from "d3-scale-chromatic";
-import base_theme from "protomaps-themes-base";
-import {
-  StyleSpecification,
-  LayerSpecification,
-} from "@maplibre/maplibre-gl-style-spec";
+import baseTheme from "protomaps-themes-base";
+import React, { useState, useEffect, useRef } from "react";
+import { renderToString } from "react-dom/server";
+import { Protocol } from "../../js/adapters";
+import { PMTiles, TileType } from "../../js/index";
+import { styled } from "./stitches.config";
 
 const INITIAL_ZOOM = 0;
 const INITIAL_LNG = 0;
@@ -102,7 +102,7 @@ interface LayerVisibility {
   visible: boolean;
 }
 
-interface PMTilesMetadata {
+interface Metadata {
   name?: string;
   type?: string;
   tilestats?: unknown;
@@ -187,12 +187,12 @@ const LayersVisibilityController = (props: {
 };
 
 const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
-  let header = await file.getHeader();
-  let metadata = (await file.getMetadata()) as PMTilesMetadata;
+  const header = await file.getHeader();
+  const metadata = (await file.getMetadata()) as Metadata;
   let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
-    layers = base_theme("basemap", "black");
+    layers = baseTheme("basemap", "black");
   }
 
   layers.push({
@@ -206,7 +206,7 @@ const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
     sources: {
       source: {
         type: "raster",
-        tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
+        tiles: [`pmtiles://${file.source.getKey()}/{z}/{x}/{y}`],
         minzoom: header.minZoom,
         maxzoom: header.maxZoom,
       },
@@ -228,25 +228,23 @@ const vectorStyle = async (
   style: StyleSpecification;
   layersVisibility: LayerVisibility[];
 }> => {
-  let header = await file.getHeader();
-  let metadata = (await file.getMetadata()) as PMTilesMetadata;
+  const header = await file.getHeader();
+  const metadata = (await file.getMetadata()) as Metadata;
   let layers: LayerSpecification[] = [];
   let baseOpacity = 0.35;
 
   if (metadata.type !== "baselayer") {
-    layers = base_theme("basemap", "black");
+    layers = baseTheme("basemap", "black");
     baseOpacity = 0.9;
   }
 
-  var tilestats: any;
-  var vector_layers: LayerSpecification[];
-  tilestats = metadata.tilestats;
-  vector_layers = metadata.vector_layers;
+  const tilestats = metadata.tilestats;
+  const vectorLayers = metadata.vector_layers;
 
-  if (vector_layers) {
-    for (let [i, layer] of vector_layers.entries()) {
+  if (vectorLayers) {
+    for (const [i, layer] of vectorLayers.entries()) {
       layers.push({
-        id: layer.id + "_fill",
+        id: `${layer.id}_fill`,
         type: "fill",
         source: "source",
         "source-layer": layer.id,
@@ -268,7 +266,7 @@ const vectorStyle = async (
         filter: ["==", ["geometry-type"], "Polygon"],
       });
       layers.push({
-        id: layer.id + "_stroke",
+        id: `${layer.id}_stroke`,
         type: "line",
         source: "source",
         "source-layer": layer.id,
@@ -284,7 +282,7 @@ const vectorStyle = async (
         filter: ["==", ["geometry-type"], "LineString"],
       });
       layers.push({
-        id: layer.id + "_point",
+        id: `${layer.id}_point`,
         type: "circle",
         source: "source",
         "source-layer": layer.id,
@@ -315,7 +313,7 @@ const vectorStyle = async (
       sources: {
         source: {
           type: "vector",
-          tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
+          tiles: [`pmtiles://${file.source.getKey()}/{z}/{x}/{y}`],
           minzoom: header.minZoom,
           maxzoom: header.maxZoom,
           bounds: bounds,
@@ -331,7 +329,7 @@ const vectorStyle = async (
       glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
       layers: layers,
     },
-    layersVisibility: vector_layers.map((l: LayerSpecification) => ({
+    layersVisibility: vectorLayers.map((l: LayerSpecification) => ({
       id: l.id,
       visible: true,
     })),
@@ -339,11 +337,13 @@ const vectorStyle = async (
 };
 
 function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
-  let mapContainerRef = useRef<HTMLDivElement>(null);
-  let [hamburgerOpen, setHamburgerOpen] = useState<boolean>(true);
-  let [showAttributes, setShowAttributes] = useState<boolean>(false);
-  let [showTileBoundaries, setShowTileBoundaries] = useState<boolean>(false);
-  let [layersVisibility, setLayersVisibility] = useState<LayerVisibility[]>([]);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [hamburgerOpen, setHamburgerOpen] = useState<boolean>(true);
+  const [showAttributes, setShowAttributes] = useState<boolean>(false);
+  const [showTileBoundaries, setShowTileBoundaries] = useState<boolean>(false);
+  const [layersVisibility, setLayersVisibility] = useState<LayerVisibility[]>(
+    []
+  );
   const mapRef = useRef<maplibregl.Map | null>(null);
   const hoveredFeaturesRef = useRef<Set<MapGeoJSONFeature>>(new Set());
 
@@ -383,7 +383,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
   };
 
   useEffect(() => {
-    let protocol = new Protocol();
+    const protocol = new Protocol();
     maplibregl.addProtocol("pmtiles", protocol.tile);
     protocol.add(props.file); // this is necessary for non-HTTP sources
 
@@ -423,7 +423,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
 
       const { x, y } = e.point;
       const r = 2; // radius around the point
-      var features = map.queryRenderedFeatures([
+      let features = map.queryRenderedFeatures([
         [x - r, y - r],
         [x + r, y + r],
       ]);
@@ -436,7 +436,9 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
         hoveredFeatures.add(feature);
       }
 
-      let content = renderToString(<FeaturesProperties features={features} />);
+      const content = renderToString(
+        <FeaturesProperties features={features} />
+      );
       if (!features.length) {
         popup.remove();
       } else {
@@ -452,10 +454,10 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
   }, []);
 
   useEffect(() => {
-    let initStyle = async () => {
+    const initStyle = async () => {
       if (mapRef.current) {
-        let map = mapRef.current;
-        let header = await props.file.getHeader();
+        const map = mapRef.current;
+        const header = await props.file.getHeader();
         if (!props.mapHashPassed) {
           // the map hash was not passed, so auto-detect the initial viewport based on metadata
           map.fitBounds(
@@ -471,12 +473,12 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
         if (
           header.tileType === TileType.Png ||
           header.tileType === TileType.Webp ||
-          header.tileType == TileType.Jpeg
+          header.tileType === TileType.Jpeg
         ) {
-          let style = await rasterStyle(props.file);
+          const style = await rasterStyle(props.file);
           map.setStyle(style);
         } else {
-          let { style, layersVisibility } = await vectorStyle(props.file);
+          const { style, layersVisibility } = await vectorStyle(props.file);
           map.setStyle(style);
           setLayersVisibility(layersVisibility);
         }
@@ -488,7 +490,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
 
   return (
     <MapContainer ref={mapContainerRef}>
-      <div ref={mapContainerRef}></div>
+      <div ref={mapContainerRef} />
       <Hamburger onClick={toggleHamburger}>menu</Hamburger>
       {hamburgerOpen ? (
         <Options>

@@ -1,0 +1,20 @@
+{
+  "javascript": {
+    "formatter": {
+      "trailingComma": "es5"
+    }
+  },
+  "formatter": {
+    "indentStyle": "space"
+  },
+  "linter": {
+    "rules": {
+      "style": {
+        "useNamingConvention": {}
+      },
+      "nursery": {
+        "noUnusedImports": {}
+      }
+    }
+  }
+}

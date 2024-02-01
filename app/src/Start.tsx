@@ -1,8 +1,7 @@
-import { useState, Dispatch, SetStateAction, useCallback } from "react";
-import maplibregl from "maplibre-gl";
-import { PMTiles, FileSource } from "../../js/index";
-import { styled } from "./stitches.config";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { FileSource, PMTiles } from "../../js/index";
+import { styled } from "./stitches.config";
 
 import * as LabelPrimitive from "@radix-ui/react-label";
 
@@ -115,8 +114,8 @@ function Start(props: {
     onDrop,
   });
 
-  let [remoteUrl, setRemoteUrl] = useState<string>("");
-  let [selectedExample, setSelectedExample] = useState<number | null>(1);
+  const [remoteUrl, setRemoteUrl] = useState<string>("");
+  const [selectedExample, setSelectedExample] = useState<number | null>(1);
 
   const onRemoteUrlChangeHandler = (
     event: React.ChangeEvent<HTMLInputElement>

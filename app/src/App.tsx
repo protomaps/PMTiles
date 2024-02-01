@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { styled, globalStyles } from "./stitches.config";
-import { PMTiles } from "../../js/index";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import React, { useState, useEffect } from "react";
+import { PMTiles } from "../../js/index";
+import { globalStyles, styled } from "./stitches.config";
 
-import Start from "./Start";
 import Loader from "./Loader";
+import Start from "./Start";
 
 const Header = styled("div", {
   height: "$4",
@@ -57,15 +57,15 @@ const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "").substr(0, 8);
 function App() {
   globalStyles();
 
-  let [errorDisplay, setErrorDisplay] = useState<string | undefined>();
-  let [file, setFile] = useState<PMTiles | undefined>();
-  let [mapHashPassed, setMapHashPassed] = useState<boolean>(false);
+  const [errorDisplay, setErrorDisplay] = useState<string | undefined>();
+  const [file, setFile] = useState<PMTiles | undefined>();
+  const [mapHashPassed, setMapHashPassed] = useState<boolean>(false);
 
   // initial load
   useEffect(() => {
     const loadUrl = new URLSearchParams(location.search).get("url");
     if (loadUrl) {
-      let initialValue = new PMTiles(loadUrl);
+      const initialValue = new PMTiles(loadUrl);
       setFile(initialValue);
     }
     if (location.hash.includes("map")) {
@@ -93,7 +93,7 @@ function App() {
     }
   }, [file]);
 
-  let clear = (event: React.MouseEvent<HTMLAnchorElement>) => {
+  const clear = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     setFile(undefined);
   };

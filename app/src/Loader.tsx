@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PMTiles } from "../../js/index";
 import { styled } from "./stitches.config";
 
@@ -6,7 +6,7 @@ import Inspector from "./Inspector";
 import MaplibreMap from "./MaplibreMap";
 import Metadata from "./Metadata";
 
-import { MagnifyingGlassIcon, ImageIcon } from "@radix-ui/react-icons";
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 
 const StyledToolbar = styled(ToolbarPrimitive.Root, {
@@ -71,7 +71,7 @@ const ToolbarToggleGroup = StyledToggleGroup;
 const ToolbarToggleItem = StyledToggleItem;
 
 function Loader(props: { file: PMTiles; mapHashPassed: boolean }) {
-  let [tab, setTab] = useState("maplibre");
+  const [tab, setTab] = useState("maplibre");
 
   let view;
   if (tab === "maplibre") {

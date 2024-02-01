@@ -29,6 +29,7 @@
     "esbuild": "^0.20.0",
     "msw": "^2.1.5",
     "tsx": "^4.7.0",
+    "typedoc": "^0.25.7",
     "typescript": "^4.5.5"
   },
   "dependencies": {

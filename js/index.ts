@@ -2,6 +2,7 @@ import { decompressSync } from "fflate";
 import v2 from "./v2";
 export * from "./adapters";
 
+/** @hidden */
 export interface BufferPosition {
   buf: Uint8Array;
   pos: number;
@@ -34,6 +35,7 @@ function readVarintRemainder(l: number, p: BufferPosition): number {
   throw new Error("Expected varint not more than 10 bytes");
 }
 
+/** @hidden */
 export function readVarint(p: BufferPosition): number {
   const buf = p.buf;
   let b = buf[p.pos++];
@@ -390,6 +392,7 @@ export class FetchSource implements Source {
   }
 }
 
+/** @hidden */
 export function getUint64(v: DataView, offset: number): number {
   const wh = v.getUint32(offset + 4, true);
   const wl = v.getUint32(offset + 0, true);
@@ -834,6 +837,8 @@ export class SharedPromiseCache {
   }
 }
 
+// if source is a string, create a browser FetchSource().
+// if no cache is passed, create a browser SharedPromiseCache where simultaneous tile requests share intermediate requests.
 // biome-ignore lint: that's just how its capitalized
 export class PMTiles {
   source: Source;

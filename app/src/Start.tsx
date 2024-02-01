@@ -12,7 +12,7 @@ const Input = styled("input", {
   justifyContent: "center",
   fontSize: "$3",
   fontFamily: "$sans",
-  "&:focus": { boxShadow: `0 0 0 1px black` },
+  "&:focus": { boxShadow: "0 0 0 1px black" },
   width: "100%",
   border: "1px solid $white",
   padding: "$1",
@@ -141,7 +141,7 @@ function Start(props: {
         id="remoteUrl"
         placeholder="https://example.com/my_archive.pmtiles"
         onChange={onRemoteUrlChangeHandler}
-      ></Input>
+      />
       <Button color="gray" onClick={onSubmit} disabled={!remoteUrl.trim()}>
         Load URL
       </Button>

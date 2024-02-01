@@ -28,7 +28,7 @@ const itemStyles = {
   fontSize: "$2",
   alignItems: "center",
   "&:hover": { backgroundColor: "$hover", color: "$white" },
-  "&:focus": { position: "relative", boxShadow: `0 0 0 2px blue` },
+  "&:focus": { position: "relative", boxShadow: "0 0 0 2px blue" },
 };
 
 const StyledLink = styled(
@@ -73,7 +73,7 @@ const ToolbarToggleItem = StyledToggleItem;
 function Loader(props: { file: PMTiles; mapHashPassed: boolean }) {
   const [tab, setTab] = useState("maplibre");
 
-  let view;
+  let view: any;
   if (tab === "maplibre") {
     view = (
       <MaplibreMap file={props.file} mapHashPassed={props.mapHashPassed} />

@@ -58,7 +58,7 @@ const TileRow = (props: {
       <td>{props.entry.offset}</td>
       <td>{props.entry.length}</td>
       <td>
-        {props.entry.runLength == 0
+        {props.entry.runLength === 0
           ? "directory"
           : `tile(${props.entry.runLength})`}
       </td>
@@ -124,7 +124,7 @@ const FeatureSvg = (props: {
       onMouseOver={mouseOver}
       onMouseOut={mouseOut}
       onMouseDown={mouseDown}
-    ></path>
+    />
   );
 };
 
@@ -138,7 +138,7 @@ const LayerSvg = (props: {
       key={i}
       feature={f}
       setSelectedFeature={props.setSelectedFeature}
-    ></FeatureSvg>
+    />
   ));
   return <g color={props.color}>{elems}</g>;
 };
@@ -153,7 +153,7 @@ const StyledFeatureProperties = styled("div", {
 
 const FeatureProperties = (props: { feature: Feature }) => {
   const tmp: [string, string][] = [];
-  for (var key in props.feature.properties) {
+  for (const key in props.feature.properties) {
     tmp.push([key, props.feature.properties[key]]);
   }
 
@@ -186,7 +186,7 @@ const VectorPreview = (props: {
   const [ref, { width, height }] = useMeasure<HTMLDivElement>();
 
   useEffect(() => {
-    viewer.current!.zoomOnViewerCenter(0.1);
+    viewer.current?.zoomOnViewerCenter(0.1);
   }, []);
 
   useEffect(() => {
@@ -196,13 +196,13 @@ const VectorPreview = (props: {
 
       const tile = new VectorTile(new Protobuf(new Uint8Array(resp!.data)));
       const newLayers = [];
-      let max_extent = 0;
+      let maxExtent = 0;
       for (const [name, layer] of Object.entries(tile.layers)) {
-        if (layer.extent > max_extent) {
-          max_extent = layer.extent;
+        if (layer.extent > maxExtent) {
+          maxExtent = layer.extent;
         }
         const features: Feature[] = [];
-        for (var i = 0; i < layer.length; i++) {
+        for (let i = 0; i < layer.length; i++) {
           const feature = layer.feature(i);
           const p = path();
           const geom = feature.loadGeometry();
@@ -216,7 +216,7 @@ const VectorPreview = (props: {
           } else {
             for (const ring of geom) {
               p.moveTo(ring[0].x, ring[0].y);
-              for (var j = 1; j < ring.length; j++) {
+              for (let j = 1; j < ring.length; j++) {
                 p.lineTo(ring[j].x, ring[j].y);
               }
               if (feature.type === 3) {
@@ -234,7 +234,7 @@ const VectorPreview = (props: {
         }
         newLayers.push({ features: features, name: name });
       }
-      setMaxExtent(max_extent);
+      setMaxExtent(maxExtent);
       newLayers.sort(smartCompare);
       setLayers(newLayers);
     };
@@ -250,7 +250,7 @@ const VectorPreview = (props: {
       layer={l}
       color={schemeSet3[i % 12]}
       setSelectedFeature={setSelectedFeature}
-    ></LayerSvg>
+    />
   ));
 
   return (
@@ -280,7 +280,7 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
       const [z, x, y] = tileIdToZxy(entry.tileId);
       const resp = await props.file.getZxy(z, x, y);
       const blob = new Blob([resp!.data]);
-      var imageUrl = window.URL.createObjectURL(blob);
+      const imageUrl = window.URL.createObjectURL(blob);
       setImageSrc(imageUrl);
     };
 
@@ -289,7 +289,7 @@ const RasterPreview = (props: { file: PMTiles; entry: Entry }) => {
     }
   }, [props.entry]);
 
-  return <img src={imgSrc}></img>;
+  return <img src={imgSrc} alt="raster tile" />;
 };
 
 function getHashString(entry: Entry) {
@@ -357,10 +357,10 @@ function Inspector(props: { file: PMTiles }) {
   }, [props.file, selectedEntry]);
 
   const rows = entryRows.map((e, i) => (
-    <TileRow key={i} entry={e} setSelectedEntry={setSelectedEntry}></TileRow>
+    <TileRow key={i} entry={e} setSelectedEntry={setSelectedEntry} />
   ));
 
-  let tilePreview = <div></div>;
+  let tilePreview = <div />;
   if (selectedEntry && header?.tileType) {
     if (selectedEntry.runLength === 0) {
       // do nothing

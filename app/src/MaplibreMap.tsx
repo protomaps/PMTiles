@@ -102,7 +102,7 @@ interface LayerVisibility {
   visible: boolean;
 }
 
-interface PmTilesMetadata {
+interface Metadata {
   name?: string;
   type?: string;
   tilestats?: unknown;
@@ -188,7 +188,7 @@ const LayersVisibilityController = (props: {
 
 const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
   const header = await file.getHeader();
-  const metadata = (await file.getMetadata()) as PmTilesMetadata;
+  const metadata = (await file.getMetadata()) as Metadata;
   let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
@@ -206,7 +206,7 @@ const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
     sources: {
       source: {
         type: "raster",
-        tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
+        tiles: [`pmtiles://${file.source.getKey()}/{z}/{x}/{y}`],
         minzoom: header.minZoom,
         maxzoom: header.maxZoom,
       },
@@ -229,7 +229,7 @@ const vectorStyle = async (
   layersVisibility: LayerVisibility[];
 }> => {
   const header = await file.getHeader();
-  const metadata = (await file.getMetadata()) as PmTilesMetadata;
+  const metadata = (await file.getMetadata()) as Metadata;
   let layers: LayerSpecification[] = [];
   let baseOpacity = 0.35;
 
@@ -238,15 +238,13 @@ const vectorStyle = async (
     baseOpacity = 0.9;
   }
 
-  var tilestats: any;
-  var vectorLayers: LayerSpecification[];
-  tilestats = metadata.tilestats;
-  vectorLayers = metadata.vector_layers;
+  const tilestats = metadata.tilestats;
+  const vectorLayers = metadata.vector_layers;
 
   if (vectorLayers) {
     for (const [i, layer] of vectorLayers.entries()) {
       layers.push({
-        id: layer.id + "_fill",
+        id: `${layer.id}_fill`,
         type: "fill",
         source: "source",
         "source-layer": layer.id,
@@ -268,7 +266,7 @@ const vectorStyle = async (
         filter: ["==", ["geometry-type"], "Polygon"],
       });
       layers.push({
-        id: layer.id + "_stroke",
+        id: `${layer.id}_stroke`,
         type: "line",
         source: "source",
         "source-layer": layer.id,
@@ -284,7 +282,7 @@ const vectorStyle = async (
         filter: ["==", ["geometry-type"], "LineString"],
       });
       layers.push({
-        id: layer.id + "_point",
+        id: `${layer.id}_point`,
         type: "circle",
         source: "source",
         "source-layer": layer.id,
@@ -315,7 +313,7 @@ const vectorStyle = async (
       sources: {
         source: {
           type: "vector",
-          tiles: ["pmtiles://" + file.source.getKey() + "/{z}/{x}/{y}"],
+          tiles: [`pmtiles://${file.source.getKey()}/{z}/{x}/{y}`],
           minzoom: header.minZoom,
           maxzoom: header.maxZoom,
           bounds: bounds,
@@ -425,7 +423,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
 
       const { x, y } = e.point;
       const r = 2; // radius around the point
-      var features = map.queryRenderedFeatures([
+      let features = map.queryRenderedFeatures([
         [x - r, y - r],
         [x + r, y + r],
       ]);
@@ -475,7 +473,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
         if (
           header.tileType === TileType.Png ||
           header.tileType === TileType.Webp ||
-          header.tileType == TileType.Jpeg
+          header.tileType === TileType.Jpeg
         ) {
           const style = await rasterStyle(props.file);
           map.setStyle(style);
@@ -492,7 +490,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
 
   return (
     <MapContainer ref={mapContainerRef}>
-      <div ref={mapContainerRef}></div>
+      <div ref={mapContainerRef} />
       <Hamburger onClick={toggleHamburger}>menu</Hamburger>
       {hamburgerOpen ? (
         <Options>

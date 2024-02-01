@@ -84,7 +84,7 @@ function App() {
   // maintaining URL state
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (file && file.source.getKey().startsWith("http")) {
+    if (file?.source.getKey().startsWith("http")) {
       url.searchParams.set("url", file.source.getKey());
       history.pushState(null, "", url.toString());
     } else {

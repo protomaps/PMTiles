@@ -13,7 +13,7 @@ const Heading = styled("div", {
 });
 
 function Metadata(props: { file: PMTiles }) {
-  const [metadata, setMetadata] = useState<any>();
+  const [metadata, setMetadata] = useState<unknown>();
   const [header, setHeader] = useState<Header | null>(null);
 
   useEffect(() => {

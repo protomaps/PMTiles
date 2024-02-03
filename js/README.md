@@ -3,7 +3,7 @@
 the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module:
 
 ```html
- <script src="https://unpkg.com/pmtiles@2.5.0/dist/index.js"></script>
+ <script src="https://unpkg.com/pmtiles@<VERSION>/dist/pmtiles.js"></script>
 ```
 
 All the PMTiles exports are available under the global `pmtiles` variable e.g. `pmtiles.PMTiles`.

@@ -683,7 +683,6 @@ export class ResolvedValueCache {
 
   async invalidate(source: Source) {
     this.cache.delete(source.getKey());
-    await this.getHeader(source);
   }
 }
 
@@ -698,6 +697,7 @@ interface SharedPromiseCacheValue {
 // (estimates) the maximum size of the cache.
 export class SharedPromiseCache {
   cache: Map<string, SharedPromiseCacheValue>;
+  invalidations: Map<string, Promise<void>>;
   maxCacheEntries: number;
   counter: number;
   decompress: DecompressFunc;
@@ -708,6 +708,7 @@ export class SharedPromiseCache {
     decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, SharedPromiseCacheValue>();
+    this.invalidations = new Map<string, Promise<void>>();
     this.maxCacheEntries = maxCacheEntries;
     this.counter = 1;
     this.decompress = decompress;
@@ -823,8 +824,22 @@ export class SharedPromiseCache {
   }
 
   async invalidate(source: Source) {
+    const key = source.getKey();
+    if (this.invalidations.get(key)) {
+      return await this.invalidations.get(key);
+    }
     this.cache.delete(source.getKey());
-    await this.getHeader(source);
+    const p = new Promise<void>((resolve, reject) => {
+      this.getHeader(source)
+        .then((h) => {
+          resolve();
+          this.invalidations.delete(key);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
+    this.invalidations.set(key, p);
   }
 }
 

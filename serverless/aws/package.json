@@ -14,8 +14,8 @@
     "tsc": "tsc --noEmit --watch",
     "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.mjs --format=esm --bundle --platform=node --target=node18 --external:@aws-sdk/client-s3 --external:@aws-sdk/node-http-handler --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.mjs",
     "test": "tsx ../shared/index.test.ts",
-    "biome": "biome check --config-path=../../js/ src/index.ts --apply",
-    "biome-check": "biome check --config-path=../../js src/index.ts"
+    "biome": "biome check --config-path=../../js/ src --apply",
+    "biome-check": "biome check --config-path=../../js src"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.360.0",

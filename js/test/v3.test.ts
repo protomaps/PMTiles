@@ -289,12 +289,8 @@ test("cache getDirectory", async () => {
     "1"
   );
 
-  let cache = new SharedPromiseCache(6400, false);
-  let header = await cache.getHeader(source);
-  assert.strictEqual(cache.cache.size, 1);
-
-  cache = new SharedPromiseCache(6400, true);
-  header = await cache.getHeader(source);
+  const cache = new SharedPromiseCache(6400);
+  const header = await cache.getHeader(source);
 
   // prepopulates the root directory
   assert.strictEqual(cache.cache.size, 2);
@@ -358,7 +354,7 @@ test("weak etags", async () => {
 // handle DigitalOcean case returning 200 instead of 206
 
 test("cache pruning by byte size", async () => {
-  const cache = new SharedPromiseCache(2, false);
+  const cache = new SharedPromiseCache(2);
   cache.cache.set("0", { lastUsed: 0, data: Promise.resolve([]) });
   cache.cache.set("1", { lastUsed: 1, data: Promise.resolve([]) });
   cache.cache.set("2", { lastUsed: 2, data: Promise.resolve([]) });

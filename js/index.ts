@@ -509,8 +509,7 @@ export interface Cache {
 
 async function getHeaderAndRoot(
   source: Source,
-  decompress: DecompressFunc,
-  prefetch: boolean
+  decompress: DecompressFunc
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
   const resp = await source.getBytes(0, 16384);
 
@@ -530,22 +529,18 @@ async function getHeaderAndRoot(
 
   // optimistically set the root directory
   // TODO check root bounds
-  if (prefetch) {
-    const rootDirData = resp.data.slice(
-      header.rootDirectoryOffset,
-      header.rootDirectoryOffset + header.rootDirectoryLength
-    );
-    const dirKey = `${source.getKey()}|${header.etag || ""}|${
-      header.rootDirectoryOffset
-    }|${header.rootDirectoryLength}`;
+  const rootDirData = resp.data.slice(
+    header.rootDirectoryOffset,
+    header.rootDirectoryOffset + header.rootDirectoryLength
+  );
+  const dirKey = `${source.getKey()}|${header.etag || ""}|${
+    header.rootDirectoryOffset
+  }|${header.rootDirectoryLength}`;
 
-    const rootDir = deserializeIndex(
-      await decompress(rootDirData, header.internalCompression)
-    );
-    return [header, [dirKey, rootDir.length, rootDir]];
-  }
-
-  return [header, undefined];
+  const rootDir = deserializeIndex(
+    await decompress(rootDirData, header.internalCompression)
+  );
+  return [header, [dirKey, rootDir.length, rootDir]];
 }
 
 async function getDirectory(
@@ -574,22 +569,20 @@ export class ResolvedValueCache {
   cache: Map<string, ResolvedValue>;
   maxCacheEntries: number;
   counter: number;
-  prefetch: boolean;
   decompress: DecompressFunc;
 
   constructor(
     maxCacheEntries = 100,
-    prefetch = true,
+    prefetch = true, // deprecated
     decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, ResolvedValue>();
     this.maxCacheEntries = maxCacheEntries;
     this.counter = 1;
-    this.prefetch = prefetch;
     this.decompress = decompress;
   }
 
-  async getHeader(source: Source, currentEtag?: string): Promise<Header> {
+  async getHeader(source: Source): Promise<Header> {
     const cacheKey = source.getKey();
     const cacheValue = this.cache.get(cacheKey);
     if (cacheValue) {
@@ -598,7 +591,7 @@ export class ResolvedValueCache {
       return data as Header;
     }
 
-    const res = await getHeaderAndRoot(source, this.decompress, this.prefetch);
+    const res = await getHeaderAndRoot(source, this.decompress);
     if (res[1]) {
       this.cache.set(res[1][0], {
         lastUsed: this.counter++,
@@ -690,7 +683,6 @@ export class ResolvedValueCache {
 
   async invalidate(source: Source) {
     this.cache.delete(source.getKey());
-    await this.getHeader(source);
   }
 }
 
@@ -705,24 +697,24 @@ interface SharedPromiseCacheValue {
 // (estimates) the maximum size of the cache.
 export class SharedPromiseCache {
   cache: Map<string, SharedPromiseCacheValue>;
+  invalidations: Map<string, Promise<void>>;
   maxCacheEntries: number;
   counter: number;
-  prefetch: boolean;
   decompress: DecompressFunc;
 
   constructor(
     maxCacheEntries = 100,
-    prefetch = true,
+    prefetch = true, // deprecated
     decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, SharedPromiseCacheValue>();
+    this.invalidations = new Map<string, Promise<void>>();
     this.maxCacheEntries = maxCacheEntries;
     this.counter = 1;
-    this.prefetch = prefetch;
     this.decompress = decompress;
   }
 
-  async getHeader(source: Source, currentEtag?: string): Promise<Header> {
+  async getHeader(source: Source): Promise<Header> {
     const cacheKey = source.getKey();
     const cacheValue = this.cache.get(cacheKey);
     if (cacheValue) {
@@ -732,7 +724,7 @@ export class SharedPromiseCache {
     }
 
     const p = new Promise<Header>((resolve, reject) => {
-      getHeaderAndRoot(source, this.decompress, this.prefetch)
+      getHeaderAndRoot(source, this.decompress)
         .then((res) => {
           if (res[1]) {
             this.cache.set(res[1][0], {
@@ -832,8 +824,22 @@ export class SharedPromiseCache {
   }
 
   async invalidate(source: Source) {
+    const key = source.getKey();
+    if (this.invalidations.get(key)) {
+      return await this.invalidations.get(key);
+    }
     this.cache.delete(source.getKey());
-    await this.getHeader(source);
+    const p = new Promise<void>((resolve, reject) => {
+      this.getHeader(source)
+        .then((h) => {
+          resolve();
+          this.invalidations.delete(key);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
+    this.invalidations.set(key, p);
   }
 }
 

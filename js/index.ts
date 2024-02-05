@@ -509,7 +509,7 @@ export interface Cache {
 
 async function getHeaderAndRoot(
   source: Source,
-  decompress: DecompressFunc,
+  decompress: DecompressFunc
 ): Promise<[Header, [string, number, Entry[] | ArrayBuffer]?]> {
   const resp = await source.getBytes(0, 16384);
 
@@ -541,8 +541,6 @@ async function getHeaderAndRoot(
     await decompress(rootDirData, header.internalCompression)
   );
   return [header, [dirKey, rootDir.length, rootDir]];
-
-  return [header, undefined];
 }
 
 async function getDirectory(

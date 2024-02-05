@@ -2,6 +2,7 @@
   "name": "pmtiles-aws",
   "version": "0.0.0",
   "devDependencies": {
+    "@biomejs/biome": "^1.5.3",
     "@types/aws-lambda": "^8.10.108",
     "@types/node": "^18.11.2",
     "esbuild": "^0.20.0",
@@ -12,7 +13,9 @@
   "scripts": {
     "tsc": "tsc --noEmit --watch",
     "build": "esbuild src/index.ts --target=es2020 --outfile=dist/index.mjs --format=esm --bundle --platform=node --target=node18 --external:@aws-sdk/client-s3 --external:@aws-sdk/node-http-handler --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.mjs",
-    "test": "tsx ../shared/index.test.ts"
+    "test": "tsx ../shared/index.test.ts",
+    "biome": "biome check --config-path=../../js/ src/index.ts --apply",
+    "biome-check": "biome check --config-path=../../js src/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.360.0",

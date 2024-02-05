@@ -5,6 +5,7 @@ import {
 } from "aws-lambda";
 import {
   Compression,
+  EtagMismatch,
   PMTiles,
   RangeResponse,
   ResolvedValueCache,
@@ -16,7 +17,11 @@ import { pmtiles_path, tileJSON, tile_path } from "../../shared/index";
 import { createHash } from "crypto";
 import zlib from "zlib";
 
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  GetObjectCommandOutput,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 
 // the region should default to the same one as the function
@@ -60,16 +65,26 @@ class S3Source implements Source {
     signal?: AbortSignal,
     etag?: string
   ): Promise<RangeResponse> {
-    const resp = await s3client.send(
-      new GetObjectCommand({
-        // biome-ignore lint: aws api
-        Bucket: process.env.BUCKET!,
-        // biome-ignore lint: aws api
-        Key: pmtiles_path(this.archiveName, process.env.PMTILES_PATH),
-        // biome-ignore lint: aws api
-        Range: "bytes=" + offset + "-" + (offset + length - 1),
-      })
-    );
+    let resp: GetObjectCommandOutput;
+    try {
+      resp = await s3client.send(
+        new GetObjectCommand({
+          // biome-ignore lint: aws api
+          Bucket: process.env.BUCKET!,
+          // biome-ignore lint: aws api
+          Key: pmtiles_path(this.archiveName, process.env.PMTILES_PATH),
+          // biome-ignore lint: aws api
+          Range: "bytes=" + offset + "-" + (offset + length - 1),
+          // biome-ignore lint: aws api
+          IfMatch: etag,
+        })
+      );
+    } catch (e: unknown) {
+      if (e instanceof Error && (e as Error).name === "PreconditionFailed") {
+        throw new EtagMismatch();
+      }
+      throw e;
+    }
 
     const arr = await resp.Body?.transformToByteArray();
 

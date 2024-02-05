@@ -573,6 +573,7 @@ export class ResolvedValueCache {
 
   constructor(
     maxCacheEntries = 100,
+    prefetch = true, // deprecated
     decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, ResolvedValue>();
@@ -703,6 +704,7 @@ export class SharedPromiseCache {
 
   constructor(
     maxCacheEntries = 100,
+    prefetch = true, // deprecated
     decompress: DecompressFunc = defaultDecompress
   ) {
     this.cache = new Map<string, SharedPromiseCacheValue>();

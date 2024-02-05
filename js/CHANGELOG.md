@@ -1,4 +1,14 @@
-3.0.1-alpha.2
+3.0.3
+
+* Deprecate `prefetch`-ing the first 16 kb as an option, always true
+* Optimize invalidation when etag changes when promises are shared between tile requests. [#90]
+
+3.0.2
+
+* Fix name of script includes (IIFE) name from `index.js` to `pmtiles.js`
+* Fix name of ES6 module from `index.mjs` to `index.js`, which fixes bundlers detecting TypeScript types (index.d.ts)
+
+3.0.1
 
 * FileApiSource renamed to FileSource
 * package.json defines **ES6 module only** (no CommonJS), fixing issues related to named imports [#317, #248]

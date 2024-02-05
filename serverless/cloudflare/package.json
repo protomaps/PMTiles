@@ -2,6 +2,7 @@
   "name": "pmtiles-cloudflare",
   "version": "0.0.1",
   "devDependencies": {
+    "@biomejs/biome": "^1.5.3",
     "@cloudflare/workers-types": "^4.20230518.0",
     "tsx": "^4.7.0",
     "typescript": "^4.8.4",
@@ -13,6 +14,8 @@
     "deploy": "wrangler deploy",
     "test": "tsx ../shared/index.test.ts",
     "tsc": "tsc --watch",
-    "build": "wrangler publish --outdir dist --dry-run"
+    "build": "wrangler publish --outdir dist --dry-run",
+    "biome": "biome check --config-path=../../js/ src/index.ts --apply",
+    "biome-check": "biome check --config-path=../../js src/index.ts"
   }
 }

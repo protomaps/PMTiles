@@ -1,22 +1,22 @@
 import {
-  Context,
-  APIGatewayProxyResult,
   APIGatewayProxyEventV2,
+  APIGatewayProxyResult,
+  Context,
 } from "aws-lambda";
 import {
-  PMTiles,
-  ResolvedValueCache,
-  RangeResponse,
-  Source,
   Compression,
+  PMTiles,
+  RangeResponse,
+  ResolvedValueCache,
+  Source,
   TileType,
 } from "../../../js/index";
-import { pmtiles_path, tile_path, tileJSON } from "../../shared/index";
+import { pmtiles_path, tileJSON, tile_path } from "../../shared/index";
 
+import { createHash } from "crypto";
 import zlib from "zlib";
-import { createHash } from "crypto"
 
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 
 // the region should default to the same one as the function
@@ -33,37 +33,47 @@ async function nativeDecompress(
 ): Promise<ArrayBuffer> {
   if (compression === Compression.None || compression === Compression.Unknown) {
     return buf;
-  } else if (compression === Compression.Gzip) {
-    return zlib.gunzipSync(buf);
-  } else {
-    throw Error("Compression method not supported");
   }
+  if (compression === Compression.Gzip) {
+    return zlib.gunzipSync(buf);
+  }
+  throw Error("Compression method not supported");
 }
 
 // Lambda needs to run with 512MB, empty function takes about 70
 const CACHE = new ResolvedValueCache(undefined, undefined, nativeDecompress);
 
 class S3Source implements Source {
-  archive_name: string;
+  archiveName: string;
 
-  constructor(archive_name: string) {
-    this.archive_name = archive_name;
+  constructor(archiveName: string) {
+    this.archiveName = archiveName;
   }
 
   getKey() {
-    return this.archive_name;
+    return this.archiveName;
   }
 
-  async getBytes(offset: number, length: number, signal?:AbortSignal, etag?: string): Promise<RangeResponse> {
+  async getBytes(
+    offset: number,
+    length: number,
+    signal?: AbortSignal,
+    etag?: string
+  ): Promise<RangeResponse> {
     const resp = await s3client.send(
       new GetObjectCommand({
+        // biome-ignore lint: aws api
         Bucket: process.env.BUCKET!,
-        Key: pmtiles_path(this.archive_name, process.env.PMTILES_PATH),
+        // biome-ignore lint: aws api
+        Key: pmtiles_path(this.archiveName, process.env.PMTILES_PATH),
+        // biome-ignore lint: aws api
         Range: "bytes=" + offset + "-" + (offset + length - 1),
       })
     );
 
-    const arr = await resp.Body!.transformToByteArray();
+    const arr = await resp.Body?.transformToByteArray();
+
+    if (!arr) throw Error("Failed to read S3 response body");
 
     return {
       data: arr.buffer,
@@ -100,12 +110,12 @@ export const handlerRaw = async (
   _context: Context,
   tilePostprocess?: (a: ArrayBuffer, t: TileType) => ArrayBuffer
 ): Promise<APIGatewayProxyResult> => {
-  let path;
-  let is_api_gateway;
+  let path: string;
+  let isApiGateway = false;
   if (event.pathParameters) {
-    is_api_gateway = true;
+    isApiGateway = true;
     if (event.pathParameters.proxy) {
-      path = "/" + event.pathParameters.proxy;
+      path = `/${event.pathParameters.proxy}`;
     } else {
       return apiResp(500, "Proxy integration missing tile_path parameter");
     }
@@ -167,7 +177,7 @@ export const handlerRaw = async (
       [TileType.Avif, "avif"],
     ]) {
       if (header.tileType === pair[0] && ext !== pair[1]) {
-        if (header.tileType == TileType.Mvt && ext === "pbf") {
+        if (header.tileType === TileType.Mvt && ext === "pbf") {
           // allow this for now. Eventually we will delete this in favor of .mvt
           continue;
         }
@@ -180,8 +190,8 @@ export const handlerRaw = async (
       }
     }
 
-    const tile_result = await p.getZxy(tile[0], tile[1], tile[2]);
-    if (tile_result) {
+    const tileResult = await p.getZxy(tile[0], tile[1], tile[2]);
+    if (tileResult) {
       switch (header.tileType) {
         case TileType.Mvt:
           // part of the list of Cloudfront compressible types.
@@ -201,38 +211,35 @@ export const handlerRaw = async (
           break;
       }
 
-      let data = tile_result.data;
+      let data = tileResult.data;
 
       if (tilePostprocess) {
         data = tilePostprocess(data, header.tileType);
       }
 
-      headers["Cache-Control"] = `public, max-age=${process.env.CACHE_MAX_AGE || 86400}`;
-      headers["ETag"] = `"${createHash("sha256").update(Buffer.from(data)).digest("hex")}"`
+      headers["Cache-Control"] = `public, max-age=${
+        process.env.CACHE_MAX_AGE || 86400
+      }`;
+      headers.ETag = `"${createHash("sha256")
+        .update(Buffer.from(data))
+        .digest("hex")}"`;
 
-      if (is_api_gateway) {
+      if (isApiGateway) {
         // this is wasted work, but we need to force API Gateway to interpret the Lambda response as binary
         // without depending on clients sending matching Accept: headers in the request.
-        const recompressed_data = zlib.gzipSync(data);
+        const recompressedData = zlib.gzipSync(data);
         headers["Content-Encoding"] = "gzip";
         return apiResp(
           200,
-          Buffer.from(recompressed_data).toString("base64"),
-          true,
-          headers
-        );
-      } else {
-        // returns uncompressed response
-        return apiResp(
-          200,
-          Buffer.from(data).toString("base64"),
+          Buffer.from(recompressedData).toString("base64"),
           true,
           headers
         );
       }
-    } else {
-      return apiResp(204, "", false, headers);
+      // returns uncompressed response
+      return apiResp(200, Buffer.from(data).toString("base64"), true, headers);
     }
+    return apiResp(204, "", false, headers);
   } catch (e) {
     if ((e as Error).name === "AccessDenied") {
       return apiResp(403, "Bucket access unauthorized", false, headers);

@@ -19,24 +19,24 @@ const REGION_MATRIX: Record<string, string[]> = {
   "sa-east-1": ["us-east-1", "us-east-2"], // sao paulo
 };
 
-export let get_region = (
-  exec_region: string,
+export const getRegion = (
+  execRegion: string,
   primary: Bucket,
-  replicas: Bucket[],
+  replicas: Bucket[]
 ): Bucket => {
-  if (primary.region === exec_region) {
+  if (primary.region === execRegion) {
     return primary;
   }
 
-  for (let replica of replicas) {
-    if (replica.region === exec_region) {
+  for (const replica of replicas) {
+    if (replica.region === execRegion) {
       return replica;
     }
   }
 
-  if (exec_region in REGION_MATRIX) {
-    for (let region of REGION_MATRIX[exec_region]) {
-      for (let replica of replicas) {
+  if (execRegion in REGION_MATRIX) {
+    for (const region of REGION_MATRIX[execRegion]) {
+      for (const replica of replicas) {
         if (replica.region === region) {
           return replica;
         }

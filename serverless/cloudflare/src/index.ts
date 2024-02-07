@@ -1,5 +1,6 @@
 import {
   Compression,
+  EtagMismatch,
   PMTiles,
   RangeResponse,
   ResolvedValueCache,
@@ -63,12 +64,19 @@ class R2Source implements Source {
       pmtiles_path(this.archiveName, this.env.PMTILES_PATH),
       {
         range: { offset: offset, length: length },
+        onlyIf: { etagMatches: etag },
       }
     );
     if (!resp) {
       throw new KeyNotFoundError("Archive not found");
     }
+
     const o = resp as R2ObjectBody;
+
+    if (!o.body) {
+      throw new EtagMismatch();
+    }
+
     const a = await o.arrayBuffer();
     return {
       data: a,

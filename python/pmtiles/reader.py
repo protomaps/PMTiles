@@ -63,9 +63,10 @@ def traverse(get_bytes, header, dir_offset, dir_length):
     entries = deserialize_directory(get_bytes(dir_offset, dir_length))
     for entry in entries:
         if entry.run_length > 0:
-            yield tileid_to_zxy(entry.tile_id), get_bytes(
-                header["tile_data_offset"] + entry.offset, entry.length
-            )
+            for i in range(entry.run_length):
+                yield tileid_to_zxy(entry.tile_id + i), get_bytes(
+                    header["tile_data_offset"] + entry.offset, entry.length
+                )
         else:
             for t in traverse(
                 get_bytes,

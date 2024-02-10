@@ -1,7 +1,7 @@
 import unittest
 from io import BytesIO
 from pmtiles.writer import Writer
-from pmtiles.reader import Reader, MemorySource
+from pmtiles.reader import all_tiles, Reader, MemorySource
 from pmtiles.tile import Compression, TileType, tileid_to_zxy, zxy_to_tileid
 
 
@@ -46,3 +46,25 @@ class TestReaderWriter(unittest.TestCase):
 
         reader = Reader(MemorySource(buf.getvalue()))
         self.assertEqual(reader.header()["clustered"], False)
+
+    def test_all_tiles(self):
+        buf = BytesIO()
+        writer = Writer(buf)
+        writer.write_tile(zxy_to_tileid(0, 0, 0), b"1")
+        writer.write_tile(zxy_to_tileid(1, 0, 0), b"1")
+        writer.write_tile(zxy_to_tileid(2, 0, 0), b"2")
+        writer.finalize(
+            {
+                "tile_compression": Compression.UNKNOWN,
+                "tile_type": TileType.UNKNOWN,
+            },
+            {"key": "value"},
+        )
+
+        reader = Reader(MemorySource(buf.getvalue()))
+        tiles = list(all_tiles(reader.get_bytes))
+        self.assertEqual(tiles, [
+            ((0,0,0), b"1"),
+            ((1,0,0), b"1"),
+            ((2,0,0), b"2"),
+        ])

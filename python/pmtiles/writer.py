@@ -84,10 +84,6 @@ class Writer:
         self.addressed_tiles += 1
 
     def finalize(self, header, metadata):
-        print("# of addressed tiles:", self.addressed_tiles)
-        print("# of tile entries (after RLE):", len(self.tile_entries))
-        print("# of tile contents:", len(self.hash_to_offset))
-
         header["addressed_tiles_count"] = self.addressed_tiles
         header["tile_entries_count"] = len(self.tile_entries)
         header["tile_contents_count"] = len(self.hash_to_offset)
@@ -100,23 +96,6 @@ class Writer:
         root_bytes, leaves_bytes, num_leaves = optimize_directories(
             self.tile_entries, 16384 - 127
         )
-
-        if num_leaves > 0:
-            print("Root dir bytes:", len(root_bytes))
-            print("Leaves dir bytes:", len(leaves_bytes))
-            print("Num leaf dirs:", num_leaves)
-            print("Total dir bytes:", len(root_bytes) + len(leaves_bytes))
-            print("Average leaf dir bytes:", len(leaves_bytes) / num_leaves)
-            print(
-                "Average bytes per addressed tile:",
-                (len(root_bytes) + len(leaves_bytes)) / self.addressed_tiles,
-            )
-        else:
-            print("Total dir bytes:", len(root_bytes))
-            print(
-                "Average bytes per addressed tile:",
-                len(root_bytes) / self.addressed_tiles,
-            )
 
         compressed_metadata = gzip.compress(json.dumps(metadata).encode())
         header["clustered"] = self.clustered

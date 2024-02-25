@@ -1,3 +1,6 @@
+3.0.4
+* export DecompressFunc type
+
 3.0.3
 
 * Deprecate `prefetch`-ing the first 16 kb as an option, always true

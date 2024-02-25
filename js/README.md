@@ -1,5 +1,7 @@
 # PMTiles for Browsers + NodeJS
 
+See the [JavaScript API docs](https://protomaps.github.io/PMTiles/typedoc/)
+
 the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module:
 
 ```html

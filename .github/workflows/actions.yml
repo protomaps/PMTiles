@@ -25,6 +25,7 @@ jobs:
       - run: cd serverless/cloudflare && cp wrangler.toml.example wrangler.toml && npm install && npx tsc && npm run biome-check && npm run build && cp dist/index.js ../../app/dist
       - run: cd spec/v3 && cp *.pmtiles ../../app/dist
       - run: cd js/examples && mkdir ../../app/dist/examples && cp *.html ../../app/dist/examples/
+      - run: cd js && npx run typedoc index.ts --out ../app/dist/typedoc
       - run: cd openlayers/examples && mkdir ../../app/dist/examples/openlayers && cp *.html ../../app/dist/examples/openlayers
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3

@@ -15,6 +15,11 @@ interface DocumentLike {
 // biome-ignore lint: we don't want to bring in the entire document type
 type DoneCallback = (error?: Error, tile?: any) => void;
 
+/**
+ * Add a raster PMTiles as a layer to a Leaflet map.
+ *
+ * For vector tiles see https://github.com/protomaps/protomaps-leaflet
+ */
 export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
   let loaded = false;
   let mimeType = "";
@@ -155,6 +160,9 @@ const v3compat =
     return { cancel: () => abortController.abort() };
   };
 
+/**
+ * MapLibre GL JS protocol. Must be added once globally.
+ */
 export class Protocol {
   tiles: Map<string, PMTiles>;
 

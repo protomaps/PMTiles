@@ -94,6 +94,9 @@ const tzValues: number[] = [
   93824992236885, 375299968947541, 1501199875790165,
 ];
 
+/**
+ * Convert Z,X,Y to a Hilbert TileID.
+ */
 export function zxyToTileId(z: number, x: number, y: number): number {
   if (z > 26) {
     throw Error("Tile zoom level exceeds max safe number limit (26)");
@@ -119,6 +122,9 @@ export function zxyToTileId(z: number, x: number, y: number): number {
   return acc + d;
 }
 
+/**
+ * Convert a Hilbert TileID to Z,X,Y.
+ */
 export function tileIdToZxy(i: number): [number, number, number] {
   let acc = 0;
   const z = 0;
@@ -134,6 +140,9 @@ export function tileIdToZxy(i: number): [number, number, number] {
   throw Error("Tile zoom level exceeds max safe number limit (26)");
 }
 
+/**
+ * PMTiles v3 directory entry.
+ */
 export interface Entry {
   tileId: number;
   offset: number;
@@ -141,6 +150,11 @@ export interface Entry {
   runLength: number;
 }
 
+/**
+ * Enum representing a compression algorithm used.
+ * 0 = unknown compression, for if you must use a different or unspecified algorithm.
+ * 1 = no compression.
+ */
 export enum Compression {
   Unknown = 0,
   None = 1,
@@ -149,7 +163,13 @@ export enum Compression {
   Zstd = 4,
 }
 
-type DecompressFunc = (
+/**
+ * Provide a decompression implementation that acts on `buf` and returns decompressed data.
+ *
+ * Should use the native DecompressionStream on browsers, zlib on node.
+ * Should throw if the compression algorithm is not supported.
+ */
+export type DecompressFunc = (
   buf: ArrayBuffer,
   compression: Compression
 ) => Promise<ArrayBuffer>;
@@ -179,6 +199,10 @@ async function defaultDecompress(
   throw Error("Compression method not supported");
 }
 
+/**
+ * Describe the type of tiles stored in the archive.
+ * 0 is unknown/other, 1 is "MVT" vector tiles.
+ */
 export enum TileType {
   Unknown = 0,
   Mvt = 1,
@@ -190,6 +214,9 @@ export enum TileType {
 
 const HEADER_SIZE_BYTES = 127;
 
+/**
+ * PMTiles v3 header storing basic archive-level information.
+ */
 export interface Header {
   specVersion: number;
   rootDirectoryOffset: number;
@@ -219,6 +246,9 @@ export interface Header {
   etag?: string;
 }
 
+/**
+ * Low-level function for looking up a TileID or leaf directory inside a directory.
+ */
 export function findTile(entries: Entry[], tileId: number): Entry | null {
   let m = 0;
   let n = entries.length - 1;
@@ -253,8 +283,9 @@ export interface RangeResponse {
   cacheControl?: string;
 }
 
-// In the future this may need to change
-// to support ReadableStream to pass to native DecompressionStream API
+/**
+ * Interface for retrieving an archive from remote or local storage.
+ */
 export interface Source {
   getBytes: (
     offset: number,
@@ -263,11 +294,16 @@ export interface Source {
     etag?: string
   ) => Promise<RangeResponse>;
 
+  /**
+   * Return a unique string key for the archive e.g. a URL.
+   */
   getKey: () => string;
 }
 
-// uses the Browser's File API, which is different from the NodeJS file API.
-// see https://developer.mozilla.org/en-US/docs/Web/API/File_API
+/**
+ * Use the Browser's File API, which is different from the NodeJS file API.
+ * see https://developer.mozilla.org/en-US/docs/Web/API/File_API
+ */
 export class FileSource implements Source {
   file: File;
 
@@ -286,6 +322,12 @@ export class FileSource implements Source {
   }
 }
 
+/**
+ * Uses the browser Fetch API to make tile requests via HTTP.
+ *
+ * This method does not send conditional request headers If-Match because of CORS.
+ * Instead, it detects ETag mismatches via the response ETag or the 416 response code.
+ */
 export class FetchSource implements Source {
   url: string;
   customHeaders: Headers;
@@ -399,6 +441,9 @@ export function getUint64(v: DataView, offset: number): number {
   return wh * 2 ** 32 + wl;
 }
 
+/**
+ * Parse raw header bytes into a Header object.
+ */
 export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
   const v = new DataView(bytes);
   const specVersion = v.getUint8(7);
@@ -488,8 +533,15 @@ function detectVersion(a: ArrayBuffer): number {
   return 3;
 }
 
+/**
+ * Error thrown when a response for PMTiles over HTTP does not match previous, cached parts of the archive.
+ * The default PMTiles implementation will catch this error once internally and retry a request.
+ */
 export class EtagMismatch extends Error {}
 
+/**
+ * Interface for caches of parts (headers, directories) of a PMTiles archive.
+ */
 export interface Cache {
   getHeader: (source: Source) => Promise<Header>;
   getDirectory: (
@@ -565,6 +617,13 @@ interface ResolvedValue {
   data: Header | Entry[] | ArrayBuffer;
 }
 
+/**
+ * A cache for parts of a PMTiles archive where promises are never shared between requests.
+ *
+ * Runtimes such as Cloudflare Workers cannot share promises between different requests.
+ *
+ * Only caches headers and directories, not individual tile contents.
+ */
 export class ResolvedValueCache {
   cache: Map<string, ResolvedValue>;
   maxCacheEntries: number;
@@ -691,10 +750,11 @@ interface SharedPromiseCacheValue {
   data: Promise<Header | Entry[] | ArrayBuffer>;
 }
 
-// a "dumb" bag of bytes.
-// only caches headers and directories
-// deduplicates simultaneous responses
-// (estimates) the maximum size of the cache.
+/**
+ * A cache for parts of a PMTiles archive where promises can be shared between requests.
+ *
+ * Only caches headers and directories, not individual tile contents.
+ */
 export class SharedPromiseCache {
   cache: Map<string, SharedPromiseCacheValue>;
   invalidations: Map<string, Promise<void>>;
@@ -843,8 +903,13 @@ export class SharedPromiseCache {
   }
 }
 
-// if source is a string, create a browser FetchSource().
-// if no cache is passed, create a browser SharedPromiseCache where simultaneous tile requests share intermediate requests.
+/**
+ * Main class encapsulating PMTiles decoding logic.
+ *
+ * if `source` is a string, creates a FetchSource using that string as the URL to a remote PMTiles.
+ * if no `cache` is passed, use a SharedPromiseCache.
+ * if no `decompress` is passed, default to the browser DecompressionStream API with a fallback to `fflate`.
+ */
 // biome-ignore lint: that's just how its capitalized
 export class PMTiles {
   source: Source;
@@ -873,10 +938,15 @@ export class PMTiles {
     }
   }
 
+  /**
+   * Return the header of the archive,
+   * including information such as tile type, min/max zoom, bounds, and summary statistics.
+   */
   async getHeader() {
     return await this.cache.getHeader(this.source);
   }
 
+  /** @hidden */
   async getZxyAttempt(
     z: number,
     x: number,
@@ -930,6 +1000,11 @@ export class PMTiles {
     throw Error("Maximum directory depth exceeded");
   }
 
+  /**
+   * Primary method to get a single tile bytes from an archive.
+   *
+   * Returns undefined if the tile does not exist in the archive.
+   */
   async getZxy(
     z: number,
     x: number,
@@ -947,6 +1022,7 @@ export class PMTiles {
     }
   }
 
+  /** @hidden */
   async getMetadataAttempt(): Promise<unknown> {
     const header = await this.cache.getHeader(this.source);
 
@@ -964,6 +1040,9 @@ export class PMTiles {
     return JSON.parse(dec.decode(decompressed));
   }
 
+  /**
+   * Return the arbitrary JSON metadata of the archive.
+   */
   async getMetadata(): Promise<unknown> {
     try {
       return await this.getMetadataAttempt();

@@ -1,12 +1,14 @@
 {
   "name": "ol-pmtiles",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "PMTiles sources for OpenLayers",
   "type": "module",
-  "main": "src/index.js",
+  "exports": [
+    "./src/index.js"
+  ],
   "files": [
-    "dist/olpmtiles.js",
-    "src/index.js"
+    "./dist/olpmtiles.js",
+    "./src/index.js"
   ],
   "repository": {
     "type": "git",
@@ -26,12 +28,12 @@
     "prettier-check": "prettier --check *.js"
   },
   "dependencies": {
-    "pmtiles": "2.11.0"
+    "pmtiles": "^3.0.4"
   },
   "devDependencies": {
     "esbuild": "^0.15.11"
   },
   "peerDependencies": {
-    "ol": ">=7.3.0"
+    "ol": ">=9.0.0"
   }
 }

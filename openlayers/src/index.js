@@ -53,7 +53,6 @@ export class PMTilesVectorSource extends VectorTile {
     const y = +result[4];
 
     tile.setLoader((extent, resolution, projection) => {
-      tile.setState(TileState.LOADING);
       this.pmtiles_
         .getZxy(z, x, y)
         .then((tile_result) => {

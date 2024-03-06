@@ -59,7 +59,6 @@ export class PMTilesVectorSource extends ol.source.VectorTile {
     const y = +result[4];
 
     tile.setLoader((extent, resolution, projection) => {
-      tile.setState(1);
       this.pmtiles_
         .getZxy(z, x, y)
         .then((tile_result) => {

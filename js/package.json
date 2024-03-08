@@ -1,6 +1,6 @@
 {
   "name": "pmtiles",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "PMTiles archive decoder for browsers",
   "type": "module",
   "exports": "./dist/index.js",
@@ -8,7 +8,9 @@
   "source": "index.ts",
   "files": [
     "dist",
-    "index.ts"
+    "adapters.ts",
+    "index.ts",
+    "v2.ts"
   ],
   "scripts": {
     "build-iife": "esbuild index.ts --outfile=dist/pmtiles.js --target=es6 --global-name=pmtiles --bundle --format=iife",

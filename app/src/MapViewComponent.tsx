@@ -54,7 +54,7 @@ const StyledContent = styled(DialogPrimitive.Content, {
 
 const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "").substr(0, 8);
 
-function App() {
+function MapViewComponent() {
   globalStyles();
 
   const [errorDisplay, setErrorDisplay] = useState<string | undefined>();
@@ -136,4 +136,4 @@ function App() {
   );
 }
 
-export default App;
+export default MapViewComponent;

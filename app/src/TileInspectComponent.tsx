@@ -16,18 +16,7 @@ function TileInspectComponent() {
       const initialValue = new PMTiles(loadUrl);
       setFile(initialValue);
     }
-    if (location.hash.includes("map")) {
-      setMapHashPassed(true);
-    }
   }, []);
-
-  useEffect(() => {
-    if (file) {
-      file.getHeader().catch((e) => {
-        setErrorDisplay(e.message);
-      });
-    }
-  }, [file]);
 
   // maintaining URL state
   useEffect(() => {

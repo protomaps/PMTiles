@@ -34,7 +34,7 @@ const MapContainer = styled("div", {
 const PopupContainer = styled("div", {
   color: "black",
   maxHeight: "400px",
-  overflowY: "scroll"
+  overflowY: "scroll",
 });
 
 const FeatureRow = styled("div", {
@@ -458,7 +458,7 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
     });
 
     map.on("click", (e) => {
-      setPopupFrozen(p => !p);
+      setPopupFrozen((p) => !p);
     });
 
     return () => {

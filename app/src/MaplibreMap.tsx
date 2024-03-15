@@ -33,6 +33,8 @@ const MapContainer = styled("div", {
 
 const PopupContainer = styled("div", {
   color: "black",
+  maxHeight: "400px",
+  overflowY: "scroll"
 });
 
 const FeatureRow = styled("div", {
@@ -344,6 +346,10 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
   const [layersVisibility, setLayersVisibility] = useState<LayerVisibility[]>(
     []
   );
+  const [popupFrozen, setPopupFrozen] = useState<boolean>(false);
+  const popupFrozenRef = useRef<boolean>();
+  popupFrozenRef.current = popupFrozen;
+
   const mapRef = useRef<maplibregl.Map | null>(null);
   const hoveredFeaturesRef = useRef<Set<MapGeoJSONFeature>>(new Set());
 
@@ -410,6 +416,9 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
     mapRef.current = map;
 
     map.on("mousemove", (e) => {
+      if (popupFrozenRef.current) {
+        return;
+      }
       const hoveredFeatures = hoveredFeaturesRef.current;
       for (const feature of hoveredFeatures) {
         map.setFeatureState(feature, { hover: false });
@@ -446,6 +455,10 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
         popup.setLngLat(e.lngLat);
         popup.addTo(map);
       }
+    });
+
+    map.on("click", (e) => {
+      setPopupFrozen(p => !p);
     });
 
     return () => {

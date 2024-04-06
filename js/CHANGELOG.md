@@ -1,3 +1,6 @@
+3.0.5
+* fix missing files in dist/ for build systems that bundle .ts files
+
 3.0.4
 * export DecompressFunc type
 

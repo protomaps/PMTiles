@@ -104,7 +104,7 @@ export default {
     if (!ok) {
       return new Response("Invalid URL", { status: 404 });
     }
-    
+
     let allowedOrigin = "";
     if (typeof env.ALLOWED_ORIGINS !== "undefined") {
       for (const o of env.ALLOWED_ORIGINS.split(",")) {

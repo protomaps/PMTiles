@@ -13,6 +13,8 @@ import { Protocol } from "../../js/adapters";
 import { PMTiles, TileType } from "../../js/index";
 import { styled } from "./stitches.config";
 
+const BASEMAP_THEME = "black";
+
 const INITIAL_ZOOM = 0;
 const INITIAL_LNG = 0;
 const INITIAL_LAT = 0;
@@ -194,7 +196,7 @@ const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
   let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
-    layers = baseTheme("basemap", "black");
+    layers = baseTheme("basemap", BASEMAP_THEME);
   }
 
   layers.push({
@@ -220,6 +222,7 @@ const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
       },
     },
     glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
+    sprite: `https://protomaps.github.io/basemaps-assets/sprites/v3/${BASEMAP_THEME}`,
     layers: layers,
   };
 };
@@ -236,7 +239,7 @@ const vectorStyle = async (
   let baseOpacity = 0.35;
 
   if (metadata.type !== "baselayer") {
-    layers = baseTheme("basemap", "black");
+    layers = baseTheme("basemap", BASEMAP_THEME);
     baseOpacity = 0.9;
   }
 

@@ -1,3 +1,6 @@
+3.0.6
+* add CommonJS build fallback for NodeJS projects not using ESM.
+
 3.0.5
 * fix missing files in dist/ for build systems that bundle .ts files
 

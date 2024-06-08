@@ -17,7 +17,7 @@
         <script type="text/javascript">
             const map = L.map('map').setView([0, 0], 0);
 
-            const p = new pmtiles.PMTiles("https://protomaps.github.io/PMTiles/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles")
+            const p = new pmtiles.PMTiles("https://pmtiles.io/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles")
             p.getHeader().then(h => {
                 let layer = pmtiles.leafletRasterLayer(p, {
                     maxzoom:h.maxZoom,

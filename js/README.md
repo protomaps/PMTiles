@@ -1,6 +1,6 @@
 # PMTiles for Browsers + NodeJS
 
-See the [JavaScript API docs](https://protomaps.github.io/PMTiles/typedoc/)
+See the [JavaScript API docs](https://pmtiles.io/typedoc/)
 
 the [PMTiles](https://www.npmjs.com/package/pmtiles) package can be included via script tag or ES6 module:
 
@@ -26,7 +26,7 @@ const p = new PMTiles('example.pmtiles')
 leafletRasterLayer(p,{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>'}).addTo(map)
 ````
 
-[Live example](https://protomaps.github.io/PMTiles/examples/leaflet.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/js/examples/leaflet.html)
+[Live example](https://pmtiles.io/examples/leaflet.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/js/examples/leaflet.html)
 
 ### Leaflet: Vector tileset
 
@@ -50,7 +50,7 @@ var style = {
     ...
 ```
 
-[Live example](https://protomaps.github.io/PMTiles/examples/maplibre.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/js/examples/maplibre.html)
+[Live example](https://pmtiles.io/examples/maplibre.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/js/examples/maplibre.html)
 
 # CORS
 

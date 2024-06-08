@@ -2,9 +2,9 @@
 
 ## Live Examples
 
-[Vector example](https://protomaps.github.io/PMTiles/examples/openlayers/vector.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/openlayers/examples/vector.html)
+[Vector example](https://pmtiles.io/examples/openlayers/vector.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/openlayers/examples/vector.html)
 
-[Raster example](https://protomaps.github.io/PMTiles/examples/openlayers/raster.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/openlayers/examples/raster.html)
+[Raster example](https://pmtiles.io/examples/openlayers/raster.html) | [Code](https://github.com/protomaps/PMTiles/blob/main/openlayers/examples/raster.html)
 
 ## Usage
 

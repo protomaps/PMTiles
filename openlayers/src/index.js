@@ -78,14 +78,11 @@ export class PMTilesVectorSource extends VectorTile {
   };
 
   constructor(options) {
-    super({
-      ...options,
-      ...{
-        state: "loading",
-        url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
-        format: new MVT(),
-      },
-    });
+    options.state = "loading"
+    options.url = "pmtiles://" + options.url + "/{z}/{x}/{y}"
+    options.format = options.format ? options.format : new MVT();
+
+    super(options);
 
     const fetchSource = new pmtiles.FetchSource(
       options.url,

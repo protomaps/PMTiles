@@ -89,7 +89,7 @@ export class PMTilesVectorSource extends ol.source.VectorTile {
       ...{
         state: "loading",
         url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
-        format: new ol.format.MVT(),
+        format: options.format || new ol.format.MVT(),
       },
     });
 

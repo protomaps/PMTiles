@@ -83,7 +83,7 @@ export class PMTilesVectorSource extends VectorTile {
       ...{
         state: "loading",
         url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
-        format: new MVT(),
+        format: options.format || new MVT(),
       },
     });
 

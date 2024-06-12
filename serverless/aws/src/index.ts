@@ -58,11 +58,11 @@ export async function handler(
 // Assumes event is a API Gateway V2 or Lambda Function URL formatted dict
 // and returns API Gateway V2 / Lambda Function dict responses
 // Does not work with CloudFront events/Lambda@Edge; see README
-export const handlerRaw = async (
+export async function handlerRaw(
   event: APIGatewayProxyEventV2,
   _context: Context,
   tilePostprocess?: (a: ArrayBuffer, t: TileType) => ArrayBuffer
-): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> {
   let path: string;
   let isApiGateway = false;
 
@@ -212,7 +212,7 @@ export const handlerRaw = async (
 
     throw error;
   }
-};
+}
 
 async function nativeDecompress(
   buffer: ArrayBuffer,

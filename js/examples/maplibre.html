@@ -39,6 +39,9 @@
                         sources: {
                             "example_source": {
                                 type: "vector",
+                                // For standard Z/X/Y tile APIs or Z/X/Y URLs served from go-pmtiles, replace "url" with "tiles" and remove all the pmtiles-related client code.
+                                // tiles: ["https://example.com/{z}/[x}/{y}.mvt"],
+                                // see https://maplibre.org/maplibre-style-spec/sources/#vector
                                 url: "pmtiles://" + PMTILES_URL,
                                 attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
                             }

@@ -1,0 +1,1 @@
+ - [ ] Please do not open PRs for new features if you're a first time contributor; first open an issue to confirm that the new feature is appropriate. 

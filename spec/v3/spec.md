@@ -362,7 +362,7 @@ _¹ Please refer to [Section 4.2](#42-encoding) for details on how Tile ID and O
 
 The metadata section MUST contain a valid JSON object encoded in UTF-8, which MAY include additional metadata related to the tileset that is not already covered in the header section.
 
-If the [Tile Type](#tile-type-tt) in the header has a value of _MVT Vector Tile_, the object SHOULD contain a key of `vector_layers` as described in the [TileJSON 3.0 specification](https://github.com/mapbox/tilejson-spec/blob/22f5f91e643e8980ef2656674bef84c2869fbe76/3.0.0/README.md#33-vector_layers).
+If the [Tile Type](#tile-type-tt) in the header has a value of _MVT Vector Tile_, the object MUST contain a key of `vector_layers` as described in the [TileJSON 3.0 specification](https://github.com/mapbox/tilejson-spec/blob/22f5f91e643e8980ef2656674bef84c2869fbe76/3.0.0/README.md#33-vector_layers).
 
 Additionally, this specification defines the following keys, which MAY be included in the object:
 

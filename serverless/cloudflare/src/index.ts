@@ -15,7 +15,7 @@ interface Env {
   // biome-ignore lint: config name
   BUCKET: R2Bucket;
   // biome-ignore lint: config name
-  CACHE_MAX_AGE?: number;
+  CACHE_CONTROL?: string;
   // biome-ignore lint: config name
   PMTILES_PATH?: string;
   // biome-ignore lint: config name
@@ -134,8 +134,9 @@ export default {
     ) => {
       cacheableHeaders.set(
         "Cache-Control",
-        `max-age=${env.CACHE_MAX_AGE || 86400}`
+        env.CACHE_CONTROL || "public, max-age=86400"
       );
+
       const cacheable = new Response(body, {
         headers: cacheableHeaders,
         status: status,

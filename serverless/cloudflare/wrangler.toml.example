@@ -9,4 +9,4 @@ r2_buckets  = [
 
 [vars]
 # ALLOWED_ORIGINS = "http://localhost:8000"
-# CACHE_MAX_AGE = 86400
+# CACHE_CONTROL = "public, max-age=86400"

@@ -232,9 +232,9 @@ export const handlerRaw = async (
         data = tilePostprocess(data, header.tileType);
       }
 
-      headers["Cache-Control"] = `public, max-age=${
-        process.env.CACHE_MAX_AGE || 86400
-      }`;
+      headers["Cache-Control"] =
+        process.env.CACHE_CONTROL || "public, max-age=86400";
+
       headers.ETag = `"${createHash("sha256")
         .update(Buffer.from(data))
         .digest("hex")}"`;

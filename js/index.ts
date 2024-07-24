@@ -407,7 +407,9 @@ export class FetchSource implements Source {
     // some storage systems are misbehaved (Cloudflare R2)
     if (resp.status === 416 || (etag && newEtag && newEtag !== etag)) {
       this.mustReload = true;
-      throw new EtagMismatch(`Server returned non-matching ETag ${etag} after one retry. Check browser extensions and servers for issues that may affect correct ETag headers.`);
+      throw new EtagMismatch(
+        `Server returned non-matching ETag ${etag} after one retry. Check browser extensions and servers for issues that may affect correct ETag headers.`
+      );
     }
 
     if (resp.status >= 300) {

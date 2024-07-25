@@ -1,3 +1,6 @@
+3.0.7
+* improve ETag error message [#427]
+
 3.0.6
 * add CommonJS build fallback for NodeJS projects not using ESM.
 

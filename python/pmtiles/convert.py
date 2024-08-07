@@ -178,3 +178,128 @@ def pmtiles_to_dir(input, output):
             os.makedirs(directory, exist_ok=True)
             with open(path, "wb") as f:
                 f.write(tile_data)
+
+
+def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
+    """Convert a directory of tiles on disk to PMTiles.
+
+    Requires metadata.json in the root of the directory.
+
+    Tiling scheme of the directory is assumed to be zxy unless specified.
+
+    Args:
+        directory_path (str): Root directory of tiles.
+        output (str): Path of PMTiles to be written.
+        maxzoom (int, "auto"): Max zoom level to use. If "auto", uses highest zoom in directory.
+
+    Keyword Args:
+        scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'zyx', or 'zxy' (default)).
+        image_format (str): Image format of the tiles ('png', 'jpeg', 'pbf', 'webp', 'avif') if not given in the metadata.
+    
+    Uses modified elements of 'disk_to_mbtiles' from mbutil.
+    
+    Copyright (c), Development Seed
+    All rights reserved.
+
+    Licensed under BSD 3-Clause
+    """
+    try:
+        metadata = json.load(open(os.path.join(directory_path, 'metadata.json'), 'r'))
+    except IOError:
+        raise Exception("metadata.json not found in directory")
+
+    image_format = kwargs.get('image_format', metadata.get("format"))
+    if not image_format:
+        raise Exception("image format not in metadata nor specified as argument")
+    metadata["format"] = image_format  # Add 'format' to metadata
+
+    scheme = kwargs.get('scheme')
+
+    # Collect a set of all tile IDs
+    z_set = []  # List of all zoom levels for auto-detecting maxzoom.
+    tileid_path_set = []  # List of tile (id, filepath) pairs
+    for zoom_dir in get_dirs(directory_path):
+        if scheme == 'ags':
+            z = int(zoom_dir.replace("L", ""))
+        elif scheme == 'gwc':
+            z=int(zoom_dir[-2:])
+        else:
+            z = int(zoom_dir)
+        z_set.append(z)
+        for row_dir in get_dirs(os.path.join(directory_path, zoom_dir)):
+            if scheme == 'ags':
+                y = flip_y(z, int(row_dir.replace("R", ""), 16))
+            elif scheme == 'gwc':
+                pass
+            elif scheme == 'zyx':
+                y = flip_y(int(z), int(row_dir))
+            else:
+                x = int(row_dir)
+            for current_file in os.listdir(os.path.join(directory_path, zoom_dir, row_dir)):
+                if current_file == ".DS_Store":
+                    pass
+                else:
+                    file_name, _ = current_file.split('.',1)
+                    if scheme == 'xyz':
+                        y = flip_y(int(z), int(file_name))
+                    elif scheme == 'ags':
+                        x = int(file_name.replace("C", ""), 16)
+                    elif scheme == 'gwc':
+                        x, y = file_name.split('_')
+                        x = int(x)
+                        y = int(y)
+                    elif scheme == 'zyx':
+                        x = int(file_name)
+                    else:
+                        y = int(file_name)
+
+                    flipped = (1 << z) - 1 - y
+                    tileid = zxy_to_tileid(z, x, flipped)
+                    filepath = os.path.join(directory_path, zoom_dir, row_dir, current_file)
+                    tileid_path_set.append((tileid, filepath))
+
+    tileid_path_set.sort(key=lambda x: x[0])  # Sort by tileid
+
+    if maxzoom == "auto":
+        maxzoom = max(z_set)
+
+    is_pbf = image_format == "pbf"
+
+    with write(output) as writer:
+
+        # read tiles in ascending tile order
+        for tileid, filepath in tileid_path_set:
+            f = open(filepath, 'rb')
+            data = f.read()
+            # force gzip compression only for vector
+            if is_pbf and data[0:2] != b"\x1f\x8b":
+                data = gzip.compress(data)
+            writer.write_tile(tileid, data)
+
+        pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(metadata)
+        pmtiles_header["max_zoom"] = int(maxzoom)
+        metadata["maxzoom"] = maxzoom
+        result = writer.finalize(pmtiles_header, pmtiles_metadata)
+
+
+def get_dirs(path):
+    """'get_dirs' from mbutil
+    
+    Copyright (c), Development Seed
+    All rights reserved
+
+    Licensed under BSD 3-Clause
+    """
+    return [name for name in os.listdir(path)
+        if os.path.isdir(os.path.join(path, name))]
+
+
+def flip_y(zoom, y):
+    """'flip_y' from mbutil
+    
+    Copyright (c), Development Seed
+    All rights reserved
+
+    Licensed under BSD 3-Clause
+    """
+    return (2**zoom-1) - y

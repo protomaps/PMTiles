@@ -192,17 +192,19 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
         output (str): Path of PMTiles to be written.
         maxzoom (int, "auto"): Max zoom level to use. If "auto", uses highest zoom in directory.
 
-    Keyword Args:
+    Keyword args:
         scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'zyx', or 'zxy' (default)).
         image_format (str): Image format of the tiles ('png', 'jpeg', 'pbf', 'webp', 'avif') if not given in the metadata.
+        verbose (bool): Set True to print progress.
     
-    Uses modified elements of 'disk_to_mbtiles' from mbutil.
+    Uses modified elements of 'disk_to_mbtiles' from mbutil
     
     Copyright (c), Development Seed
     All rights reserved.
 
     Licensed under BSD 3-Clause
     """
+    verbose = kwargs.get("verbose")
     try:
         metadata = json.load(open(os.path.join(directory_path, 'metadata.json'), 'r'))
     except IOError:
@@ -218,14 +220,25 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
     # Collect a set of all tile IDs
     z_set = []  # List of all zoom levels for auto-detecting maxzoom.
     tileid_path_set = []  # List of tile (id, filepath) pairs
-    for zoom_dir in get_dirs(directory_path):
+    zoom_dirs = get_dirs(directory_path)
+    zoom_dirs.sort(key=len)
+    try:
+        collect_max = int(maxzoom)
+    except ValueError:
+        collect_max = 99
+    collect_min = metadata.get("minzoom", 0)
+    count = 0
+    for zoom_dir in zoom_dirs:
         if scheme == 'ags':
             z = int(zoom_dir.replace("L", ""))
         elif scheme == 'gwc':
             z=int(zoom_dir[-2:])
         else:
             z = int(zoom_dir)
+        if not collect_min <= z <= collect_max:
+            continue
         z_set.append(z)
+        count = 0
         for row_dir in get_dirs(os.path.join(directory_path, zoom_dir)):
             if scheme == 'ags':
                 y = flip_y(z, int(row_dir.replace("R", ""), 16))
@@ -257,17 +270,27 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
                     tileid = zxy_to_tileid(z, x, flipped)
                     filepath = os.path.join(directory_path, zoom_dir, row_dir, current_file)
                     tileid_path_set.append((tileid, filepath))
+                    count = count + 1
+        if verbose:
+            print(" %s tiles found at z=%s" % (count, z))
 
     tileid_path_set.sort(key=lambda x: x[0])  # Sort by tileid
+    n_tiles = len(tileid_path_set)
 
     if maxzoom == "auto":
         maxzoom = max(z_set)
+    metadata["maxzoom"] = maxzoom
+
+    if not metadata.get("minzoom"):
+        metadata["minzoom"] = min(z_set)
 
     is_pbf = image_format == "pbf"
 
     with write(output) as writer:
 
         # read tiles in ascending tile order
+        count = 0
+        count_step = (2**(maxzoom-3))**2
         for tileid, filepath in tileid_path_set:
             f = open(filepath, 'rb')
             data = f.read()
@@ -275,10 +298,15 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
             if is_pbf and data[0:2] != b"\x1f\x8b":
                 data = gzip.compress(data)
             writer.write_tile(tileid, data)
+            count = count + 1
+            if (count % count_step) == 0 and verbose:
+                print(" %s tiles inserted of %s" % (count, n_tiles))
 
+        if verbose and (count % count_step) != 0:
+            print(" %s tiles inserted of %s" % (count, n_tiles))
+        
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(metadata)
         pmtiles_header["max_zoom"] = int(maxzoom)
-        metadata["maxzoom"] = maxzoom
         result = writer.finalize(pmtiles_header, pmtiles_metadata)
 
 

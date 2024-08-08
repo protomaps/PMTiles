@@ -21,6 +21,7 @@
             let protocol = new pmtiles.Protocol();
             maplibregl.addProtocol("pmtiles",protocol.tile);
 
+            // pmtiles extract https://build.protomaps.com/20240807.pmtiles my_area.pmtiles --bbox=11.221144,43.745121,11.287543,43.789306
             let PMTILES_URL = "https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles";
 
             const p = new pmtiles.PMTiles(PMTILES_URL);

@@ -33,6 +33,10 @@ class TestConvert(unittest.TestCase):
             shutil.rmtree("test_dir")
         except:
             pass
+        try:
+            os.remove("test_tmp_from_dir.pmtiles")
+        except:
+            pass
 
     def test_roundtrip(self):
         with open("test_tmp.pmtiles", "wb") as f:
@@ -75,6 +79,8 @@ class TestConvert(unittest.TestCase):
         mbtiles_to_pmtiles("test_tmp.mbtiles", "test_tmp_2.pmtiles", 3)
 
         pmtiles_to_dir("test_tmp.pmtiles","test_dir")
+
+        disk_to_pmtiles("test_dir", "test_tmp_from_dir.pmtiles", tile_format="pbz")
 
     def test_mbtiles_header(self):
         header, json_metadata = mbtiles_to_header_json(

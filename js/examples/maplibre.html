@@ -21,6 +21,7 @@
             let protocol = new pmtiles.Protocol();
             maplibregl.addProtocol("pmtiles",protocol.tile);
 
+            // pmtiles extract https://build.protomaps.com/20240807.pmtiles my_area.pmtiles --bbox=11.221144,43.745121,11.287543,43.789306
             let PMTILES_URL = "https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles";
 
             const p = new pmtiles.PMTiles(PMTILES_URL);
@@ -48,12 +49,21 @@
                         },
                         layers: [
                             {
-                                "id":"buildings",
+                                "id":"water",
                                 "source": "example_source",
-                                "source-layer":"landuse",
+                                "source-layer":"water",
                                 "type": "fill",
                                 "paint": {
-                                    "fill-color": "steelblue"
+                                    "fill-color": "#80b1d3"
+                                }
+                            },
+                            {
+                                "id":"buildings",
+                                "source": "example_source",
+                                "source-layer":"buildings",
+                                "type": "fill",
+                                "paint": {
+                                    "fill-color": "#d9d9d9"
                                 }
                             },
                             {
@@ -62,16 +72,16 @@
                                 "source-layer":"roads",
                                 "type": "line",
                                 "paint": {
-                                    "line-color": "black"
+                                    "line-color": "#fc8d62"
                                 }
                             },
                             {
-                                "id":"mask",
+                                "id":"pois",
                                 "source": "example_source",
-                                "source-layer":"mask",
-                                "type": "fill",
+                                "source-layer":"pois",
+                                "type": "circle",
                                 "paint": {
-                                    "fill-color": "white"
+                                    "circle-color": "#ffffb3"
                                 }
                             }
                         ]

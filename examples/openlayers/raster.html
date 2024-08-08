@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>PMTiles OpenLayers Raster Example</title>
+        <meta charset="utf-8"/>
+        <script src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css">
+        <script src="https://unpkg.com/ol-pmtiles@0.5.0/dist/olpmtiles.js"></script>
+        <style>
+            body, #map {
+                height:100vh;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="text/javascript">
+          const rasterLayer = new ol.layer.WebGLTile({
+            source: new olpmtiles.PMTilesRasterSource({
+              url:"https://r2-public.protomaps.com/protomaps-sample-datasets/terrarium_z9.pmtiles",
+              attributions:["https://github.com/tilezen/joerd/blob/master/docs/attribution.md"],
+              tileSize: [512,512]
+            })
+          });
+
+          ol.proj.useGeographic();
+
+          const map = new ol.Map({
+            layers: [rasterLayer],
+            target: 'map',
+            view: new ol.View({
+              center: [0,0],
+              zoom: 1,
+              multiWorld: true
+            }),
+          });
+        </script>
+    </body>
+</html>

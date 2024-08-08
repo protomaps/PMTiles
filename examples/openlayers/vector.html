@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <title>PMTiles OpenLayers Vector Example</title>
+        <meta charset="utf-8"/>
+        <script src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css">
+        <script src="https://unpkg.com/ol-pmtiles@0.5.0/dist/olpmtiles.js"></script>
+        <style>
+            body, #map {
+                height:100vh;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="text/javascript">
+          const vectorLayer = new ol.layer.VectorTile({
+            declutter: true,
+            source: new olpmtiles.PMTilesVectorSource({
+              url: "https://r2-public.protomaps.com/protomaps-sample-datasets/nz-buildings-v3.pmtiles",
+              attributions: ["© Land Information New Zealand"]
+            }),
+            style: new ol.style.Style({
+              stroke: new ol.style.Stroke({
+                color: 'gray',
+                width: 1,
+              }),
+              fill: new ol.style.Fill({
+                color: 'rgba(20,20,20,0.9)',
+              })
+            })
+          });
+
+          ol.proj.useGeographic();
+          const map = new ol.Map({
+            layers: [vectorLayer],
+            target: 'map',
+            view: new ol.View({
+              center: [172.606201,-43.556510],
+              zoom: 7
+            }),
+          });
+        </script>
+    </body>
+</html>

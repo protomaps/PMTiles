@@ -1,0 +1,68 @@
+<html>
+    <head>
+        <title>PMTiles MapLibre Raster DEM Example</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" crossorigin="anonymous">
+        <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
+        <style>
+            body {
+                margin: 0;
+            }
+            #map {
+                height:100%; width:100%;
+            }
+            #overlay {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+                font:  600 16px sans-serif;
+                background-color: white;
+                border-radius: 4px;
+                padding: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="overlay">
+        </div>
+        <script type="text/javascript">
+            let protocol = new pmtiles.Protocol();
+            maplibregl.addProtocol("pmtiles",protocol.tile);
+            let URL = "https://r2-public.protomaps.com/protomaps-sample-datasets/terrarium_z9.pmtiles";
+
+            function formatBytes(a,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"][d]}`}
+
+            fetch(URL, {method:"HEAD"}).then(resp => {
+                let length = resp.headers.get("Content-Length");
+                document.getElementById("overlay").innerHTML = `<a href="${URL}">${URL}</a> (${formatBytes(length)})`;
+            })
+
+            const map = new maplibregl.Map({
+                container: 'map',
+                zoom: 0,
+                center: [0,0],
+                style: {
+                    version:8,
+                    sources: {
+                        "example_source": {
+                            type: "raster-dem",
+                            url: "pmtiles://" + URL,
+                            attribution: '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Tilezen Joerd: Attribution</a>',
+                            encoding:"terrarium"
+                        }
+                    },
+                    layers: [
+                        {
+                            "id":"dem",
+                            "source": "example_source",
+                            "source-layer":"landuse",
+                            "type": "hillshade"
+                        }
+                    ]
+                }
+            })
+        </script>
+    </body>
+</html>

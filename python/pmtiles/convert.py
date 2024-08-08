@@ -193,12 +193,12 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
         maxzoom (int, "auto"): Max zoom level to use. If "auto", uses highest zoom in directory.
 
     Keyword args:
-        scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'zyx', or 'zxy' (default)).
-        image_format (str): Image format of the tiles ('png', 'jpeg', 'pbf', 'webp', 'avif') if not given in the metadata.
+        scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'zyx', 'zxy' (default)).
+        tile_format (str): Image format of the tiles ('png', 'jpeg', 'pbf', 'webp', 'avif') if not given in the metadata.
         verbose (bool): Set True to print progress.
-    
+
     Uses modified elements of 'disk_to_mbtiles' from mbutil
-    
+
     Copyright (c), Development Seed
     All rights reserved.
 
@@ -210,10 +210,10 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
     except IOError:
         raise Exception("metadata.json not found in directory")
 
-    image_format = kwargs.get('image_format', metadata.get("format"))
-    if not image_format:
+    tile_format = kwargs.get('tile_format', metadata.get("format"))
+    if not tile_format:
         raise Exception("image format not in metadata nor specified as argument")
-    metadata["format"] = image_format  # Add 'format' to metadata
+    metadata["format"] = tile_format  # Add 'format' to metadata
 
     scheme = kwargs.get('scheme')
 
@@ -284,7 +284,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
     if not metadata.get("minzoom"):
         metadata["minzoom"] = min(z_set)
 
-    is_pbf = image_format == "pbf"
+    is_pbf = tile_format == "pbf"
 
     with write(output) as writer:
 
@@ -304,7 +304,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
 
         if verbose and (count % count_step) != 0:
             print(" %s tiles inserted of %s" % (count, n_tiles))
-        
+
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(metadata)
         pmtiles_header["max_zoom"] = int(maxzoom)
         result = writer.finalize(pmtiles_header, pmtiles_metadata)
@@ -312,7 +312,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
 
 def get_dirs(path):
     """'get_dirs' from mbutil
-    
+
     Copyright (c), Development Seed
     All rights reserved
 
@@ -324,7 +324,7 @@ def get_dirs(path):
 
 def flip_y(zoom, y):
     """'flip_y' from mbutil
-    
+
     Copyright (c), Development Seed
     All rights reserved
 

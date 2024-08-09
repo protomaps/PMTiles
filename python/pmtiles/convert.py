@@ -238,6 +238,8 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
         if not collect_min <= z <= collect_max:
             continue
         z_set.append(z)
+        if verbose:
+            print(" Searching for tiles at z=%s ..." % (z), end="")
         count = 0
         for row_dir in get_dirs(os.path.join(directory_path, zoom_dir)):
             if scheme == 'ags':
@@ -272,10 +274,14 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
                     tileid_path_set.append((tileid, filepath))
                     count = count + 1
         if verbose:
-            print(" %s tiles found at z=%s" % (count, z))
+            print(" found %s" % (count))
 
-    tileid_path_set.sort(key=lambda x: x[0])  # Sort by tileid
     n_tiles = len(tileid_path_set)
+    if verbose:
+        print(" Sorting list of %s tile IDs ..." % (n_tiles), end="")
+    tileid_path_set.sort(key=lambda x: x[0])  # Sort by tileid
+    if verbose:
+        print(" done.")
 
     if maxzoom == "auto":
         maxzoom = max(z_set)

@@ -52,23 +52,23 @@ class TestConvert(unittest.TestCase):
             writer.write_tile(7, b"7")
 
             header = {
-                    "tile_type": TileType.MVT,
-                    "tile_compression": Compression.GZIP,
-                    "min_zoom": 0,
-                    "max_zoom": 2,
-                    "min_lon_e7": 0,
-                    "max_lon_e7": 0,
-                    "min_lat_e7": 0,
-                    "max_lat_e7": 0,
-                    "center_zoom": 0,
-                    "center_lon_e7": 0,
-                    "center_lat_e7": 0,
-                },
+                "tile_type": TileType.MVT,
+                "tile_compression": Compression.GZIP,
+                "min_zoom": 0,
+                "max_zoom": 2,
+                "min_lon_e7": 0,
+                "max_lon_e7": 0,
+                "min_lat_e7": 0,
+                "max_lat_e7": 0,
+                "center_zoom": 0,
+                "center_lon_e7": 0,
+                "center_lat_e7": 0,
+                }
             
             metadata = {
                 "vector_layers": ['vector','layers'],
                 "tilestats":{'tile':'stats'},
-                },
+                }
             metadata["minzoom"] = header["min_zoom"]
             metadata["maxzoom"] = header["max_zoom"]
             min_lon = header["min_lon_e7"] / 10000000
@@ -80,8 +80,7 @@ class TestConvert(unittest.TestCase):
             center_lat = header["center_lat_e7"] / 10000000
             center_zoom = header["center_zoom"]
             metadata["center"] = f"{center_lon},{center_lat},{center_zoom}"
-            if header["tile_type"] == TileType.MVT:
-                metadata["format"] = "pbf"
+            metadata["format"] = "pbf"
 
             writer.finalize(
                 header,

@@ -241,8 +241,8 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
         z_set.append(z)
         if verbose:
             print(" Searching for tiles at z=%s ..." % (z), end="")
-        if z > 10 and not warned:
-            print(" Warning: Large tilesets (z > 10) require extreme processing times.")
+        if z > 9 and not warned:
+            print(" Warning: Large tilesets (z > 9) require extreme processing times.")
             warned = True
         count = 0
         for row_dir in get_dirs(os.path.join(directory_path, zoom_dir)):

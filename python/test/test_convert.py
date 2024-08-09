@@ -50,8 +50,8 @@ class TestConvert(unittest.TestCase):
             writer.write_tile(5, b"5")
             writer.write_tile(6, b"6")
             writer.write_tile(7, b"7")
-            writer.finalize(
-                {
+
+            header = {
                     "tile_type": TileType.MVT,
                     "tile_compression": Compression.GZIP,
                     "min_zoom": 0,
@@ -64,8 +64,28 @@ class TestConvert(unittest.TestCase):
                     "center_lon_e7": 0,
                     "center_lat_e7": 0,
                 },
-                {"vector_layers": ['vector','layers'],
-                "tilestats":{'tile':'stats'}},
+            
+            metadata = {
+                "vector_layers": ['vector','layers'],
+                "tilestats":{'tile':'stats'},
+                },
+            metadata["minzoom"] = header["min_zoom"]
+            metadata["maxzoom"] = header["max_zoom"]
+            min_lon = header["min_lon_e7"] / 10000000
+            min_lat = header["min_lat_e7"] / 10000000
+            max_lon = header["max_lon_e7"] / 10000000
+            max_lat = header["max_lat_e7"] / 10000000
+            metadata["bounds"] = f"{min_lon},{min_lat},{max_lon},{max_lat}"
+            center_lon = header["center_lon_e7"] / 10000000
+            center_lat = header["center_lat_e7"] / 10000000
+            center_zoom = header["center_zoom"]
+            metadata["center"] = f"{center_lon},{center_lat},{center_zoom}"
+            if header["tile_type"] == TileType.MVT:
+                metadata["format"] = "pbf"
+
+            writer.finalize(
+                header,
+                metadata,
             )
 
         pmtiles_to_mbtiles("test_tmp.pmtiles", "test_tmp.mbtiles")
@@ -79,7 +99,7 @@ class TestConvert(unittest.TestCase):
 
         mbtiles_to_pmtiles("test_tmp.mbtiles", "test_tmp_2.pmtiles", 3)
 
-        pmtiles_to_dir("test_tmp.pmtiles","test_dir")
+        pmtiles_to_dir("test_tmp.pmtiles", "test_dir")
 
         disk_to_pmtiles("test_dir", "test_tmp_from_dir.pmtiles", maxzoom="auto", tile_format="pbz")
 

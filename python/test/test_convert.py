@@ -11,6 +11,7 @@ from pmtiles.convert import (
     pmtiles_to_dir,
     mbtiles_to_pmtiles,
     mbtiles_to_header_json,
+    disk_to_pmtiles
 )
 from pmtiles.tile import TileType, Compression
 
@@ -80,7 +81,7 @@ class TestConvert(unittest.TestCase):
 
         pmtiles_to_dir("test_tmp.pmtiles","test_dir")
 
-        disk_to_pmtiles("test_dir", "test_tmp_from_dir.pmtiles", tile_format="pbz")
+        disk_to_pmtiles("test_dir", "test_tmp_from_dir.pmtiles", maxzoom="auto", tile_format="pbz")
 
     def test_mbtiles_header(self):
         header, json_metadata = mbtiles_to_header_json(

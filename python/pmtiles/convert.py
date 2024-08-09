@@ -212,7 +212,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
 
     tile_format = kwargs.get('tile_format', metadata.get("format"))
     if not tile_format:
-        raise Exception("image format not in metadata nor specified as argument")
+        raise Exception("tile format not found in metadata.json nor specified as keyword argument")
     metadata["format"] = tile_format  # Add 'format' to metadata
 
     scheme = kwargs.get('scheme')

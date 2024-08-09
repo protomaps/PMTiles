@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pmtiles",
-    version="3.3.0",
+    version="3.4.0",
     author="Brandon Liu",
     author_email="brandon@protomaps.com",
     description="Library and utilities to write and read PMTiles archives - cloud-optimized archives of map tiles.",

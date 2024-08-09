@@ -287,8 +287,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
     if verbose:
         print(" done.")
 
-    if maxzoom == "auto":
-        maxzoom = max(z_set)
+    maxzoom = max(z_set) if maxzoom == "auto" else int(maxzoom)
     metadata["maxzoom"] = maxzoom
 
     if not metadata.get("minzoom"):
@@ -318,7 +317,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
             print(" %s tiles inserted of %s" % (count, n_tiles))
 
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(metadata)
-        pmtiles_header["max_zoom"] = int(maxzoom)
+        pmtiles_header["max_zoom"] = maxzoom
         result = writer.finalize(pmtiles_header, pmtiles_metadata)
 
 

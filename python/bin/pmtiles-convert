@@ -49,7 +49,6 @@ elif args.input.endswith(".pmtiles"):
     pmtiles_to_dir(args.input, args.output)
 
 elif args.output.endswith(".pmtiles"):
-    print("Notice: only suitable for small to medium tilesets. Large tilesets (z > 10) require extreme processing time.")
     disk_to_pmtiles(args.input, args.output, args.maxzoom, args.scheme, args.image_format, args.verbose)
 
 else:

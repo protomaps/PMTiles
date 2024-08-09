@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("input", help="Input .mbtiles, .pmtiles, or directory")
 parser.add_argument("output", help="Output .mbtiles, .pmtiles, or directory")
 parser.add_argument(
-    "--maxzoom", help="the maximum zoom level to include in the output. If 'auto', uses highest zoom in directory."
+    "--maxzoom", help="The maximum zoom level to include in the output. Set to 'auto' when converting from directory to use the highest zoom."
 )
 parser.add_argument(
     "--overwrite", help="Overwrite the existing output.", action="store_true"
@@ -22,7 +22,7 @@ parser.add_argument(
     "--scheme", help="Tiling scheme of the input directory ('ags', 'gwc', 'zyx', 'zxy' (default))."
 )
 parser.add_argument(
-    "--image_format", help="Image format of tiles in the input directory ('png', 'jpeg', 'pbf', 'webp', 'avif') if not given in the metadata."
+    "--image_format", help="Image format of tiles in the input directory if not given in the metadata ('png', 'jpeg', 'pbf', 'webp', 'avif')."
 )
 parser.add_argument(
     "--verbose", help="Print progress when converting a directory to .pmtiles.", action="store_true"

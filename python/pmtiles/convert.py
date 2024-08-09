@@ -300,7 +300,9 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
 
         # read tiles in ascending tile order
         count = 0
-        count_step = (2**(maxzoom-3))**2
+        if verbose:
+            count_step = (2**(maxzoom-3))**2 if maxzoom <= 9 else (2**(9-3))**2
+            print(" Begin writing %s to .pmtiles ..." % (n_tiles), flush=True)
         for tileid, filepath in tileid_path_set:
             f = open(filepath, 'rb')
             data = f.read()
@@ -309,8 +311,8 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
                 data = gzip.compress(data)
             writer.write_tile(tileid, data)
             count = count + 1
-            if (count % count_step) == 0 and verbose:
-                print(" %s tiles inserted of %s" % (count, n_tiles))
+            if verbose and (count % count_step) == 0:
+                print(" %s tiles inserted of %s" % (count, n_tiles), flush=True)
 
         if verbose and (count % count_step) != 0:
             print(" %s tiles inserted of %s" % (count, n_tiles))

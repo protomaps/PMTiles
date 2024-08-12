@@ -5,18 +5,27 @@ import argparse
 import os
 import shutil
 
-from pmtiles.convert import mbtiles_to_pmtiles, pmtiles_to_mbtiles, pmtiles_to_dir
+from pmtiles.convert import mbtiles_to_pmtiles, pmtiles_to_mbtiles, pmtiles_to_dir, disk_to_pmtiles
 
 parser = argparse.ArgumentParser(
     description="Convert between PMTiles and other archive formats."
 )
-parser.add_argument("input", help="Input .mbtiles or .pmtiles")
+parser.add_argument("input", help="Input .mbtiles, .pmtiles, or directory")
 parser.add_argument("output", help="Output .mbtiles, .pmtiles, or directory")
 parser.add_argument(
-    "--maxzoom", help="the maximum zoom level to include in the output."
+    "--maxzoom", help="The maximum zoom level to include in the output. Set to 'auto' when converting from directory to use the highest zoom."
 )
 parser.add_argument(
     "--overwrite", help="Overwrite the existing output.", action="store_true"
+)
+parser.add_argument(
+    "--scheme", help="Tiling scheme of the input directory ('ags', 'gwc', 'zyx', 'zxy' (default))."
+)
+parser.add_argument(
+    "--format", help="Raster image format of tiles in the input directory ('png', 'jpeg', 'webp', 'avif') if not provided in the metadata.", dest="tile_format"
+)
+parser.add_argument(
+    "--verbose", help="Print progress when converting a directory to .pmtiles.", action="store_true"
 )
 args = parser.parse_args()
 
@@ -38,6 +47,9 @@ elif args.input.endswith(".pmtiles") and args.output.endswith(".mbtiles"):
 
 elif args.input.endswith(".pmtiles"):
     pmtiles_to_dir(args.input, args.output)
+
+elif args.output.endswith(".pmtiles"):
+    disk_to_pmtiles(args.input, args.output, args.maxzoom, scheme=args.scheme, tile_format=args.tile_format, verbose=args.verbose)
 
 else:
     print("Conversion not implemented")

@@ -22,7 +22,7 @@ parser.add_argument(
     "--scheme", help="Tiling scheme of the input directory ('ags', 'gwc', 'zyx', 'zxy' (default))."
 )
 parser.add_argument(
-    "--format", help="Image format of tiles in the input directory, if not provided in the metadata ('png', 'jpeg', 'pbf', 'webp', 'avif').", dest="tile_format"
+    "--format", help="Raster image format of tiles in the input directory ('png', 'jpeg', 'webp', 'avif') if not provided in the metadata.", dest="tile_format"
 )
 parser.add_argument(
     "--verbose", help="Print progress when converting a directory to .pmtiles.", action="store_true"

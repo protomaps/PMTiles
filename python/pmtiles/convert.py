@@ -181,7 +181,7 @@ def pmtiles_to_dir(input, output):
 
 
 def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
-    """Convert a directory of tiles on disk to PMTiles.
+    """Convert a directory of raster format tiles on disk to PMTiles.
 
     Requires metadata.json in the root of the directory.
 
@@ -194,7 +194,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
 
     Keyword args:
         scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'zyx', 'zxy' (default)).
-        tile_format (str): Image format of the tiles ('png', 'jpeg', 'pbf', 'webp', 'avif') if not given in the metadata.
+        tile_format (str): Image format of the tiles ('png', 'jpeg', 'webp', 'avif') if not given in the metadata.
         verbose (bool): Set True to print progress.
 
     Uses modified elements of 'disk_to_mbtiles' from mbutil

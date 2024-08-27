@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create a protomaps infraestructure to serve tiles.
+Parameters:
+  BucketName:
+    Description: 'The name of the S3 bucket where you will store pmtiles files to be served (must be globally unique)'
+    Type: String
+
+  CodeBucketName:
+    Description: 'The S3 bucket name where the Lambda function code is stored (e.g., lambda-protomaps-code)'
+    Type: String
+
+  CodeKey:
+    Description: 'The S3 key for the Lambda function code (e.g., lambda_function.zip)'
+    Type: String
+
+  PublicHostname:
+    Description: 'The public custom domain name for your CloudFront distribution'
+    Type: String
+    Default: 'None'
+
+# ##########################################################################
+# #  S3 Bucket                                             #
+# ##########################################################################
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub arn:aws:s3:::${BucketName}/*
+
+##########################################################################
+#   Lambda Function                                                      #
+##########################################################################
+
+  ProtomapsLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: protomaps
+      Runtime: nodejs18.x
+      Architectures: [arm64]
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: index.handler
+      MemorySize: 512
+      Environment:
+        Variables:
+          BUCKET: !Ref BucketName
+          PUBLIC_HOSTNAME: !Ref PublicHostname
+      Code:
+        S3Bucket: !Ref CodeBucketName
+        S3Key: !Ref CodeKey
+
+  ProtomapsLambdaFunctionUrl:
+    Type: 'AWS::Lambda::Url'
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt ProtomapsLambdaFunction.Arn
+      Cors:
+        AllowOrigins: ["*"]
+      InvokeMode: BUFFERED
+
+  ProtomapsLambdaFunctionUrlPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref ProtomapsLambdaFunction
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+# ##########################################################################
+# #  CloudFront::Distribution                                              #
+# ##########################################################################
+
+  CloudFrontDistribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: ProtomapsLambdaOrigin
+            DomainName: !Select [2, !Split ["/", !GetAtt ProtomapsLambdaFunctionUrl.FunctionUrl]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+        DefaultCacheBehavior:
+          TargetOriginId: ProtomapsLambdaOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: !Ref CachePolicyId
+          ResponseHeadersPolicyId: !Ref ResponseHeadersPolicyId
+        Enabled: true
+        HttpVersion: http2and3
+        Comment: "Protomaps CloudFront Distribution"
+        PriceClass: PriceClass_All  # Change this to save cost and distribute to fewer countries. Check https://aws.amazon.com/cloudfront/pricing/
+
+# ##########################################################################
+# #  CloudFront::CachePolicy                                               #
+# ##########################################################################
+
+  CachePolicyId:
+    Type: 'AWS::CloudFront::CachePolicy'
+    Properties:
+      CachePolicyConfig:
+        Name: 'CachingOptimized'
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          CookiesConfig:
+            CookieBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+  ResponseHeadersPolicyId:
+    Type: 'AWS::CloudFront::ResponseHeadersPolicy'
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: 'protomaps-cors'
+        CorsConfig:
+          AccessControlAllowOrigins:
+            Items: 
+              - 'https://example.com'  # Replace with your allowed origin
+          AccessControlAllowHeaders:
+            Items: 
+              - '*'
+          AccessControlAllowMethods:
+            Items:
+              - GET
+              - POST
+              - OPTIONS
+          AccessControlAllowCredentials: false  # Set to true if you want to include credentials
+          OriginOverride: true
+        Comment: 'CORS policy for Protomaps'
+    DeletionPolicy: Delete
+
+Outputs:
+  BucketNameOutput:
+    Description: 'URL of the S3 bucket'
+    Value: !Sub "https://s3.console.aws.amazon.com/s3/buckets/${BucketName}"
+    Export:
+      Name: !Sub "${AWS::StackName}-S3BucketURL"
+
+  LambdaFunctionUrl:
+    Description: 'URL of the Lambda function'
+    Value: !GetAtt ProtomapsLambdaFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub "${AWS::StackName}-LambdaFunctionURL"
+
+  CloudFrontDistributionUrl:
+    Description: 'URL of the CloudFront distribution'
+    Value: !Sub "https://${CloudFrontDistribution.DomainName}"
+    Export:
+      Name: !Sub "${AWS::StackName}-CloudFrontDistributionURL"
+

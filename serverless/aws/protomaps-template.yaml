@@ -91,7 +91,7 @@ Resources:
           return request;
         }
       FunctionConfig:
-        Comment: 'Add x-distribution-id header.'
+        Comment: 'Add x-distribution-domain header.'
         Runtime: cloudfront-js-2.0
 
   CloudFrontDistribution:
@@ -181,4 +181,4 @@ Resources:
           PUBLIC_HOSTNAME: !Ref PublicHostname
       Code:
         S3Bucket: !Ref BucketName
-        S3Key: lambda_function3.zip
+        S3Key: lambda_function.zip

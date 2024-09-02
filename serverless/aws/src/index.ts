@@ -160,6 +160,14 @@ export const handlerRaw = async (
     const header = await p.getHeader();
 
     if (!tile) {
+      if (!(process.env.PUBLIC_HOSTNAME || event.headers['x-distribution-domain-name'])) {
+        return apiResp(
+          501,
+          "PUBLIC_HOSTNAME must be set for TileJSON",
+          false,
+          headers
+        );
+      }
       headers["Content-Type"] = "application/json";
 
       const t = tileJSON(

@@ -6,17 +6,13 @@ from pmtiles.writer import Writer
 
 acc = 0
 
-with open("stamen_toner_maxzoom3.pmtiles", "wb") as f:
+with open("terrarium_z0-3.pmtiles", "wb") as f:
     writer = Writer(f)
 
     for tileid in range(0, zxy_to_tileid(4, 0, 0)):
         acc += 1
         z, x, y = tileid_to_zxy(tileid)
-        req = Request(f"https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png")
-        req.add_header(
-            "User-Agent",
-            "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
-        )
+        req = Request(f"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png")
         with urlopen(req) as f:
             writer.write_tile(tileid, f.read())
 
@@ -35,6 +31,6 @@ with open("stamen_toner_maxzoom3.pmtiles", "wb") as f:
             "center_lat_e7": 0,
         },
         {
-            "attribution": 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+            "attribution": '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Tilezen Joerd: Attribution</a>'
         },
     )

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "lib": ["es2021", "dom"],
+    "strict": true,
+    "moduleResolution": "node",
+    "paths": {
+    },
+    "types": [],
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/*.ts"]
+}

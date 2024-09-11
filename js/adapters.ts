@@ -5,7 +5,7 @@ declare const window: any;
 declare const document: DocumentLike;
 
 import type { Coords } from "leaflet";
-import { PMTiles, TileType } from "./index";
+import { FetchSource, PMTiles, TileType } from "./index";
 
 interface DocumentLike {
   // biome-ignore lint: we don't want to bring in the entire document type
@@ -186,7 +186,9 @@ export class Protocol {
       const pmtilesUrl = params.url.substr(10);
       let instance = this.tiles.get(pmtilesUrl);
       if (!instance) {
-        instance = new PMTiles(pmtilesUrl);
+        const headers = new Headers({ ...(params?.headers || {}) });
+        const source = new FetchSource(pmtilesUrl, headers);
+        instance = new PMTiles(source);
         this.tiles.set(pmtilesUrl, instance);
       }
 

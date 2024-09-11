@@ -1,20 +1,20 @@
-import { Data } from "ol/DataTile";
+import { type Data } from "ol/DataTile";
 import {
-  Options as DataTileSourceOptions,
+  type Options as DataTileSourceOptions,
   default as DataTileSource,
 } from "ol/source/DataTile";
 import TileState from "ol/TileState";
 import { MVT } from "ol/format";
-import TileSource from "ol/source/Tile";
-import { Extent } from "ol/Extent";
-import Projection from "ol/proj/Projection";
-import Tile from "ol/Tile";
-import VectorTile from "ol/VectorTile";
+import type TileSource from "ol/source/Tile";
+import { type Extent } from "ol/Extent";
+import type Projection from "ol/proj/Projection";
+import type Tile from "ol/Tile";
+import type VectorTile from "ol/VectorTile";
 import {
-  Options as VectorTileSourceOptions,
+  type Options as VectorTileSourceOptions,
   default as VectorTileSource,
 } from "ol/source/VectorTile";
-import RenderFeature from "ol/render/Feature";
+import type RenderFeature from "ol/render/Feature";
 import { createXYZ, extentFromProjection } from "ol/tilegrid";
 import { PMTiles, Header, Source } from "pmtiles";
 

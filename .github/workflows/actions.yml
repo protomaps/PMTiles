@@ -26,7 +26,7 @@ jobs:
       - run: cd spec/v3 && cp *.pmtiles ../../app/dist
       - run: cd js/examples && mkdir ../../app/dist/examples && cp *.html ../../app/dist/examples/
       - run: cd js && npm install && npx typedoc index.ts --out ../app/dist/typedoc
-      - run: cd openlayers/examples && mkdir ../../app/dist/examples/openlayers && cp *.html ../../app/dist/examples/openlayers
+      - run: cd openlayers/examples && npm run tsc && mkdir ../../app/dist/examples/openlayers && cp *.html ../../app/dist/examples/openlayers
       - name: build_app
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}

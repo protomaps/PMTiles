@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Serve Z/X/Y tiles through CloudFront + Lambda from an existing S3 bucket.
 Parameters:
   BucketName:
-    Description: 'Name of an existing S3 bucket with .pmtiles tilesets. Should be in the same region as your CloudFormation stack.'
+    Description: 'Name of an existing S3 bucket with .pmtiles tilesets. Should be in the same region as your CloudFormation stack. Can be a RequesterPays bucket in another account.'
     Type: String
     MinLength: 1
 

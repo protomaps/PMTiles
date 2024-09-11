@@ -16,12 +16,7 @@ import {
 } from "ol/source/VectorTile";
 import RenderFeature from "ol/render/Feature";
 import { createXYZ, extentFromProjection } from "ol/tilegrid";
-import { PMTiles, Header, FetchSource } from "pmtiles";
-
-interface PMTilesOptions {
-  url: string;
-  headers: Headers;
-}
+import { PMTiles, Header, Source } from "pmtiles";
 
 export class PMTilesRasterSource extends DataTileSource {
   loadImage = (src: string): Promise<HTMLImageElement> => {
@@ -33,7 +28,7 @@ export class PMTilesRasterSource extends DataTileSource {
     });
   };
 
-  constructor(options: DataTileSourceOptions & PMTilesOptions) {
+  constructor(options: DataTileSourceOptions & { url: string | Source }) {
     super({
       ...options,
       ...{
@@ -41,11 +36,7 @@ export class PMTilesRasterSource extends DataTileSource {
       },
     });
 
-    const fetchSource = new FetchSource(
-      options.url,
-      new Headers(options.headers),
-    );
-    const p = new PMTiles(fetchSource);
+    const p = new PMTiles(options.url);
     p.getHeader().then((h: Header) => {
       const projection =
         options.projection === undefined ? "EPSG:3857" : options.projection;
@@ -80,15 +71,15 @@ export class PMTilesVectorSource extends VectorTileSource {
     const vtile = tile as VectorTile;
     // the URL construction is done internally by OL, so we need to parse it
     // back out here using a hacky regex
-    const re = new RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/);
+    const re = new RegExp(/pmtiles:\/\/(\d+)\/(\d+)\/(\d+)/);
     const result = url.match(re);
 
-    if (!(result && result.length >= 5)) {
+    if (!(result && result.length >= 4)) {
       throw Error("Could not parse tile URL");
     }
-    const z = +result[2];
-    const x = +result[3];
-    const y = +result[4];
+    const z = +result[1];
+    const x = +result[2];
+    const y = +result[3];
 
     vtile.setLoader(
       (extent: Extent, resolution: number, projection: Projection) => {
@@ -118,22 +109,18 @@ export class PMTilesVectorSource extends VectorTileSource {
   };
 
   constructor(
-    options: VectorTileSourceOptions<RenderFeature> & PMTilesOptions,
+    options: VectorTileSourceOptions<RenderFeature> & { url: string | Source },
   ) {
     super({
       ...options,
       ...{
         state: "loading",
-        url: "pmtiles://" + options.url + "/{z}/{x}/{y}",
+        url: "pmtiles://{z}/{x}/{y}",
         format: options.format || new MVT(),
       },
     });
 
-    const fetchSource = new FetchSource(
-      options.url,
-      new Headers(options.headers),
-    );
-    this.pmtiles_ = new PMTiles(fetchSource);
+    this.pmtiles_ = new PMTiles(options.url);
     this.pmtiles_.getHeader().then((h: Header) => {
       const projection = options.projection || "EPSG:3857";
       const extent = options.extent || extentFromProjection(projection);

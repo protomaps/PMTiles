@@ -2,9 +2,14 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Serve Z/X/Y tiles through CloudFront + Lambda from an existing S3 bucket.
 Parameters:
   BucketName:
-    Description: 'Name of an existing S3 bucket with .pmtiles tilesets. Should be in the same region as your CloudFormation stack.'
+    Description: 'Name of an existing S3 bucket with .pmtiles tilesets. Should be in the same region as your CloudFormation stack. Can be a RequesterPays bucket in another account.'
     Type: String
     MinLength: 1
+
+  DefaultTTL:
+    Description: Default time-to-live for cached tiles in the CloudFront distribution.
+    Type: Number
+    Default: 86400
 
   AllowedOrigins:
     Description: 'Comma-separated list of domains (e.g. example.com) allowed by browser CORS policy, or * for all origins.'
@@ -17,10 +22,11 @@ Parameters:
 
 Outputs:
   CloudFrontDistributionUrl:
-    Description: 'URL of the CloudFront distribution'
+    Description: 'URL of the CloudFront distribution for cached tiles.'
     Value: !Sub "https://${CloudFrontDistribution.DomainName}"
     Export:
       Name: !Sub "${AWS::StackName}-CloudFrontDistributionURL"
+
 
 Conditions:
   IsPublicHostnameProvided:
@@ -127,7 +133,7 @@ Resources:
     Properties:
       CachePolicyConfig:
         Name: !Sub "${AWS::StackName}-CachePolicyConfig"
-        DefaultTTL: 86400
+        DefaultTTL: !Ref DefaultTTL
         MaxTTL: 31536000
         MinTTL: 0
         ParametersInCacheKeyAndForwardedToOrigin:

@@ -77,7 +77,8 @@ class S3Source implements Source {
           Range: "bytes=" + offset + "-" + (offset + length - 1),
           // biome-ignore lint: aws api
           IfMatch: etag,
-          RequestPayer: 'requester'
+          // biome-ignore lint: aws api
+          RequestPayer: "requester",
         })
       );
     } catch (e: unknown) {

@@ -5,7 +5,6 @@ import {
 } from "ol/source/DataTile";
 import TileState from "ol/TileState";
 import { MVT } from "ol/format";
-import * as pmtiles from "pmtiles";
 import TileSource from "ol/source/Tile";
 import { Extent } from "ol/Extent";
 import Projection from "ol/proj/Projection";
@@ -15,8 +14,9 @@ import {
   Options as VectorTileSourceOptions,
   default as VectorTileSource,
 } from "ol/source/VectorTile";
-import TileGrid from "ol/tilegrid/TileGrid";
 import RenderFeature from "ol/render/Feature";
+import { createXYZ, extentFromProjection } from "ol/tilegrid";
+import { PMTiles, Header, FetchSource } from "pmtiles";
 
 interface PMTilesOptions {
   url: string;
@@ -41,14 +41,23 @@ export class PMTilesRasterSource extends DataTileSource {
       },
     });
 
-    const fetchSource = new pmtiles.FetchSource(
+    const fetchSource = new FetchSource(
       options.url,
       new Headers(options.headers),
     );
-    const p = new pmtiles.PMTiles(fetchSource);
-    p.getHeader().then((h: pmtiles.Header) => {
-      // this.tileGrid.minZoom = h.minZoom;
-      // this.tileGrid.maxZoom = h.maxZoom;
+    const p = new PMTiles(fetchSource);
+    p.getHeader().then((h: Header) => {
+      const projection =
+        options.projection === undefined ? "EPSG:3857" : options.projection;
+      this.tileGrid =
+        options.tileGrid ||
+        createXYZ({
+          extent: extentFromProjection(projection),
+          maxResolution: options.maxResolution,
+          minZoom: h.minZoom,
+          maxZoom: h.maxZoom,
+          tileSize: options.tileSize,
+        });
       this.setLoader(async (z, x, y): Promise<Data> => {
         const response = await p.getZxy(z, x, y);
         if (!response) {
@@ -65,7 +74,7 @@ export class PMTilesRasterSource extends DataTileSource {
 }
 
 export class PMTilesVectorSource extends VectorTileSource {
-  pmtiles_: pmtiles.PMTiles;
+  pmtiles_: PMTiles;
 
   tileLoadFunction = (tile: Tile, url: string) => {
     const vtile = tile as VectorTile;
@@ -108,7 +117,9 @@ export class PMTilesVectorSource extends VectorTileSource {
     );
   };
 
-  constructor(options: VectorTileSourceOptions<RenderFeature> & PMTilesOptions) {
+  constructor(
+    options: VectorTileSourceOptions<RenderFeature> & PMTilesOptions,
+  ) {
     super({
       ...options,
       ...{
@@ -118,16 +129,23 @@ export class PMTilesVectorSource extends VectorTileSource {
       },
     });
 
-    const fetchSource = new pmtiles.FetchSource(
+    const fetchSource = new FetchSource(
       options.url,
       new Headers(options.headers),
     );
-    this.pmtiles_ = new pmtiles.PMTiles(fetchSource);
-    this.pmtiles_.getHeader().then((h: pmtiles.Header) => {
-      if (this.tileGrid) {
-        // this.tileGrid.minZoom = h.minZoom;
-        // this.tileGrid.maxZoom = h.maxZoom;
-      }
+    this.pmtiles_ = new PMTiles(fetchSource);
+    this.pmtiles_.getHeader().then((h: Header) => {
+      const projection = options.projection || "EPSG:3857";
+      const extent = options.extent || extentFromProjection(projection);
+      this.tileGrid =
+        options.tileGrid ||
+        createXYZ({
+          extent: extent,
+          maxResolution: options.maxResolution,
+          maxZoom: options.maxZoom !== undefined ? options.maxZoom : h.maxZoom,
+          minZoom: h.minZoom,
+          tileSize: options.tileSize || 512,
+        });
       this.setTileLoadFunction(this.tileLoadFunction);
       this.setState("ready");
     });

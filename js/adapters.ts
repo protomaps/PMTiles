@@ -186,7 +186,14 @@ export class Protocol {
       const pmtilesUrl = params.url.substr(10);
       let instance = this.tiles.get(pmtilesUrl);
       if (!instance) {
-        const headers = new Headers({ ...(params?.headers || {}) });
+        const headers = new Headers();
+        if (params?.headers) {
+          for (const [key, value] of Object.entries(params.headers)) {
+            if (typeof key === "string" && typeof value === "string") {
+              headers.append(key, value);
+            }
+          }
+        }
         const source = new FetchSource(pmtilesUrl, headers);
         instance = new PMTiles(source);
         this.tiles.set(pmtilesUrl, instance);

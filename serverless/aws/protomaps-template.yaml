@@ -6,6 +6,11 @@ Parameters:
     Type: String
     MinLength: 1
 
+  DefaultTTL:
+    Description: Default time-to-live for cached tiles in the CloudFront distribution.
+    Type: Number
+    Default: 86400
+
   AllowedOrigins:
     Description: 'Comma-separated list of domains (e.g. example.com) allowed by browser CORS policy, or * for all origins.'
     Type: List<String>
@@ -17,10 +22,11 @@ Parameters:
 
 Outputs:
   CloudFrontDistributionUrl:
-    Description: 'URL of the CloudFront distribution'
+    Description: 'URL of the CloudFront distribution for cached tiles.'
     Value: !Sub "https://${CloudFrontDistribution.DomainName}"
     Export:
       Name: !Sub "${AWS::StackName}-CloudFrontDistributionURL"
+
 
 Conditions:
   IsPublicHostnameProvided:
@@ -127,7 +133,7 @@ Resources:
     Properties:
       CachePolicyConfig:
         Name: !Sub "${AWS::StackName}-CachePolicyConfig"
-        DefaultTTL: 86400
+        DefaultTTL: !Ref DefaultTTL
         MaxTTL: 31536000
         MinTTL: 0
         ParametersInCacheKeyAndForwardedToOrigin:

@@ -6,7 +6,7 @@ import {
 import TileState from "ol/TileState";
 import { MVT } from "ol/format";
 import type TileSource from "ol/source/Tile";
-import { type Extent } from "ol/Extent";
+import { type Extent } from "ol/extent";
 import type Projection from "ol/proj/Projection";
 import type Tile from "ol/Tile";
 import type VectorTile from "ol/VectorTile";

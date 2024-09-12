@@ -25,7 +25,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/protomaps/PMTiles.git"
+    "url": "https://github.com/protomaps/PMTiles.git"
   },
   "bugs": {
     "url": "https://github.com/protomaps/PMTiles/issues"

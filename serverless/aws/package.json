@@ -13,7 +13,7 @@
   "private": true,
   "scripts": {
     "tsc": "tsc --noEmit --watch",
-    "build-zip": "esbuild src/index.ts --target=es2020 --outfile=dist/index.mjs --format=esm --bundle --platform=node --target=node20 --external:@aws-sdk/client-s3 --external:@aws-sdk/node-http-handler --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.mjs",
+    "build-zip": "esbuild src/index.ts --target=es2020 --outfile=dist/index.mjs --format=cjs --bundle --platform=node --target=node20 --external:@aws-sdk/client-s3 --external:@aws-sdk/node-http-handler --banner:js=//$(git describe --always) && cd dist && zip lambda_function.zip index.js",
     "build-cloudformation-stack": "esbuild src/index.ts --target=es2020 --minify --outfile=dist/index.js --format=cjs --bundle --platform=node --target=node20 --external:@aws-sdk/client-s3 --banner:js=//sha:$(git describe --always) && tsx inline_lambda.ts",
     "test": "tsx ../shared/index.test.ts",
     "biome": "biome check --config-path=../../js/ src --apply",

@@ -1,21 +1,22 @@
-import { type Data } from "ol/DataTile";
+// see import style (.js) at https://openlayers.org/en/latest/examples/data-tiles.html
+import { type Data } from "ol/DataTile.js";
 import {
   type Options as DataTileSourceOptions,
   default as DataTileSource,
-} from "ol/source/DataTile";
-import TileState from "ol/TileState";
-import { MVT } from "ol/format";
-import type TileSource from "ol/source/Tile";
-import { type Extent } from "ol/extent";
-import type Projection from "ol/proj/Projection";
-import type Tile from "ol/Tile";
-import type VectorTile from "ol/VectorTile";
+} from "ol/source/DataTile.js";
+import TileState from "ol/TileState.js";
+import { MVT } from "ol/format.js";
+import type TileSource from "ol/source/Tile.js";
+import { type Extent } from "ol/extent.js";
+import type Projection from "ol/proj/Projection.js";
+import type Tile from "ol/Tile.js";
+import type VectorTile from "ol/VectorTile.js";
 import {
   type Options as VectorTileSourceOptions,
   default as VectorTileSource,
-} from "ol/source/VectorTile";
-import type RenderFeature from "ol/render/Feature";
-import { createXYZ, extentFromProjection } from "ol/tilegrid";
+} from "ol/source/VectorTile.js";
+import type RenderFeature from "ol/render/Feature.js";
+import { createXYZ, extentFromProjection } from "ol/tilegrid.js";
 import { PMTiles, Header, Source } from "pmtiles";
 
 export class PMTilesRasterSource extends DataTileSource {

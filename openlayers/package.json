@@ -1,6 +1,6 @@
 {
   "name": "ol-pmtiles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PMTiles sources for OpenLayers",
   "type": "module",
   "main": "dist/cjs/index.cjs",

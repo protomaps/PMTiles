@@ -14,7 +14,7 @@
     "deploy": "wrangler deploy",
     "test": "tsx ../shared/index.test.ts",
     "tsc": "tsc --watch",
-    "build": "wrangler publish --outdir dist --dry-run",
+    "build": "wrangler deploy --outdir dist --dry-run",
     "biome": "biome check --config-path=../../js/ src/index.ts --apply",
     "biome-check": "biome check --config-path=../../js src/index.ts"
   }

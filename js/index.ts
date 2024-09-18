@@ -1033,7 +1033,7 @@ export class PMTiles {
   }
 
   /**
-   * Primary method to get a single tile bytes from an archive.
+   * Primary method to get a single tile's bytes from an archive.
    *
    * Returns undefined if the tile does not exist in the archive.
    */
@@ -1088,11 +1088,11 @@ export class PMTiles {
   }
 
   /**
-   * Return TileJSON 3.0.0: https://github.com/mapbox/tilejson-spec
+   * Construct a [TileJSON](https://github.com/mapbox/tilejson-spec) object.
    *
-   * baseTilesURL is the URL, excluding the suffix /{z}/{x}/{y}.{ext}.
-   * For example, if the desired tiles URL is http://example.com/tileset/{z}/{x}/{y}.mvt,
-   * the baseTilesURL should be https://example.com/tileset
+   * baseTilesUrl is the desired tiles URL, excluding the suffix `/{z}/{x}/{y}.{ext}`.
+   * For example, if the desired URL is `http://example.com/tileset/{z}/{x}/{y}.mvt`,
+   * the baseTilesUrl should be `https://example.com/tileset`.
    */
   async getTileJson(baseTilesUrl: string): Promise<unknown> {
     const header = await this.getHeader();

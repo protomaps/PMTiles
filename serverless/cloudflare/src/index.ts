@@ -159,7 +159,7 @@ export default {
 
       if (!tile) {
         cacheableHeaders.set("Content-Type", "application/json");
-        const t = p.getTileJson(
+        const t = await p.getTileJson(
           `https://${env.PUBLIC_HOSTNAME || url.hostname}/${name}`
         );
         return cacheableResponse(JSON.stringify(t), cacheableHeaders, 200);

@@ -177,7 +177,7 @@ export const handlerRaw = async (
       }
       headers["Content-Type"] = "application/json";
 
-      const t = p.getTileJson(
+      const t = await p.getTileJson(
         `https://${
           process.env.PUBLIC_HOSTNAME ||
           event.headers["x-distribution-domain-name"] ||

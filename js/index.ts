@@ -359,11 +359,20 @@ export class FetchSource implements Source {
   customHeaders: Headers;
   /** @hidden */
   mustReload: boolean;
+  chromeWindowsNoCache: boolean;
 
   constructor(url: string, customHeaders: Headers = new Headers()) {
     this.url = url;
     this.customHeaders = customHeaders;
     this.mustReload = false;
+    const userAgent = navigator.userAgent;
+    const isWindows = userAgent.indexOf("Windows") > -1;
+    const isChromiumBased = /Chrome|Chromium|Edg|OPR|Brave/.test(userAgent);
+    if (isWindows && isChromiumBased) {
+      this.chromeWindowsNoCache = true;
+    } else {
+      this.chromeWindowsNoCache = false;
+    }
   }
 
   getKey() {
@@ -404,6 +413,8 @@ export class FetchSource implements Source {
     let cache: string | undefined;
     if (this.mustReload) {
       cache = "reload";
+    } else if (this.chromeWindowsNoCache) {
+      cache = "no-store";
     }
 
     let resp = await fetch(this.url, {

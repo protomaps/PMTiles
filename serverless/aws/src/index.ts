@@ -72,7 +72,7 @@ class S3Source implements Source {
           // biome-ignore lint: aws api
           Bucket: process.env.BUCKET!,
           // biome-ignore lint: aws api
-          Key: pmtiles_path(this.archiveName, process.env.PMTILES_PATH),
+          Key: process.env.OVERWRITE_PMTILES_FILE || pmtiles_path(this.archiveName, process.env.PMTILES_PATH),
           // biome-ignore lint: aws api
           Range: "bytes=" + offset + "-" + (offset + length - 1),
           // biome-ignore lint: aws api

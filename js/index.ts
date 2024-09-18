@@ -359,6 +359,7 @@ export class FetchSource implements Source {
   customHeaders: Headers;
   /** @hidden */
   mustReload: boolean;
+  /** @hidden */
   chromeWindowsNoCache: boolean;
 
   constructor(url: string, customHeaders: Headers = new Headers()) {

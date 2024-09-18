@@ -345,10 +345,19 @@ export class FileSource implements Source {
  *
  * This method does not send conditional request headers If-Match because of CORS.
  * Instead, it detects ETag mismatches via the response ETag or the 416 response code.
+ *
+ * This also works around browser and storage-specific edge cases.
  */
 export class FetchSource implements Source {
   url: string;
+
+  /**
+   * A [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) object, specfying custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+   *
+   * This should be used instead of maplibre's [transformRequest](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#example) for PMTiles archives.
+   */
   customHeaders: Headers;
+  /** @hidden */
   mustReload: boolean;
 
   constructor(url: string, customHeaders: Headers = new Headers()) {
@@ -361,6 +370,9 @@ export class FetchSource implements Source {
     return this.url;
   }
 
+  /**
+   * Mutate the custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+   */
   setHeaders(customHeaders: Headers) {
     this.customHeaders = customHeaders;
   }

@@ -12,7 +12,7 @@ import {
   Source,
   TileType,
 } from "../../../js/index";
-import { pmtiles_path, tileJSON, tile_path } from "../../shared/index";
+import { pmtiles_path, tile_path } from "../../shared/index";
 
 import { createHash } from "crypto";
 import zlib from "zlib";
@@ -177,15 +177,13 @@ export const handlerRaw = async (
       }
       headers["Content-Type"] = "application/json";
 
-      const t = tileJSON(
-        header,
-        await p.getMetadata(),
-        process.env.PUBLIC_HOSTNAME ||
+      const t = await p.getTileJson(
+        `https://${
+          process.env.PUBLIC_HOSTNAME ||
           event.headers["x-distribution-domain-name"] ||
-          "",
-        name
+          ""
+        }/${name}`
       );
-
       return apiResp(200, JSON.stringify(t), false, headers);
     }
 

@@ -164,20 +164,31 @@ const v3compat =
  * MapLibre GL JS protocol. Must be added once globally.
  */
 export class Protocol {
+  /** @hidden */
   tiles: Map<string, PMTiles>;
 
   constructor() {
     this.tiles = new Map<string, PMTiles>();
   }
 
+  /**
+   * Add a {@link PMTiles} instance to the global protocol instance.
+   *
+   * For remote fetch sources, references in MapLibre styles like pmtiles://http://...
+   * will resolve to the same instance if the URLs match.
+   */
   add(p: PMTiles) {
     this.tiles.set(p.source.getKey(), p);
   }
 
+  /**
+   * Fetch a {@link PMTiles} instance by URL, for remote PMTiles instances.
+   */
   get(url: string) {
     return this.tiles.get(url);
   }
 
+  /** @hidden */
   tilev4 = async (
     params: RequestParameters,
     abortController: AbortController

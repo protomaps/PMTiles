@@ -150,6 +150,15 @@ export interface Entry {
   runLength: number;
 }
 
+interface MetadataLike {
+  attribution?: string;
+  name?: string;
+  version?: string;
+  // biome-ignore lint: TileJSON spec
+  vector_layers?: string;
+  description?: string;
+}
+
 /**
  * Enum representing a compression algorithm used.
  * 0 = unknown compression, for if you must use a different or unspecified algorithm.
@@ -210,6 +219,15 @@ export enum TileType {
   Jpeg = 3,
   Webp = 4,
   Avif = 5,
+}
+
+export function tileTypeExt(t: TileType): string {
+  if (t === TileType.Mvt) return ".mvt";
+  if (t === TileType.Png) return ".png";
+  if (t === TileType.Jpeg) return ".jpg";
+  if (t === TileType.Webp) return ".webp";
+  if (t === TileType.Avif) return ".avif";
+  return "";
 }
 
 const HEADER_SIZE_BYTES = 127;
@@ -327,10 +345,19 @@ export class FileSource implements Source {
  *
  * This method does not send conditional request headers If-Match because of CORS.
  * Instead, it detects ETag mismatches via the response ETag or the 416 response code.
+ *
+ * This also works around browser and storage-specific edge cases.
  */
 export class FetchSource implements Source {
   url: string;
+
+  /**
+   * A [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) object, specfying custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+   *
+   * This should be used instead of maplibre's [transformRequest](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#example) for PMTiles archives.
+   */
   customHeaders: Headers;
+  /** @hidden */
   mustReload: boolean;
 
   constructor(url: string, customHeaders: Headers = new Headers()) {
@@ -343,6 +370,9 @@ export class FetchSource implements Source {
     return this.url;
   }
 
+  /**
+   * Mutate the custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+   */
   setHeaders(customHeaders: Headers) {
     this.customHeaders = customHeaders;
   }
@@ -1003,7 +1033,7 @@ export class PMTiles {
   }
 
   /**
-   * Primary method to get a single tile bytes from an archive.
+   * Primary method to get a single tile's bytes from an archive.
    *
    * Returns undefined if the tile does not exist in the archive.
    */
@@ -1055,5 +1085,34 @@ export class PMTiles {
       }
       throw e;
     }
+  }
+
+  /**
+   * Construct a [TileJSON](https://github.com/mapbox/tilejson-spec) object.
+   *
+   * baseTilesUrl is the desired tiles URL, excluding the suffix `/{z}/{x}/{y}.{ext}`.
+   * For example, if the desired URL is `http://example.com/tileset/{z}/{x}/{y}.mvt`,
+   * the baseTilesUrl should be `https://example.com/tileset`.
+   */
+  async getTileJson(baseTilesUrl: string): Promise<unknown> {
+    const header = await this.getHeader();
+    const metadata = (await this.getMetadata()) as MetadataLike;
+    const ext = tileTypeExt(header.tileType);
+
+    return {
+      tilejson: "3.0.0",
+      scheme: "xyz",
+      tiles: [`${baseTilesUrl}/{z}/{x}/{y}${ext}`],
+      // biome-ignore lint: TileJSON spec
+      vector_layers: metadata.vector_layers,
+      attribution: metadata.attribution,
+      description: metadata.description,
+      name: metadata.name,
+      version: metadata.version,
+      bounds: [header.minLon, header.minLat, header.maxLon, header.maxLat],
+      center: [header.centerLon, header.centerLat, header.centerZoom],
+      minzoom: header.minZoom,
+      maxzoom: header.maxZoom,
+    };
   }
 }

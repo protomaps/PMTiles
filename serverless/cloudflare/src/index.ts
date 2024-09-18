@@ -7,7 +7,7 @@ import {
   Source,
   TileType,
 } from "../../../js/index";
-import { pmtiles_path, tileJSON, tile_path } from "../../shared/index";
+import { pmtiles_path, tile_path } from "../../shared/index";
 
 interface Env {
   // biome-ignore lint: config name
@@ -159,14 +159,9 @@ export default {
 
       if (!tile) {
         cacheableHeaders.set("Content-Type", "application/json");
-
-        const t = tileJSON(
-          pHeader,
-          await p.getMetadata(),
-          env.PUBLIC_HOSTNAME || url.hostname,
-          name
+        const t = await p.getTileJson(
+          `https://${env.PUBLIC_HOSTNAME || url.hostname}/${name}`
         );
-
         return cacheableResponse(JSON.stringify(t), cacheableHeaders, 200);
       }
 

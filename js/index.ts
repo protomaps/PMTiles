@@ -150,6 +150,15 @@ export interface Entry {
   runLength: number;
 }
 
+interface MetadataLike {
+  attribution?: string;
+  name?: string;
+  version?: string;
+  // biome-ignore lint: TileJSON spec
+  vector_layers?: string;
+  description?: string;
+}
+
 /**
  * Enum representing a compression algorithm used.
  * 0 = unknown compression, for if you must use a different or unspecified algorithm.
@@ -210,6 +219,15 @@ export enum TileType {
   Jpeg = 3,
   Webp = 4,
   Avif = 5,
+}
+
+export function tileTypeExt(t: TileType): string {
+  if (t === TileType.Mvt) return ".mvt";
+  if (t === TileType.Png) return ".png";
+  if (t === TileType.Jpeg) return ".jpg";
+  if (t === TileType.Webp) return ".webp";
+  if (t === TileType.Avif) return ".avif";
+  return "";
 }
 
 const HEADER_SIZE_BYTES = 127;
@@ -1055,5 +1073,34 @@ export class PMTiles {
       }
       throw e;
     }
+  }
+
+  /**
+   * Return TileJSON 3.0.0: https://github.com/mapbox/tilejson-spec
+   *
+   * baseTilesURL is the URL, excluding the suffix /{z}/{x}/{y}.{ext}.
+   * For example, if the desired tiles URL is http://example.com/tileset/{z}/{x}/{y}.mvt,
+   * the baseTilesURL should be https://example.com/tileset
+   */
+  async getTileJson(baseTilesUrl: string): Promise<unknown> {
+    const header = await this.getHeader();
+    const metadata = (await this.getMetadata()) as MetadataLike;
+    const ext = tileTypeExt(header.tileType);
+
+    return {
+      tilejson: "3.0.0",
+      scheme: "xyz",
+      tiles: [`${baseTilesUrl}/{z}/{x}/{y}${ext}`],
+      // biome-ignore lint: TileJSON spec
+      vector_layers: metadata.vector_layers,
+      attribution: metadata.attribution,
+      description: metadata.description,
+      name: metadata.name,
+      version: metadata.version,
+      bounds: [header.minLon, header.minLat, header.maxLon, header.maxLat],
+      center: [header.centerLon, header.centerLat, header.centerZoom],
+      minzoom: header.minZoom,
+      maxzoom: header.maxZoom,
+    };
   }
 }

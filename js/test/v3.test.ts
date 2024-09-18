@@ -11,10 +11,12 @@ import {
   RangeResponse,
   SharedPromiseCache,
   Source,
+  TileType,
   findTile,
   getUint64,
   readVarint,
   tileIdToZxy,
+  tileTypeExt,
   zxyToTileId,
 } from "../index";
 
@@ -376,3 +378,40 @@ test("pmtiles get metadata", async () => {
 });
 
 // echo '{"type":"Polygon","coordinates":[[[0,0],[0,1],[1,0],[0,0]]]}' | ./tippecanoe -zg -o test_fixture_2.pmtiles
+
+test("get file extension", async () => {
+  assert.equal("", tileTypeExt(TileType.Unknown));
+  assert.equal(".mvt", tileTypeExt(TileType.Mvt));
+  assert.equal(".png", tileTypeExt(TileType.Png));
+  assert.equal(".jpg", tileTypeExt(TileType.Jpeg));
+  assert.equal(".webp", tileTypeExt(TileType.Webp));
+  assert.equal(".avif", tileTypeExt(TileType.Avif));
+});
+
+interface TileJsonLike {
+  tilejson: string;
+  scheme: string;
+  tiles: string[];
+  description?: string;
+  name?: string;
+  attribution?: string;
+  version?: string;
+}
+
+test("pmtiles get TileJSON", async () => {
+  const source = new TestNodeFileSource(
+    "test/data/test_fixture_1.pmtiles",
+    "1"
+  );
+  const p = new PMTiles(source);
+  const tilejson = (await p.getTileJson(
+    "https://example.com/foo"
+  )) as TileJsonLike;
+  assert.equal("3.0.0", tilejson.tilejson);
+  assert.equal("xyz", tilejson.scheme);
+  assert.equal("https://example.com/foo/{z}/{x}/{y}.mvt", tilejson.tiles[0]);
+  assert.equal(undefined, tilejson.attribution);
+  assert.equal("test_fixture_1.pmtiles", tilejson.description);
+  assert.equal("test_fixture_1.pmtiles", tilejson.name);
+  assert.equal("2", tilejson.version);
+});

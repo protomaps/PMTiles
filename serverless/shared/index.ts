@@ -1,5 +1,3 @@
-import { Header, TileType } from "../../js/index";
-
 export const pmtiles_path = (name: string, setting?: string): string => {
   if (setting) {
     return setting.replaceAll("{name}", name);
@@ -35,39 +33,4 @@ export const tile_path = (
   }
 
   return { ok: false, name: "", tile: [0, 0, 0], ext: "" };
-};
-
-export const tileJSON = (
-  header: Header,
-  metadata: any,
-  hostname: string,
-  tileset_name: string
-) => {
-  let ext = "";
-  if (header.tileType === TileType.Mvt) {
-    ext = ".mvt";
-  } else if (header.tileType === TileType.Png) {
-    ext = ".png";
-  } else if (header.tileType === TileType.Jpeg) {
-    ext = ".jpg";
-  } else if (header.tileType === TileType.Webp) {
-    ext = ".webp";
-  } else if (header.tileType === TileType.Avif) {
-    ext = ".avif";
-  }
-
-  return {
-    tilejson: "3.0.0",
-    scheme: "xyz",
-    tiles: ["https://" + hostname + "/" + tileset_name + "/{z}/{x}/{y}" + ext],
-    vector_layers: metadata.vector_layers,
-    attribution: metadata.attribution,
-    description: metadata.description,
-    name: metadata.name,
-    version: metadata.version,
-    bounds: [header.minLon, header.minLat, header.maxLon, header.maxLat],
-    center: [header.centerLon, header.centerLat, header.centerZoom],
-    minzoom: header.minZoom,
-    maxzoom: header.maxZoom,
-  };
 };

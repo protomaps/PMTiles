@@ -177,7 +177,13 @@ export const handlerRaw = async (
       }
       headers["Content-Type"] = "application/json";
 
-      const t = p.getTileJson(`https://${process.env.PUBLIC_HOSTNAME || event.headers["x-distribution-domain-name"] || ""}/${name}`);
+      const t = p.getTileJson(
+        `https://${
+          process.env.PUBLIC_HOSTNAME ||
+          event.headers["x-distribution-domain-name"] ||
+          ""
+        }/${name}`
+      );
       return apiResp(200, JSON.stringify(t), false, headers);
     }
 

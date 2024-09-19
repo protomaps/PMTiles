@@ -1,7 +1,7 @@
 import fs from "fs";
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it, test } from "node:test";
-import { http, HttpResponse, rest } from "msw";
+import { http, HttpResponse  } from "msw";
 import { setupServer } from "msw/node";
 
 import {
@@ -420,10 +420,12 @@ test("pmtiles get TileJSON", async () => {
 
 describe("user agent", async () => {
   beforeEach(() => {
+    // @ts-ignore
     global.navigator = {userAgent: 'Windows Chrome'};
   });
 
   afterEach(() => {
+    // @ts-ignore
     delete global.navigator.userAgent;
   });
 

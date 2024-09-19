@@ -366,7 +366,10 @@ export class FetchSource implements Source {
     this.url = url;
     this.customHeaders = customHeaders;
     this.mustReload = false;
-    const userAgent = navigator.userAgent;
+    let userAgent = "";
+    if ("navigator" in globalThis) {
+      userAgent = globalThis.navigator.userAgent;
+    }
     const isWindows = userAgent.indexOf("Windows") > -1;
     const isChromiumBased = /Chrome|Chromium|Edg|OPR|Brave/.test(userAgent);
     if (isWindows && isChromiumBased) {

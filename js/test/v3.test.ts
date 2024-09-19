@@ -1,7 +1,7 @@
 import fs from "fs";
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it, test } from "node:test";
-import { http, HttpResponse  } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 
 import {
@@ -421,17 +421,15 @@ test("pmtiles get TileJSON", async () => {
 describe("user agent", async () => {
   beforeEach(() => {
     // @ts-ignore
-    global.navigator = {userAgent: 'Windows Chrome'};
+    global.navigator = { userAgent: "Windows Chrome" };
   });
 
   afterEach(() => {
     // @ts-ignore
-    delete global.navigator.userAgent;
+    global.navigator.userAgent = undefined;
   });
 
-  it('works around caching bug on chrome on windows', async () => {
-    let fetchRequestCache;
-
+  it("works around caching bug on chrome on windows", async () => {
     const p = new PMTiles("http://localhost:1337/example.pmtiles");
     await p.getZxy(0, 0, 0);
     assert.equal("no-store", mockserver.lastCache);

@@ -1,7 +1,7 @@
 import fs from "fs";
 import assert from "node:assert";
-import { test } from "node:test";
-import { http, HttpResponse } from "msw";
+import { afterEach, beforeEach, describe, it, test } from "node:test";
+import { http, HttpResponse, rest } from "msw";
 import { setupServer } from "msw/node";
 
 import {
@@ -23,6 +23,7 @@ import {
 class MockServer {
   etag?: string;
   numRequests: number;
+  lastCache?: string;
 
   reset() {
     this.numRequests = 0;
@@ -37,6 +38,7 @@ class MockServer {
       http.get(
         "http://localhost:1337/example.pmtiles",
         ({ request, params }) => {
+          this.lastCache = request.cache;
           this.numRequests++;
           const range = request.headers.get("range")?.substr(6).split("-");
           if (!range) {
@@ -414,4 +416,22 @@ test("pmtiles get TileJSON", async () => {
   assert.equal("test_fixture_1.pmtiles", tilejson.description);
   assert.equal("test_fixture_1.pmtiles", tilejson.name);
   assert.equal("2", tilejson.version);
+});
+
+describe("user agent", async () => {
+  beforeEach(() => {
+    global.navigator = {userAgent: 'Windows Chrome'};
+  });
+
+  afterEach(() => {
+    delete global.navigator.userAgent;
+  });
+
+  it('works around caching bug on chrome on windows', async () => {
+    let fetchRequestCache;
+
+    const p = new PMTiles("http://localhost:1337/example.pmtiles");
+    await p.getZxy(0, 0, 0);
+    assert.equal("no-store", mockserver.lastCache);
+  });
 });

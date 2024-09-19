@@ -9,7 +9,7 @@ The code for the lambda function imports from the top level `js/` directory. You
 You should then be able to build the Lambda ZIP:
 
 ```sh
-npm run build
+npm run build-zip
 ```
 
 Upload the resulting `dist/lambda_function.zip` using the Lambda console or copy and paste `dist/index.mjs`.

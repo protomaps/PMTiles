@@ -368,7 +368,7 @@ export class FetchSource implements Source {
     this.mustReload = false;
     let userAgent = "";
     if ("navigator" in globalThis) {
-      //biome-ignore lint
+      //biome-ignore lint: cf workers
       userAgent = (globalThis as any).navigator.userAgent;
     }
     const isWindows = userAgent.indexOf("Windows") > -1;

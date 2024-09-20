@@ -1,3 +1,7 @@
+3.1.0
+* disable brower caching if Chrome + Windows is detected in user agent to work around https://issues.chromium.org/issues/40542704 [#384, #442, #445]
+* add getTileJson to PMTiles [#239]
+
 3.0.7
 * improve ETag error message [#427]
 

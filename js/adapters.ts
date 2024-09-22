@@ -211,8 +211,8 @@ export class Protocol {
 
       if (this.metadata) {
         return {
-          data: await instance.getTileJson(params.url)
-        }
+          data: await instance.getTileJson(params.url),
+        };
       }
 
       const h = await instance.getHeader();

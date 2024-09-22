@@ -174,9 +174,9 @@ export class Protocol {
    * * metadata: also load the metadata section of the PMTiles. required for some "inspect" functionality
    * and to automatically populate the map attribution. Requires an extra HTTP request.
    */
-  constructor(options?: {metadata: boolean}) {
+  constructor(options?: { metadata: boolean }) {
     this.tiles = new Map<string, PMTiles>();
-    this.metadata = options && options.metadata || false;
+    this.metadata = options?.metadata || false;
   }
 
   /**

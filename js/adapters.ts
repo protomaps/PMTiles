@@ -166,9 +166,17 @@ const v3compat =
 export class Protocol {
   /** @hidden */
   tiles: Map<string, PMTiles>;
+  metadata: boolean;
 
-  constructor() {
+  /**
+   * Initialize the MapLibre PMTiles protocol.
+   *
+   * * metadata: also load the metadata section of the PMTiles. required for some "inspect" functionality
+   * and to automatically populate the map attribution. Requires an extra HTTP request.
+   */
+  constructor(options?: { metadata: boolean }) {
     this.tiles = new Map<string, PMTiles>();
+    this.metadata = options?.metadata || false;
   }
 
   /**
@@ -201,8 +209,13 @@ export class Protocol {
         this.tiles.set(pmtilesUrl, instance);
       }
 
-      const h = await instance.getHeader();
+      if (this.metadata) {
+        return {
+          data: await instance.getTileJson(params.url),
+        };
+      }
 
+      const h = await instance.getHeader();
       return {
         data: {
           tiles: [`${params.url}/{z}/{x}/{y}`],

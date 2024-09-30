@@ -8,5 +8,6 @@ r2_buckets  = [
 ]
 
 [vars]
-# ALLOWED_ORIGINS = "http://localhost:8000"
+# change to https://example.com, etc. to limit CORS origins
+ALLOWED_ORIGINS = "*"
 # CACHE_CONTROL = "public, max-age=86400"

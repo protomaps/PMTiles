@@ -272,8 +272,8 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
                     else:
                         y = int(file_name)
 
-                    flipped = (1 << z) - 1 - y
-                    tileid = zxy_to_tileid(z, x, flipped)
+                    # flipped = (1 << z) - 1 - y
+                    tileid = zxy_to_tileid(z, x, y)
                     filepath = os.path.join(directory_path, zoom_dir, row_dir, current_file)
                     tileid_path_set.append((tileid, filepath))
                     count = count + 1

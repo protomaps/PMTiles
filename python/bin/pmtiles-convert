@@ -19,7 +19,7 @@ parser.add_argument(
     "--overwrite", help="Overwrite the existing output.", action="store_true"
 )
 parser.add_argument(
-    "--scheme", help="Tiling scheme of the input directory ('ags', 'gwc', 'zyx', 'zxy' (default))."
+    "--scheme", help="Tiling scheme of the input directory ('ags', 'gwc', 'tms', 'zyx', 'zxy' (default))."
 )
 parser.add_argument(
     "--format", help="Raster image format of tiles in the input directory ('png', 'jpeg', 'webp', 'avif') if not provided in the metadata.", dest="tile_format"

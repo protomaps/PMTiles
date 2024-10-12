@@ -193,7 +193,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
         maxzoom (int, "auto"): Max zoom level to use. If "auto", uses highest zoom in directory.
 
     Keyword args:
-        scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'zyx', 'zxy' (default)).
+        scheme (str): Tiling scheme of the directory ('ags', 'gwc', 'tms', 'zyx', 'zxy' (default)).
         tile_format (str): Image format of the tiles ('png', 'jpeg', 'webp', 'avif') if not given in the metadata.
         verbose (bool): Set True to print progress.
 
@@ -247,11 +247,11 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
         count = 0
         for row_dir in get_dirs(os.path.join(directory_path, zoom_dir)):
             if scheme == 'ags':
-                y = flip_y(z, int(row_dir.replace("R", ""), 16))
+                y = int(row_dir.replace("R", ""), 16)
             elif scheme == 'gwc':
                 pass
             elif scheme == 'zyx':
-                y = flip_y(int(z), int(row_dir))
+                y = int(row_dir)
             else:
                 x = int(row_dir)
             for current_file in os.listdir(os.path.join(directory_path, zoom_dir, row_dir)):
@@ -259,21 +259,20 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
                     pass
                 else:
                     file_name, _ = current_file.split('.',1)
-                    if scheme == 'xyz':
-                        y = flip_y(int(z), int(file_name))
+                    if scheme == 'tms':
+                        y = flip_y(z, int(file_name))
                     elif scheme == 'ags':
                         x = int(file_name.replace("C", ""), 16)
                     elif scheme == 'gwc':
                         x, y = file_name.split('_')
                         x = int(x)
-                        y = int(y)
+                        y = flip_y(z, int(y))
                     elif scheme == 'zyx':
                         x = int(file_name)
                     else:
                         y = int(file_name)
 
-                    flipped = (1 << z) - 1 - y
-                    tileid = zxy_to_tileid(z, x, flipped)
+                    tileid = zxy_to_tileid(z, x, y)
                     filepath = os.path.join(directory_path, zoom_dir, row_dir, current_file)
                     tileid_path_set.append((tileid, filepath))
                     count = count + 1

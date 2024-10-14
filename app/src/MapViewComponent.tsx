@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Protomaps LLC
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import React, { useState, useEffect } from "react";

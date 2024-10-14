@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Protomaps LLC
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
 import { useState } from "react";
 import { PMTiles } from "../../js/index";
 import { styled } from "./stitches.config";

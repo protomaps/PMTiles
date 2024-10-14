@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Protomaps LLC
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { FileSource, PMTiles } from "../../js/index";

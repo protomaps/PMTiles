@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Protomaps LLC
+//
+// SPDX-License-Identifier: BSD-3-Clause
+
 import { VectorTile } from "@mapbox/vector-tile";
 import { path } from "d3-path";
 import { schemeSet3 } from "d3-scale-chromatic";

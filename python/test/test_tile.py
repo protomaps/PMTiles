@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Protomaps LLC
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 import unittest
 from pmtiles.tile import zxy_to_tileid, tileid_to_zxy, Entry
 from pmtiles.tile import read_varint, write_varint

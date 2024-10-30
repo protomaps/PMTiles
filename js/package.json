@@ -31,12 +31,12 @@
   "license": "BSD-3-Clause",
   "devDependencies": {
     "@biomejs/biome": "^1.5.3",
-    "@types/node": "^18.11.9",
+    "@types/node": "^20.0.0",
     "esbuild": "^0.20.0",
-    "msw": "^2.1.5",
+    "msw": "^2.5.0",
     "tsx": "^4.7.0",
     "typedoc": "^0.25.7",
-    "typescript": "^4.5.5"
+    "typescript": "^5.0.0"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.8",

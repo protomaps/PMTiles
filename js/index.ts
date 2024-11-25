@@ -1,5 +1,4 @@
 import { decompressSync } from "fflate";
-import v2 from "./v2";
 export * from "./adapters";
 
 /** @hidden */
@@ -566,14 +565,14 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
 function detectVersion(a: ArrayBuffer): number {
   const v = new DataView(a);
   if (v.getUint16(2, true) === 2) {
-    console.warn(
-      "PMTiles spec version 2 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade"
+    console.error(
+      "PMTiles spec version 2 is not supported; please see github.com/protomaps/PMTiles for tools to upgrade"
     );
     return 2;
   }
   if (v.getUint16(2, true) === 1) {
-    console.warn(
-      "PMTiles spec version 1 has been deprecated; please see github.com/protomaps/PMTiles for tools to upgrade"
+    console.error(
+      "PMTiles spec version 1 is not supported; please see github.com/protomaps/PMTiles for tools to upgrade"
     );
     return 1;
   }
@@ -597,12 +596,6 @@ export interface Cache {
     length: number,
     header: Header
   ) => Promise<Entry[]>;
-  getArrayBuffer: (
-    source: Source,
-    offset: number,
-    length: number,
-    header: Header
-  ) => Promise<ArrayBuffer>;
   invalidate: (source: Source) => Promise<void>;
 }
 
@@ -615,11 +608,6 @@ async function getHeaderAndRoot(
   const v = new DataView(resp.data);
   if (v.getUint16(0, true) !== 0x4d50) {
     throw new Error("Wrong magic number for PMTiles archive");
-  }
-
-  // V2 COMPATIBILITY
-  if (detectVersion(resp.data) < 3) {
-    return [await v2.getHeader(source)];
   }
 
   const headerData = resp.data.slice(0, HEADER_SIZE_BYTES);
@@ -744,33 +732,6 @@ export class ResolvedValueCache {
     return directory;
   }
 
-  // for v2 backwards compatibility
-  async getArrayBuffer(
-    source: Source,
-    offset: number,
-    length: number,
-    header: Header
-  ): Promise<ArrayBuffer> {
-    const cacheKey = `${source.getKey()}|${
-      header.etag || ""
-    }|${offset}|${length}`;
-    const cacheValue = this.cache.get(cacheKey);
-    if (cacheValue) {
-      cacheValue.lastUsed = this.counter++;
-      const data = await cacheValue.data;
-      return data as ArrayBuffer;
-    }
-
-    const resp = await source.getBytes(offset, length, undefined, header.etag);
-
-    this.cache.set(cacheKey, {
-      lastUsed: this.counter++,
-      data: resp.data,
-    });
-    this.prune();
-    return resp.data;
-  }
-
   prune() {
     if (this.cache.size > this.maxCacheEntries) {
       let minUsed = Infinity;
@@ -880,40 +841,6 @@ export class SharedPromiseCache {
     return p;
   }
 
-  // for v2 backwards compatibility
-  async getArrayBuffer(
-    source: Source,
-    offset: number,
-    length: number,
-    header: Header
-  ): Promise<ArrayBuffer> {
-    const cacheKey = `${source.getKey()}|${
-      header.etag || ""
-    }|${offset}|${length}`;
-    const cacheValue = this.cache.get(cacheKey);
-    if (cacheValue) {
-      cacheValue.lastUsed = this.counter++;
-      const data = await cacheValue.data;
-      return data as ArrayBuffer;
-    }
-
-    const p = new Promise<ArrayBuffer>((resolve, reject) => {
-      source
-        .getBytes(offset, length, undefined, header.etag)
-        .then((resp) => {
-          resolve(resp.data);
-          if (this.cache.has(cacheKey)) {
-          }
-          this.prune();
-        })
-        .catch((e) => {
-          reject(e);
-        });
-    });
-    this.cache.set(cacheKey, { lastUsed: this.counter++, data: p });
-    return p;
-  }
-
   prune() {
     if (this.cache.size >= this.maxCacheEntries) {
       let minUsed = Infinity;
@@ -1002,11 +929,6 @@ export class PMTiles {
   ): Promise<RangeResponse | undefined> {
     const tileId = zxyToTileId(z, x, y);
     const header = await this.cache.getHeader(this.source);
-
-    // V2 COMPATIBILITY
-    if (header.specVersion < 3) {
-      return v2.getZxy(header, this.source, this.cache, z, x, y, signal);
-    }
 
     if (z < header.minZoom || z > header.maxZoom) {
       return undefined;

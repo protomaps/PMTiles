@@ -1,7 +1,7 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import React, { useState, useEffect } from "react";
-import { PMTiles } from "../../js/index";
+import { PMTiles } from "../../js/src/index";
 import { globalStyles, styled } from "./stitches.config";
 
 import Loader from "./Loader";

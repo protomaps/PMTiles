@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { FileSource, PMTiles } from "../../js/index";
+import { FileSource, PMTiles } from "../../js/src/index";
 import { styled } from "./stitches.config";
 
 import * as LabelPrimitive from "@radix-ui/react-label";

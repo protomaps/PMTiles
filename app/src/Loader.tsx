@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PMTiles } from "../../js/index";
+import { PMTiles } from "../../js/src/index";
 import { styled } from "./stitches.config";
 
 import MaplibreMap from "./MaplibreMap";

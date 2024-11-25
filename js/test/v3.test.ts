@@ -18,7 +18,7 @@ import {
   tileIdToZxy,
   tileTypeExt,
   zxyToTileId,
-} from "../index";
+} from "../src/index";
 
 class MockServer {
   etag?: string;

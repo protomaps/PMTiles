@@ -1,3 +1,6 @@
+4.0.1
+* fix iife build via esbuild configuration for fflate browser dependency
+
 4.0.0
 * remove pmtiles spec v2 support, which reduces bundle size significantly [#287]
 * use tsup for creating cjs/esm packages, which fixes typescript usage [#498]

@@ -29,6 +29,9 @@ export default [
   }),
   defineConfig({
     ...baseOptions,
+    esbuildOptions: (options) => {
+      options.platform = "browser";
+    },
     outDir: "dist",
     format: "iife",
     globalName: "pmtiles",

@@ -1,6 +1,6 @@
 import { JsonViewer } from "@textea/json-viewer";
 import { useEffect, useState } from "react";
-import { Header, PMTiles } from "../../js/index";
+import { Header, PMTiles } from "../../js/src/index";
 import { styled } from "./stitches.config";
 
 const Padded = styled("div", {

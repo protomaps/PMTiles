@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PMTiles } from "../../js/index";
+import { PMTiles } from "../../js/src/index";
 import { globalStyles, styled } from "./stitches.config";
 import Inspector from "./Inspector";
 import Start from "./Start";

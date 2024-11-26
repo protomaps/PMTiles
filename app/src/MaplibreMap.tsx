@@ -9,8 +9,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import baseTheme from "protomaps-themes-base";
 import React, { useState, useEffect, useRef } from "react";
 import { renderToString } from "react-dom/server";
-import { Protocol } from "../../js/adapters";
-import { PMTiles, TileType } from "../../js/index";
+import { Protocol } from "../../js/src/adapters";
+import { PMTiles, TileType } from "../../js/src/index";
 import { styled } from "./stitches.config";
 
 const BASEMAP_THEME = "black";

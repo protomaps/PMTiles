@@ -1,3 +1,8 @@
+4.0.0
+* remove pmtiles spec v2 support, which reduces bundle size significantly [#287]
+* use tsup for creating cjs/esm packages, which fixes typescript usage [#498]
+* re-structure files in js project to be more conventional.
+
 3.2.0
 * MapLibre `Protocol` constructor takes an options object.
 * add protocol option `metadata:boolean` that controls whether TileJSON metadata is fetched synchronously on map load. [#247]

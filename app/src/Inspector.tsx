@@ -5,7 +5,13 @@ import Protobuf from "pbf";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { UncontrolledReactSVGPanZoom } from "react-svg-pan-zoom";
 import { useMeasure } from "react-use";
-import { Entry, Header, PMTiles, TileType, tileIdToZxy } from "../../js/index";
+import {
+  Entry,
+  Header,
+  PMTiles,
+  TileType,
+  tileIdToZxy,
+} from "../../js/src/index";
 import { styled } from "./stitches.config";
 
 const TableContainer = styled("div", {

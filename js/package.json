@@ -19,7 +19,6 @@
       }
     }
   },
-  "types": "./dist/index.d.ts",
   "source": "index.ts",
   "files": [
     "dist",

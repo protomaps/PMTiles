@@ -1,6 +1,6 @@
 {
   "name": "pmtiles",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "PMTiles archive decoder for browsers",
   "type": "module",
   "main": "dist/cjs/index.cjs",
@@ -38,7 +38,7 @@
     "@biomejs/biome": "^1.5.3",
     "@types/leaflet": "^1.9.8",
     "@types/node": "^20.0.0",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.24.0",
     "msw": "^2.5.0",
     "tsup": "^8.3.5",
     "tsx": "^4.7.0",

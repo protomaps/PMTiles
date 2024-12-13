@@ -167,6 +167,7 @@ export class Protocol {
   /** @hidden */
   tiles: Map<string, PMTiles>;
   metadata: boolean;
+  errorOnMissingTile: boolean;
 
   /**
    * Initialize the MapLibre PMTiles protocol.
@@ -177,7 +178,7 @@ export class Protocol {
    * returning the empty array. Not recommended. This is only to reproduce the behavior of ZXY tile APIs
    * which some overzooming applications depend on.
    */
-  constructor(options?: { metadata: boolean }) {
+  constructor(options?: { metadata?: boolean, errorOnMissingTile?: boolean }) {
     this.tiles = new Map<string, PMTiles>();
     this.metadata = options?.metadata || false;
     this.errorOnMissingTile = options?.errorOnMissingTile || false;

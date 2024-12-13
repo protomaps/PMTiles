@@ -98,10 +98,10 @@ const tzValues: number[] = [
  */
 export function zxyToTileId(z: number, x: number, y: number): number {
   if (z > 26) {
-    throw Error("Tile zoom level exceeds max safe number limit (26)");
+    throw new Error("Tile zoom level exceeds max safe number limit (26)");
   }
   if (x > 2 ** z - 1 || y > 2 ** z - 1) {
-    throw Error("tile x/y outside zoom level bounds");
+    throw new Error("tile x/y outside zoom level bounds");
   }
 
   const acc = tzValues[z];
@@ -136,7 +136,7 @@ export function tileIdToZxy(i: number): [number, number, number] {
     acc += numTiles;
   }
 
-  throw Error("Tile zoom level exceeds max safe number limit (26)");
+  throw new Error("Tile zoom level exceeds max safe number limit (26)");
 }
 
 /**
@@ -196,7 +196,7 @@ async function defaultDecompress(
     }
     const stream = new Response(buf).body;
     if (!stream) {
-      throw Error("Failed to read response stream");
+      throw new Error("Failed to read response stream");
     }
     const result: ReadableStream<Uint8Array> = stream.pipeThrough(
       // biome-ignore lint: needed to detect DecompressionStream in browser+node+cloudflare workers
@@ -204,7 +204,7 @@ async function defaultDecompress(
     );
     return new Response(result).arrayBuffer();
   }
-  throw Error("Compression method not supported");
+  throw new Error("Compression method not supported");
 }
 
 /**
@@ -431,7 +431,7 @@ export class FetchSource implements Source {
     if (offset === 0 && resp.status === 416) {
       const contentRange = resp.headers.get("Content-Range");
       if (!contentRange || !contentRange.startsWith("bytes */")) {
-        throw Error("Missing content-length on 416 response");
+        throw new Error("Missing content-length on 416 response");
       }
       const actualLength = +contentRange.substr(8);
       resp = await fetch(this.url, {
@@ -457,7 +457,7 @@ export class FetchSource implements Source {
     }
 
     if (resp.status >= 300) {
-      throw Error(`Bad response code: ${resp.status}`);
+      throw new Error(`Bad response code: ${resp.status}`);
     }
 
     // some well-behaved backends, e.g. DigitalOcean CDN, respond with 200 instead of 206
@@ -465,7 +465,7 @@ export class FetchSource implements Source {
     const contentLength = resp.headers.get("Content-Length");
     if (resp.status === 200 && (!contentLength || +contentLength > length)) {
       if (controller) controller.abort();
-      throw Error(
+      throw new Error(
         "Server returned no content-length header or content-length exceeding request. Check that your storage backend supports HTTP Byte Serving."
       );
     }
@@ -494,7 +494,7 @@ export function bytesToHeader(bytes: ArrayBuffer, etag?: string): Header {
   const v = new DataView(bytes);
   const specVersion = v.getUint8(7);
   if (specVersion > 3) {
-    throw Error(
+    throw new Error(
       `Archive is spec version ${specVersion} but this library supports up to spec version 3`
     );
   }
@@ -966,7 +966,7 @@ export class PMTiles {
         return undefined;
       }
     }
-    throw Error("Maximum directory depth exceeded");
+    throw new Error("Maximum directory depth exceeded");
   }
 
   /**

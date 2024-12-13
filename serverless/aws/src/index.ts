@@ -42,7 +42,7 @@ async function nativeDecompress(
   if (compression === Compression.Gzip) {
     return zlib.gunzipSync(buf);
   }
-  throw Error("Compression method not supported");
+  throw new Error("Compression method not supported");
 }
 
 // Lambda needs to run with 512MB, empty function takes about 70
@@ -90,7 +90,7 @@ class S3Source implements Source {
 
     const arr = await resp.Body?.transformToByteArray();
 
-    if (!arr) throw Error("Failed to read S3 response body");
+    if (!arr) throw new Error("Failed to read S3 response body");
 
     return {
       data: arr.buffer,

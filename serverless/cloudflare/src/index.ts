@@ -36,7 +36,7 @@ async function nativeDecompress(
     const result = stream?.pipeThrough(new DecompressionStream("gzip"));
     return new Response(result).arrayBuffer();
   }
-  throw Error("Compression method not supported");
+  throw new Error("Compression method not supported");
 }
 
 const CACHE = new ResolvedValueCache(25, undefined, nativeDecompress);

@@ -42,7 +42,7 @@ class MockServer {
           this.numRequests++;
           const range = request.headers.get("range")?.substr(6).split("-");
           if (!range) {
-            throw Error("invalid range");
+            throw new Error("invalid range");
           }
           const offset = +range[0];
           const length = +range[1];

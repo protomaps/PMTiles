@@ -167,16 +167,21 @@ export class Protocol {
   /** @hidden */
   tiles: Map<string, PMTiles>;
   metadata: boolean;
+  errorOnMissingTile: boolean;
 
   /**
    * Initialize the MapLibre PMTiles protocol.
    *
    * * metadata: also load the metadata section of the PMTiles. required for some "inspect" functionality
    * and to automatically populate the map attribution. Requires an extra HTTP request.
+   * * errorOnMissingTile: When a vector MVT tile is missing from the archive, raise an error instead of
+   * returning the empty array. Not recommended. This is only to reproduce the behavior of ZXY tile APIs
+   * which some applications depend on when overzooming.
    */
-  constructor(options?: { metadata: boolean }) {
+  constructor(options?: { metadata?: boolean; errorOnMissingTile?: boolean }) {
     this.tiles = new Map<string, PMTiles>();
     this.metadata = options?.metadata || false;
+    this.errorOnMissingTile = options?.errorOnMissingTile || false;
   }
 
   /**
@@ -251,6 +256,9 @@ export class Protocol {
       };
     }
     if (header.tileType === TileType.Mvt) {
+      if (this.errorOnMissingTile) {
+        throw new Error("Tile not found.");
+      }
       return { data: new Uint8Array() };
     }
     return { data: null };

@@ -1,3 +1,7 @@
+4.1.0
+* MapLibre `Protocol` constructor takes `errorOnMissingTile` option. [#505]
+  - Use this only for parity with the overzooming behavior of ZXY tile APIs.
+
 4.0.1
 * fix iife build via esbuild configuration for fflate browser dependency
 

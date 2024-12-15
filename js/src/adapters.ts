@@ -176,7 +176,7 @@ export class Protocol {
    * and to automatically populate the map attribution. Requires an extra HTTP request.
    * * errorOnMissingTile: When a vector MVT tile is missing from the archive, raise an error instead of
    * returning the empty array. Not recommended. This is only to reproduce the behavior of ZXY tile APIs
-   * which some overzooming applications depend on.
+   * which some applications depend on when overzooming.
    */
   constructor(options?: { metadata?: boolean; errorOnMissingTile?: boolean }) {
     this.tiles = new Map<string, PMTiles>();

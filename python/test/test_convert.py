@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Protomaps LLC
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 import unittest
 import sqlite3
 from io import BytesIO

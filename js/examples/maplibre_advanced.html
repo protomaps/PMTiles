@@ -10,12 +10,14 @@
                 margin: 0;
             }
             #map {
-                height:100%; width:100%;
+                height:calc(100% - 50px);
+                width:100%;
             }
         </style>
     </head>
     <body>
         <div id="map"></div>
+        Description from PMTiles metadata: <span id="description"></span>
         <script type="text/javascript">
             // Advanced MapLibre example demonstrating PMTiles JavaScript API + pmtiles:// protocol.
 
@@ -30,6 +32,10 @@
 
             // this is so we share one instance across the JS code and the map renderer
             protocol.add(p);
+
+            p.getMetadata().then((m) => {
+              document.getElementById("description").textContent = m.description;
+            })
 
             // we first fetch the header so we can get the center lon, lat of the map.
             p.getHeader().then((h) => {

@@ -221,6 +221,13 @@ export class Protocol {
       }
 
       const h = await instance.getHeader();
+
+      if (h.minLon >= h.maxLon || h.minLat >= h.maxLat) {
+        console.error(
+          `Bounds of PMTiles archive ${h.minLon},${h.minLat},${h.maxLon},${h.maxLat} are not valid.`
+        );
+      }
+
       return {
         data: {
           tiles: [`${params.url}/{z}/{x}/{y}`],

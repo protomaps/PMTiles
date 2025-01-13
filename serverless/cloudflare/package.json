@@ -17,5 +17,8 @@
     "build": "wrangler deploy --outdir dist --dry-run",
     "biome": "biome check --config-path=../../js/ src/index.ts --apply",
     "biome-check": "biome check --config-path=../../js src/index.ts"
+  },
+  "dependencies": {
+    "pmtiles": "^4.0.1"
   }
 }

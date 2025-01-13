@@ -37,7 +37,7 @@ See [protomaps-leaflet](https://github.com/protomaps/protomaps-leaflet)
 Example of a PMTiles archive displayed in MapLibre GL JS:
 
 ```js
- import { Protocol } from "pmtiles";
+import { Protocol } from "pmtiles";
 let protocol = new Protocol();
 maplibregl.addProtocol("pmtiles",protocol.tile);
 var style = {

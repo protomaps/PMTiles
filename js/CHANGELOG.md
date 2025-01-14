@@ -1,3 +1,6 @@
+4.2.0
+* MapLibre adapter detects erroneous tileset bounds and shows console error [#508]
+
 4.1.0
 * MapLibre `Protocol` constructor takes `errorOnMissingTile` option. [#505]
   - Use this only for parity with the overzooming behavior of ZXY tile APIs.

@@ -19,6 +19,6 @@
     "biome-check": "biome check --config-path=../../js src/index.ts"
   },
   "dependencies": {
-    "pmtiles": "^4.0.1"
+    "pmtiles": "^4.1.0"
   }
 }

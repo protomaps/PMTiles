@@ -1,3 +1,11 @@
+The below license (BSD-3) applies to the reference implementations in this repository.
+
+The PMTiles specification itself is public domain, or CC0 where applicable.
+
+Sample tilesets available in this repository are subject to their own license terms.
+
+---
+
 Copyright 2021 Protomaps LLC
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:

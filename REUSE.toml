@@ -1,6 +1,21 @@
 version = 1
 
 [[annotations]]
-path = "**"
+path = ["app/**","cpp/**","js/**","openlayers/**","python/**","serverless/**"]
 SPDX-FileCopyrightText = "2021 and later, Protomaps LLC and contributors"
 SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = "spec/**/*.md"
+SPDX-FileCopyrightText = "2021 and later, Protomaps LLC and contributors"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "spec/v3/protomaps(vector)ODbL_firenze.pmtiles"
+SPDX-FileCopyrightText = "© OpenStreetMap Contributors"
+SPDX-License-Identifier = "ODbL-1.0"
+
+[[annotations]]
+path = "stamen_toner(raster)CC-BY+ODbL_z3.pmtiles"
+SPDX-FileCopyrightText = "Stamen Design, © OpenStreetMap Contributors"
+SPDX-License-Identifier = "CC-BY-4.0"

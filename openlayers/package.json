@@ -42,7 +42,7 @@
     "prettier-check": "prettier --check *.js"
   },
   "dependencies": {
-    "pmtiles": "^4.2.0"
+    "pmtiles": "^4.2.1"
   },
   "devDependencies": {
     "tsup": "^8.2.3",

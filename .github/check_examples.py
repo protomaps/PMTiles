@@ -20,8 +20,8 @@ for package in glob.glob("**/package.json",recursive=True):
 			j2 = json.loads(f.read())
 			if 'dependencies' in j2 and name in j2["dependencies"]:
 				dependent_version = j2["dependencies"]["pmtiles"]
-				if "^" + dependent_version != version:
-					print(dependent,"should be",version,"was",dependent_version)
+				if dependent_version != "^" + version:
+					print(dependent,"should be ^",version,"was",dependent_version)
 					fail = 1
 
 	for html in glob.glob("**/*.html",recursive=True):

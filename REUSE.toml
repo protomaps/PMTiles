@@ -1,0 +1,6 @@
+version = 1
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2021 and later, Protomaps LLC and contributors"
+SPDX-License-Identifier = "BSD-3-Clause"

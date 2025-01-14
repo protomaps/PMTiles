@@ -1,4 +1,4 @@
-4.2.0
+4.2.1
 * MapLibre adapter detects erroneous tileset bounds and shows console error [#508]
 
 4.1.0

@@ -6,7 +6,7 @@ import {
   ResolvedValueCache,
   Source,
   TileType,
-} from "../../../js/src/index";
+} from "pmtiles";
 import { pmtiles_path, tile_path } from "../../shared/index";
 
 interface Env {

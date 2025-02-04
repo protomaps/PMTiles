@@ -19,13 +19,12 @@ const INITIAL_ZOOM = 0;
 const INITIAL_LNG = 0;
 const INITIAL_LAT = 0;
 const BASEMAP_URL =
-  "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f";
+  "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f";
 const BASEMAP_ATTRIBUTION =
   'Basemap <a href="https://github.com/protomaps/basemaps">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>';
 
 maplibregl.setRTLTextPlugin(
   "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
-  () => {},
   true
 );
 
@@ -196,7 +195,7 @@ const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
   let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
-    layers = baseTheme("basemap", BASEMAP_THEME);
+    layers = baseTheme("basemap", BASEMAP_THEME, "en");
   }
 
   layers.push({
@@ -239,7 +238,7 @@ const vectorStyle = async (
   let baseOpacity = 0.35;
 
   if (metadata.type !== "baselayer") {
-    layers = baseTheme("basemap", BASEMAP_THEME);
+    layers = baseTheme("basemap", BASEMAP_THEME, "en");
     baseOpacity = 0.9;
   }
 

@@ -25,7 +25,6 @@ const BASEMAP_ATTRIBUTION =
 
 maplibregl.setRTLTextPlugin(
   "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
-  () => {},
   true
 );
 
@@ -196,7 +195,7 @@ const rasterStyle = async (file: PMTiles): Promise<StyleSpecification> => {
   let layers: LayerSpecification[] = [];
 
   if (metadata.type !== "baselayer") {
-    layers = baseTheme("basemap", BASEMAP_THEME);
+    layers = baseTheme("basemap", BASEMAP_THEME, "en");
   }
 
   layers.push({
@@ -239,7 +238,7 @@ const vectorStyle = async (
   let baseOpacity = 0.35;
 
   if (metadata.type !== "baselayer") {
-    layers = baseTheme("basemap", BASEMAP_THEME);
+    layers = baseTheme("basemap", BASEMAP_THEME, "en");
     baseOpacity = 0.9;
   }
 

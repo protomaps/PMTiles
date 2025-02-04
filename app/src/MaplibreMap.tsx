@@ -19,7 +19,7 @@ const INITIAL_ZOOM = 0;
 const INITIAL_LNG = 0;
 const INITIAL_LAT = 0;
 const BASEMAP_URL =
-  "https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=1003762824b9687f";
+  "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f";
 const BASEMAP_ATTRIBUTION =
   'Basemap <a href="https://github.com/protomaps/basemaps">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>';
 

@@ -1,5 +1,5 @@
 {
-  "name": "app2",
+  "name": "pmtiles-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,13 +11,15 @@
   "dependencies": {
     "@mapbox/sphericalmercator": "^2.0.1",
     "@mapbox/vector-tile": "^2.0.3",
+    "@tailwindcss/vite": "^4.0.3",
     "d3-path": "^3.1.0",
     "d3-scale-chromatic": "^3.1.0",
     "fflate": "^0.8.2",
     "maplibre-gl": "^5.1.0",
     "pbf": "^4.0.1",
     "protomaps-themes-base": "^4.4.0",
-    "solid-js": "^1.9.3"
+    "solid-js": "^1.9.3",
+    "tailwindcss": "^4.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

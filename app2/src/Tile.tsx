@@ -1,13 +1,13 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import './index.css'
+import "./index.css";
 
 function Tile() {
   return (
     <>
       <h1 class="text-xl">Tile inspector</h1>
     </>
-  )
+  );
 }
 
 const root = document.getElementById("root");

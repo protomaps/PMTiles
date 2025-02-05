@@ -1,13 +1,13 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import './index.css'
+import "./index.css";
 
 function Archive() {
   return (
     <>
       <h1 class="text-xl">Archive inspector</h1>
     </>
-  )
+  );
 }
 
 const root = document.getElementById("root");

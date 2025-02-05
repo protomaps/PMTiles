@@ -8,6 +8,7 @@ import { default as layers } from "protomaps-themes-base";
 import { createHash, parseHash } from "./utils";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
+import { Tileset } from "./tileset";
 
 declare module "solid-js" {
   namespace JSX {
@@ -18,7 +19,7 @@ declare module "solid-js" {
 }
 
 const PopupContent = (props: {
-  url: string;
+  url?: string;
   z: number;
   x: number;
   y: number;
@@ -37,15 +38,7 @@ const PopupContent = (props: {
   );
 };
 
-class Tileset {
-  url: string;
-
-  constructor(url: string) {
-    this.url = url;
-  }
-}
-
-function MapView(props: { url: string }) {
+function MapView(props: { url?: string }) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);

@@ -2,6 +2,7 @@
 import { render } from "solid-js/web";
 import "./index.css";
 
+// url parameters: url (cannot be tilejson, must be local or remote pmtiles)
 function ArchiveView() {
   return (
     <>

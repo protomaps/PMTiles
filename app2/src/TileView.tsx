@@ -2,6 +2,7 @@
 import { render } from "solid-js/web";
 import "./index.css";
 
+// url parameters: zxy ?tile=1/2/3&url=https://example.com/foo.json
 function TileView() {
   return (
     <>

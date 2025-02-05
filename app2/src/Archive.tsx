@@ -5,7 +5,7 @@ import './index.css'
 function Archive() {
   return (
     <>
-      <h1 class="text-xl">Vite + Solid</h1>
+      <h1 class="text-xl">Archive inspector</h1>
     </>
   )
 }

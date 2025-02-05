@@ -6,6 +6,15 @@ import { Map as MaplibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { default as layers } from "protomaps-themes-base";
 import { createHash, parseHash } from "./utils";
+import "@alenaksu/json-viewer";
+
+declare module "solid-js" {
+  namespace JSX {
+    interface IntrinsicElements {
+      "json-viewer": unknown;
+    }
+  }
+}
 
 class Tileset {
   url: string;
@@ -52,9 +61,6 @@ function Map() {
         <button class="px-4" type="button">
           fit to bounds
         </button>
-        <button class="px-4" type="button">
-          show metadata
-        </button>
         zoom level: 1
       </div>
       <div ref={mapContainer} class="h-full flex-1" />
@@ -62,17 +68,22 @@ function Map() {
   );
 }
 
-// url parameters: maplibre hash + metadata + url
 function MapView() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? new Tileset(hash.url) : undefined,
   );
+  const [showArchiveInfo, setShowArchiveInfo] = createSignal<boolean>(
+    hash.showArchiveInfo === "true" || false,
+  );
 
   createEffect(() => {
     let t = tileset();
     if (t) {
-      location.hash = createHash(location.hash, { url: t.url });
+      location.hash = createHash(location.hash, {
+        url: t.url,
+        showArchiveInfo: showArchiveInfo() ? "true" : undefined,
+      });
     }
   });
 
@@ -103,6 +114,15 @@ function MapView() {
           <button class="px-4 bg-indigo-500" type="submit">
             load
           </button>
+          <button
+            class="px-4 rounded bg-indigo-500"
+            onClick={() => {
+              setShowArchiveInfo(!showArchiveInfo());
+            }}
+            type="button"
+          >
+            toggle archive info
+          </button>
         </form>
       </div>
       <Show
@@ -119,7 +139,14 @@ function MapView() {
           </span>
         }
       >
-        <Map />
+        <div class="flex w-full h-full">
+          <Map />
+          <Show when={showArchiveInfo()}>
+            <div class="w-1/2">
+              <json-viewer data='{"abc":{"def":"geh"}}'></json-viewer>
+            </div>
+          </Show>
+        </div>
       </Show>
     </div>
   );

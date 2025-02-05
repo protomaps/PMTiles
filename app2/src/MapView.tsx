@@ -2,7 +2,7 @@
 import { render } from "solid-js/web";
 import "./index.css";
 
-function Map() {
+function MapView() {
   return (
     <>
       <h1 class="text-xl">Map view</h1>
@@ -13,5 +13,5 @@ function Map() {
 const root = document.getElementById("root");
 
 if (root) {
-  render(() => <Map />, root);
+  render(() => <MapView />, root);
 }

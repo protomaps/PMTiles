@@ -16,6 +16,7 @@
     "@mapbox/vector-tile": "^2.0.3",
     "d3-path": "^3.1.0",
     "d3-scale-chromatic": "^3.1.0",
+    "d3-zoom": "^3.0.0",
     "fflate": "^0.8.2",
     "maplibre-gl": "^5.1.0",
     "pbf": "^4.0.1",

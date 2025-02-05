@@ -1,12 +1,13 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import "./index.css";
-import { Show, createSignal, createEffect, onMount, type JSX } from "solid-js";
-import { Map as MaplibreMap } from "maplibre-gl";
+import { Map as MaplibreMap, Popup } from "maplibre-gl";
+import { type JSX, Show, createEffect, createSignal, onMount } from "solid-js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { default as layers } from "protomaps-themes-base";
 import { createHash, parseHash } from "./utils";
 import "@alenaksu/json-viewer";
+import { SphericalMercator } from "@mapbox/sphericalmercator";
 
 declare module "solid-js" {
   namespace JSX {
@@ -16,17 +17,44 @@ declare module "solid-js" {
   }
 }
 
+const PopupContent = (props: {
+  url: string;
+  z: number;
+  x: number;
+  y: number;
+}) => {
+  return (
+    <div>
+      <a
+        class="underline"
+        target="_blank"
+        rel="noreferrer"
+        href={`/tile/#zxy=${props.z}/${props.x}/${props.y}&url=${props.url}`}
+      >
+        Inspect tile {props.z}/{props.x}/{props.y}
+      </a>
+    </div>
+  );
+};
+
 class Tileset {
   url: string;
 
   constructor(url: string) {
-    console.log("tileset init", url);
     this.url = url;
   }
 }
 
-function Map() {
+function MapView(props: { url: string }) {
   let mapContainer: HTMLDivElement | undefined;
+  let hiddenRef: HTMLDivElement | undefined;
+  const [zoom, setZoom] = createSignal<number>(0);
+
+  const popup = new Popup({
+    closeButton: false,
+    closeOnClick: false,
+    maxWidth: "none",
+  });
 
   onMount(() => {
     if (!mapContainer) {
@@ -34,7 +62,7 @@ function Map() {
       return;
     }
 
-    new MaplibreMap({
+    const map = new MaplibreMap({
       hash: "map",
       container: mapContainer,
       style: {
@@ -53,6 +81,32 @@ function Map() {
         layers: layers("basemap", "white", "en"),
       },
     });
+
+    map.showTileBoundaries = true;
+
+    setZoom(map.getZoom());
+    map.on("zoom", (e) => {
+      setZoom(e.target.getZoom());
+    });
+
+    map.on("click", (e) => {
+      const sp = new SphericalMercator();
+      const z = Math.floor(zoom());
+      const result = sp.px([e.lngLat.lng, e.lngLat.lat], z);
+      const tileX = Math.floor(result[0] / 256);
+      const tileY = Math.floor(result[1] / 256);
+
+      if (hiddenRef) {
+        hiddenRef.innerHTML = "";
+        render(
+          () => <PopupContent url={props.url} z={z} x={tileX} y={tileY} />,
+          hiddenRef,
+        );
+        popup.setHTML(hiddenRef.innerHTML);
+        popup.setLngLat(e.lngLat);
+        popup.addTo(map);
+      }
+    });
   });
 
   return (
@@ -61,14 +115,15 @@ function Map() {
         <button class="px-4" type="button">
           fit to bounds
         </button>
-        zoom level: 1
+        zoom level: {zoom()}
       </div>
       <div ref={mapContainer} class="h-full flex-1" />
+      <div class="hidden" ref={hiddenRef} />
     </div>
   );
 }
 
-function MapView() {
+function App() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? new Tileset(hash.url) : undefined,
@@ -78,7 +133,7 @@ function MapView() {
   );
 
   createEffect(() => {
-    let t = tileset();
+    const t = tileset();
     if (t) {
       location.hash = createHash(location.hash, {
         url: t.url,
@@ -110,7 +165,7 @@ function MapView() {
             type="text"
             name="url"
             placeholder="TileJSON or .pmtiles"
-          ></input>
+          />
           <button class="px-4 bg-indigo-500" type="submit">
             load
           </button>
@@ -129,21 +184,22 @@ function MapView() {
         when={tileset() !== undefined}
         fallback={
           <span>
-            <span
+            <button
+              type="button"
               onClick={() => {
                 loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
               }}
             >
               https://demo-bucket.protomaps.com/v4.pmtiles
-            </span>
+            </button>
           </span>
         }
       >
         <div class="flex w-full h-full">
-          <Map />
+          <MapView url={tileset()?.url} />
           <Show when={showArchiveInfo()}>
             <div class="w-1/2">
-              <json-viewer data='{"abc":{"def":"geh"}}'></json-viewer>
+              <json-viewer data='{"abc":{"def":"geh"}}' />
             </div>
           </Show>
         </div>
@@ -155,5 +211,5 @@ function MapView() {
 const root = document.getElementById("root");
 
 if (root) {
-  render(() => <MapView />, root);
+  render(() => <App />, root);
 }

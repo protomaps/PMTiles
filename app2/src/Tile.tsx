@@ -5,7 +5,7 @@ import './index.css'
 function Tile() {
   return (
     <>
-      <h1 class="text-xl">Vite + Solid</h1>
+      <h1 class="text-xl">Tile inspector</h1>
     </>
   )
 }

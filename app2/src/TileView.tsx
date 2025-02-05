@@ -41,9 +41,11 @@ function ZoomableTile() {
       .tickPadding(8 - height);
 
     const yAxis = axisRight(y)
-      .ticks(10)
+      .ticks(((width + 2) / (height + 2)) * 10)
       .tickSize(width)
       .tickPadding(8 - width);
+
+    console.log((width + 2) / (height + 2));
 
     svg = create("svg").attr("width", width).attr("height", height);
     const view = svg.append("g");
@@ -63,7 +65,7 @@ function ZoomableTile() {
     }
 
     zoom = d3zoom()
-      .scaleExtent([0.1, 20])
+      .scaleExtent([0.01, 20])
       .translateExtent([
         [-1000, -1000],
         [4096 + 1000, 4096 + 1000],
@@ -73,7 +75,7 @@ function ZoomableTile() {
 
     Object.assign(svg.call(zoom as any).node() as SVGSVGElement, {});
 
-    svg.call(zoom.transform, zoomIdentity.scale(0.25).translate(100,100));
+    svg.call(zoom.transform, zoomIdentity.translate(width/2,height/2).scale(height/4096*0.5).translate(-4096/2,-4096/2));
 
     const resizeObserver = new ResizeObserver((entries, observer) => {
       svg.attr("width", containerRef.clientWidth);
@@ -95,7 +97,7 @@ function ZoomableTile() {
   };
 
   return (
-    <div class="bg-indigo-500 border h-full w-full">
+    <div class="h-full w-full">
       <button type="button" onClick={reset}>
         reset
       </button>

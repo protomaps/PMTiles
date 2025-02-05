@@ -2,10 +2,10 @@
 import { render } from "solid-js/web";
 import "./index.css";
 
-function Archive() {
+function TileView() {
   return (
     <>
-      <h1 class="text-xl">Archive inspector</h1>
+      <h1 class="text-xl">Tile inspector</h1>
     </>
   );
 }
@@ -13,5 +13,5 @@ function Archive() {
 const root = document.getElementById("root");
 
 if (root) {
-  render(() => <Archive />, root);
+  render(() => <TileView />, root);
 }

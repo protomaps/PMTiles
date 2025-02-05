@@ -11,6 +11,7 @@
     "format": "biome format --write src test --javascript-formatter-indent-style=space --json-formatter-indent-style=space"
   },
   "dependencies": {
+    "@alenaksu/json-viewer": "^2.1.2",
     "@mapbox/sphericalmercator": "^2.0.1",
     "@mapbox/vector-tile": "^2.0.3",
     "d3-path": "^3.1.0",

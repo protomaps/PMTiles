@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+.axis .domain {
+	display: none;
+}
+.axis line {
+	stroke-opacity: 0.3;
+	shape-rendering: crispEdges;
+}
+.view {
+	fill: none;
+	stroke: #000;
+}
+
+.rect {
+  fill: red;
+}

@@ -4,16 +4,66 @@ import "./index.css";
 
 import { axisBottom, axisRight } from "d3-axis";
 import { scaleLinear } from "d3-scale";
-import { type Selection, create } from "d3-selection";
+import { type Selection, create, select } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
 import { type JSX, Show, createEffect, createSignal, onMount } from "solid-js";
 import { Tileset } from "./tileset";
 import { createHash, parseHash } from "./utils";
+import { VectorTile } from "@mapbox/vector-tile";
+import Protobuf from "pbf";
+import { path } from "d3-path";
+import { LayerPanel } from "./LayerPanel";
+
+function parseTile(data: arrayBuffer) {
+  const tile = new VectorTile(new Protobuf(new Uint8Array(data)));
+  const layers = [];
+  let maxExtent = 0;
+  for (const [name, layer] of Object.entries(tile.layers)) {
+    if (layer.extent > maxExtent) {
+      maxExtent = layer.extent;
+    }
+    const features: Feature[] = [];
+    for (let i = 0; i < layer.length; i++) {
+      const feature = layer.feature(i);
+      const p = path();
+      const geom = feature.loadGeometry();
+
+      if (feature.type === 1) {
+        for (const ring of geom) {
+          for (const pt of ring) {
+            p.arc(pt.x, pt.y, 10, 0, 2 * Math.PI);
+          }
+        }
+      } else {
+        for (const ring of geom) {
+          p.moveTo(ring[0].x, ring[0].y);
+          for (let j = 1; j < ring.length; j++) {
+            p.lineTo(ring[j].x, ring[j].y);
+          }
+          if (feature.type === 3) {
+            p.closePath();
+          }
+        }
+      }
+      features.push({
+        path: p.toString(),
+        type: feature.type,
+        id: feature.id,
+        properties: feature.properties
+      });
+    }
+
+    layers.push({name: name, features: features})
+  }
+
+  return layers;
+}
 
 function ZoomableTile() {
   let containerRef: HTMLDivElement | undefined;
   let svg: Selection<SVGSVGElement, undefined, null, undefined>;
   let zoom: ZoomBehavior<Element, unknown>;
+  let view: Selection<SVGSVGElement, undefined, null, undefined>;
 
   onMount(() => {
     const height = containerRef.clientHeight;
@@ -45,11 +95,9 @@ function ZoomableTile() {
       .tickSize(width)
       .tickPadding(8 - width);
 
-    console.log((width + 2) / (height + 2));
-
     svg = create("svg").attr("width", width).attr("height", height);
-    const view = svg.append("g");
-    view.append("rect").attr("class","rect").attr("width", 4096).attr("height", 4096).attr("x",0).attr("y",0);
+    view = svg.append("g");
+    view.append("rect").attr("width", 4096).attr("height", 4096).attr("x",0).attr("y",0).attr("fill","none").attr("strokeWidth","1").attr("stroke","blue");
     const gX = svg.append("g").attr("class", "axis axis--x").call(xAxis);
     const gY = svg.append("g").attr("class", "axis axis--y").call(yAxis);
 
@@ -75,7 +123,7 @@ function ZoomableTile() {
 
     Object.assign(svg.call(zoom as any).node() as SVGSVGElement, {});
 
-    svg.call(zoom.transform, zoomIdentity.translate(width/2,height/2).scale(height/4096*0.5).translate(-4096/2,-4096/2));
+    svg.call(zoom.transform, zoomIdentity.translate(width/2,height/2).scale(height/4096*0.75).translate(-4096/2,-4096/2));
 
     const resizeObserver = new ResizeObserver((entries, observer) => {
       svg.attr("width", containerRef.clientWidth);
@@ -96,11 +144,26 @@ function ZoomableTile() {
       .call(zoom.transform as any, zoomIdentity);
   };
 
+  createEffect(() => {
+    fetch("https://api.protomaps.com/tiles/v4/0/0/0.mvt?key=1003762824b9687f").then(resp => {
+      return resp.arrayBuffer();
+    }).then(a => {
+      const results = parseTile(a);
+      const layer = view.selectAll("g").data(results).join("g").attr("stroke","blue");
+      layer.selectAll("path").data(d => d.features).join("path").attr("d", f => f.path).style("opacity",1).attr("fill","none").attr("strokeWidth",1);
+      console.log(results);
+
+    })
+  });
+
   return (
     <div class="h-full w-full">
       <button type="button" onClick={reset}>
         reset
       </button>
+      <div class="absolute right-8 flex">
+        <LayerPanel/>
+      </div>
       <div ref={containerRef} class="h-full"/>
     </div>
   );
@@ -145,6 +208,9 @@ function TileView() {
           <button class="px-4 bg-indigo-500" type="submit">
             load
           </button>
+          left up right down
+          parent
+          child
         </form>
       </div>
       <Show when={tileset() !== undefined} fallback={<span>fallback</span>}>

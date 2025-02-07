@@ -23,6 +23,7 @@
     "fflate": "^0.8.2",
     "maplibre-gl": "^5.1.0",
     "pbf": "^4.0.1",
+    "pmtiles": "^4.2.1",
     "protomaps-themes-base": "^4.4.0",
     "solid-js": "^1.9.3"
   },

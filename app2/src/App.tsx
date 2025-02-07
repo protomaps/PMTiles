@@ -9,6 +9,7 @@ import { createHash, parseHash } from "./utils";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Tileset } from "./tileset";
+import { LayerPanel } from "./LayerPanel";
 
 declare module "solid-js" {
   namespace JSX {
@@ -103,7 +104,7 @@ function MapView(props: { url?: string }) {
   });
 
   return (
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col relative">
       <div class="flex-0">
         <button class="px-4" type="button">
           fit to bounds
@@ -112,6 +113,9 @@ function MapView(props: { url?: string }) {
       </div>
       <div ref={mapContainer} class="h-full flex-1" />
       <div class="hidden" ref={hiddenRef} />
+      <div class="absolute right-8">
+        <LayerPanel/>
+      </div>
     </div>
   );
 }
@@ -121,8 +125,8 @@ function App() {
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? new Tileset(hash.url) : undefined,
   );
-  const [showArchiveInfo, setShowArchiveInfo] = createSignal<boolean>(
-    hash.showArchiveInfo === "true" || false,
+  const [showMetadata, setShowMetadata] = createSignal<boolean>(
+    hash.showMetadata === "true" || false,
   );
 
   createEffect(() => {
@@ -130,7 +134,7 @@ function App() {
     if (t) {
       location.hash = createHash(location.hash, {
         url: t.url,
-        showArchiveInfo: showArchiveInfo() ? "true" : undefined,
+        showMetadata: showMetadata() ? "true" : undefined,
       });
     }
   });
@@ -165,12 +169,13 @@ function App() {
           <button
             class="px-4 rounded bg-indigo-500"
             onClick={() => {
-              setShowArchiveInfo(!showArchiveInfo());
+              setShowMetadata(!showMetadata());
             }}
             type="button"
           >
-            toggle archive info
+            toggle metadata
           </button>
+          <a href={`/archive/#url=${tileset()?.url}`}>archive inspector</a>
         </form>
       </div>
       <Show
@@ -190,7 +195,7 @@ function App() {
       >
         <div class="flex w-full h-full">
           <MapView url={tileset()?.url} />
-          <Show when={showArchiveInfo()}>
+          <Show when={showMetadata()}>
             <div class="w-1/2">
               <json-viewer data='{"abc":{"def":"geh"}}' />
             </div>

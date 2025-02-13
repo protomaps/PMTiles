@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.svx": "svelte",
+    "bit": "cpp",
+    "limits": "cpp",
+    "stdexcept": "cpp"
+  }
+}

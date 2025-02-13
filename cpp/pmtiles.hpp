@@ -333,23 +333,6 @@ void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
 	}
 }
 
-zxy t_on_level(uint8_t z, uint64_t pos) {
-	int64_t n = 1LL << z;
-	int64_t rx, ry, s, t = pos;
-	int64_t tx = 0;
-	int64_t ty = 0;
-
-	for (s = 1; s < n; s *= 2) {
-		rx = 1LL & (t / 2);
-		ry = 1LL & (t ^ rx);
-		rotate(s, tx, ty, rx, ry);
-		tx += s * rx;
-		ty += s * ry;
-		t /= 4;
-	}
-	return zxy(z, static_cast<int>(tx), static_cast<int>(ty));
-}
-
 int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
 	int n = 1;
 
@@ -405,16 +388,30 @@ entryv3 find_tile(const std::vector<entryv3> &entries, uint64_t tile_id) {
 
 }  // end anonymous namespace
 
+static uint8_t bit_width(uint64_t n) {
+    uint8_t count = 0;
+    while (n > 0) { count++; n >>= 1; }
+    return count;
+}
+
 inline zxy tileid_to_zxy(uint64_t tileid) {
-	uint64_t acc = 0;
-	for (uint8_t t_z = 0; t_z < 32; t_z++) {
-		uint64_t num_tiles = (1LL << t_z) * (1LL << t_z);
-		if (acc + num_tiles > tileid) {
-			return t_on_level(t_z, tileid - acc);
-		}
-		acc += num_tiles;
+	if (tileid > 6148914691236517204) {
+		throw std::overflow_error("tile zoom exceeds 64-bit limit");
 	}
-	throw std::overflow_error("tile zoom exceeds 64-bit limit");
+	uint8_t z = (bit_width(3 * tileid + 1) - 1) / 2;
+	uint64_t acc = ((1L << (z * 2)) - 1) / 3;
+	uint64_t pos = tileid - acc;
+	int64_t x = 0, y = 0;
+	for (uint8_t a = 0; a < z; a++) {
+        uint64_t rx = (pos / 2) & 1;
+        uint64_t ry = (pos ^ rx) & 1;
+        uint64_t s = 1 << a;
+		rotate(s, x, y, rx, ry);
+        pos /= 4;
+        x += s * rx;
+        y += s * ry;
+	}
+	return zxy(z, static_cast<int>(x), static_cast<int>(y));
 }
 
 inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
@@ -424,19 +421,16 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 	if (x > (1U << z) - 1U || y > (1U << z) - 1U) {
 		throw std::overflow_error("tile x/y outside zoom level bounds");
 	}
-	uint64_t acc = 0;
-	for (uint8_t t_z = 0; t_z < z; t_z++) acc += (1LL << t_z) * (1LL << t_z);
-	int64_t n = 1LL << z;
-	int64_t rx, ry, s, d = 0;
-	int64_t tx = x;
-	int64_t ty = y;
-	for (s = n / 2; s > 0; s /= 2) {
-		rx = (tx & s) > 0;
-		ry = (ty & s) > 0;
-		d += s * s * ((3LL * rx) ^ ry);
+	uint64_t acc = ((1LL << (z * 2U)) - 1) / 3;
+	int64_t tx = x, ty = y;
+	for (int32_t a = z - 1; a >= 0; a--) {
+		int64_t rx = (tx >> a) & 1;
+		int64_t ry = (ty >> a) & 1;
+		int64_t s = 1LL << a;
 		rotate(s, tx, ty, rx, ry);
+		acc += s * s * ((3 * rx) ^ ry);
 	}
-	return acc + d;
+	return acc;
 }
 
 // returns an uncompressed byte buffer

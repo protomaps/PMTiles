@@ -55,43 +55,24 @@ export function readVarint(p: BufferPosition): number {
   return readVarintRemainder(val, p);
 }
 
-function rotate(n: number, xy: number[], rx: number, ry: number): void {
+function rotate(
+  n: number,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number
+): [number, number] {
   if (ry === 0) {
     if (rx === 1) {
-      xy[0] = n - 1 - xy[0];
-      xy[1] = n - 1 - xy[1];
+      x = n - 1 - x;
+      y = n - 1 - y;
     }
-    const t = xy[0];
-    xy[0] = xy[1];
-    xy[1] = t;
+    const t = x;
+    x = y;
+    x = t;
   }
+  return [x, y];
 }
-
-function idOnLevel(z: number, pos: number): [number, number, number] {
-  const n = 2 ** z;
-  let rx = pos;
-  let ry = pos;
-  let t = pos;
-  const xy = [0, 0];
-  let s = 1;
-  while (s < n) {
-    rx = 1 & (t / 2);
-    ry = 1 & (t ^ rx);
-    rotate(s, xy, rx, ry);
-    xy[0] += s * rx;
-    xy[1] += s * ry;
-    t = t / 4;
-    s *= 2;
-  }
-  return [z, xy[0], xy[1]];
-}
-
-const tzValues: number[] = [
-  0, 1, 5, 21, 85, 341, 1365, 5461, 21845, 87381, 349525, 1398101, 5592405,
-  22369621, 89478485, 357913941, 1431655765, 5726623061, 22906492245,
-  91625968981, 366503875925, 1466015503701, 5864062014805, 23456248059221,
-  93824992236885, 375299968947541, 1501199875790165,
-];
 
 /**
  * Convert Z,X,Y to a Hilbert TileID.
@@ -103,40 +84,38 @@ export function zxyToTileId(z: number, x: number, y: number): number {
   if (x > 2 ** z - 1 || y > 2 ** z - 1) {
     throw new Error("tile x/y outside zoom level bounds");
   }
-
-  const acc = tzValues[z];
-  const n = 2 ** z;
-  let rx = 0;
-  let ry = 0;
-  let d = 0;
-  const xy = [x, y];
-  let s = n / 2;
-  while (s > 0) {
-    rx = (xy[0] & s) > 0 ? 1 : 0;
-    ry = (xy[1] & s) > 0 ? 1 : 0;
-    d += s * s * ((3 * rx) ^ ry);
-    rotate(s, xy, rx, ry);
-    s = s / 2;
+  let acc = (4 ** z - 1) / 3;
+  for (let a = z - 1; a >= 0; a--) {
+    const rx = (x >> a) & 1;
+    const ry = (y >> a) & 1;
+    const s = 2 ** a;
+    [x, y] = rotate(s, x, y, rx, ry);
+    acc += s * s * ((3 * rx) ^ ry);
   }
-  return acc + d;
+  return acc;
 }
 
 /**
  * Convert a Hilbert TileID to Z,X,Y.
  */
 export function tileIdToZxy(i: number): [number, number, number] {
-  let acc = 0;
-  const z = 0;
-
-  for (let z = 0; z < 27; z++) {
-    const numTiles = (0x1 << z) * (0x1 << z);
-    if (acc + numTiles > i) {
-      return idOnLevel(z, i - acc);
-    }
-    acc += numTiles;
+  const z = Math.floor(Math.log2(3 * i + 1)) >> 1;
+  if (z > 26)
+    throw new Error("Tile zoom level exceeds max safe number limit (26)");
+  let acc = (4 ** z - 1) / 3;
+  let pos = i - acc;
+  let x = 0;
+  let y = 0;
+  for (let a = 0; a < z; a++) {
+    const rx = (pos >> 1) & 1;
+    const ry = (pos ^ rx) & 1;
+    const s = 2 ** a;
+    [x, y] = rotate(s, x, y, rx, ry);
+    pos = Math.floor(pos / 4);
+    x += s * rx;
+    y += s * ry;
   }
-
-  throw new Error("Tile zoom level exceeds max safe number limit (26)");
+  return [z, x, y];
 }
 
 /**

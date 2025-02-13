@@ -72,7 +72,6 @@ MU_TEST(test_roundtrip) {
 	} catch (const std::runtime_error &e) {
 		caught = true;
 	}
-
 	mu_check(caught);
 
 	caught = false;
@@ -81,7 +80,6 @@ MU_TEST(test_roundtrip) {
 	} catch (const std::runtime_error &e) {
 		caught = true;
 	}
-
 	mu_check(caught);
 
 	caught = false;
@@ -90,7 +88,6 @@ MU_TEST(test_roundtrip) {
 	} catch (const std::runtime_error &e) {
 		caught = true;
 	}
-
 	mu_check(caught);
 
 	caught = false;

@@ -62,16 +62,17 @@ function rotate(
   rx: number,
   ry: number
 ): [number, number] {
+  let [tx, ty] = [x, y];
   if (ry === 0) {
     if (rx === 1) {
-      x = n - 1 - x;
-      y = n - 1 - y;
+      tx = n - 1 - tx;
+      ty = n - 1 - ty;
     }
-    const t = x;
-    x = y;
-    x = t;
+    const t = tx;
+    tx = ty;
+    tx = t;
   }
-  return [x, y];
+  return [tx, ty];
 }
 
 /**
@@ -84,12 +85,13 @@ export function zxyToTileId(z: number, x: number, y: number): number {
   if (x > 2 ** z - 1 || y > 2 ** z - 1) {
     throw new Error("tile x/y outside zoom level bounds");
   }
+  let [tx, ty] = [x, y];
   let acc = (4 ** z - 1) / 3;
   for (let a = z - 1; a >= 0; a--) {
-    const rx = (x >> a) & 1;
-    const ry = (y >> a) & 1;
+    const rx = (tx >> a) & 1;
+    const ry = (ty >> a) & 1;
     const s = 2 ** a;
-    [x, y] = rotate(s, x, y, rx, ry);
+    [tx, ty] = rotate(s, tx, ty, rx, ry);
     acc += s * s * ((3 * rx) ^ ry);
   }
   return acc;
@@ -102,7 +104,7 @@ export function tileIdToZxy(i: number): [number, number, number] {
   const z = Math.floor(Math.log2(3 * i + 1)) >> 1;
   if (z > 26)
     throw new Error("Tile zoom level exceeds max safe number limit (26)");
-  let acc = (4 ** z - 1) / 3;
+  const acc = (4 ** z - 1) / 3;
   let pos = i - acc;
   let x = 0;
   let y = 0;

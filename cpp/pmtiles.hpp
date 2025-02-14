@@ -388,6 +388,7 @@ entryv3 find_tile(const std::vector<entryv3> &entries, uint64_t tile_id) {
 
 }  // end anonymous namespace
 
+// Note: std::bit_width is available in C++20 and later.
 static uint8_t bit_width(uint64_t n) {
     uint8_t count = 0;
     while (n > 0) { count++; n >>= 1; }

@@ -4,17 +4,24 @@ import "./index.css";
 
 import { axisBottom, axisRight } from "d3-axis";
 import { scaleLinear } from "d3-scale";
-import { type Selection, create, select } from "d3-selection";
+import { type Selection, create } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
 import { type JSX, Show, createEffect, createSignal, onMount } from "solid-js";
-import { Tileset } from "./tileset";
-import { createHash, parseHash } from "./utils";
+import { type Tileset, tilesetFromString } from "./tileset";
+import { GIT_SHA, createHash, parseHash, zxyFromHash } from "./utils";
 import { VectorTile } from "@mapbox/vector-tile";
 import Protobuf from "pbf";
 import { path } from "d3-path";
-import { LayerPanel } from "./LayerPanel";
+import { LayersPanel } from "./LayersPanel";
 
-function parseTile(data: arrayBuffer) {
+interface Feature {
+  path: string;
+  type: number;
+  id: number | undefined;
+  properties: unknown;
+}
+
+function parseTile(data: ArrayBuffer) {
   const tile = new VectorTile(new Protobuf(new Uint8Array(data)));
   const layers = [];
   let maxExtent = 0;
@@ -31,7 +38,7 @@ function parseTile(data: arrayBuffer) {
       if (feature.type === 1) {
         for (const ring of geom) {
           for (const pt of ring) {
-            p.arc(pt.x, pt.y, 10, 0, 2 * Math.PI);
+            p.rect(pt.x-4, pt.y-4, 8, 8);
           }
         }
       } else {
@@ -59,11 +66,15 @@ function parseTile(data: arrayBuffer) {
   return layers;
 }
 
-function ZoomableTile() {
+function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
   let containerRef: HTMLDivElement | undefined;
   let svg: Selection<SVGSVGElement, undefined, null, undefined>;
   let zoom: ZoomBehavior<Element, unknown>;
   let view: Selection<SVGSVGElement, undefined, null, undefined>;
+
+  const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
+
+  console.log(activeLayers);
 
   onMount(() => {
     const height = containerRef.clientHeight;
@@ -125,7 +136,7 @@ function ZoomableTile() {
 
     svg.call(zoom.transform, zoomIdentity.translate(width/2,height/2).scale(height/4096*0.75).translate(-4096/2,-4096/2));
 
-    const resizeObserver = new ResizeObserver((entries, observer) => {
+    const resizeObserver = new ResizeObserver(() => {
       svg.attr("width", containerRef.clientWidth);
       svg.attr("height", containerRef.contentHeight);
     });
@@ -144,16 +155,15 @@ function ZoomableTile() {
       .call(zoom.transform as any, zoomIdentity);
   };
 
-  createEffect(() => {
-    fetch("https://api.protomaps.com/tiles/v4/0/0/0.mvt?key=1003762824b9687f").then(resp => {
-      return resp.arrayBuffer();
-    }).then(a => {
-      const results = parseTile(a);
-      const layer = view.selectAll("g").data(results).join("g").attr("stroke","blue");
-      layer.selectAll("path").data(d => d.features).join("path").attr("d", f => f.path).style("opacity",1).attr("fill","none").attr("strokeWidth",1);
-      console.log(results);
-
-    })
+  createEffect(async () => {
+    const zxy = props.zxy;
+    const tileset = props.tileset;
+    console.log("tileset", tileset);
+    const data = await tileset.getZxy(zxy[0],zxy[1],zxy[2]);
+    if (!data) return; // TODO show error
+    const results = parseTile(data);
+    const layer = view.selectAll("g").data(results).join("g").attr("stroke","blue");
+    layer.selectAll("path").data(d => d.features).join("path").attr("d", f => f.path).style("opacity",1).attr("fill","none").attr("strokeWidth",1).on("mouseover", (_e,d) => {console.log(d);})
   });
 
   return (
@@ -162,25 +172,26 @@ function ZoomableTile() {
         reset
       </button>
       <div class="absolute right-8 flex">
-        <LayerPanel/>
+        <LayersPanel tileset={props.tileset} setActiveLayers={setActiveLayers}/>
       </div>
       <div ref={containerRef} class="h-full"/>
     </div>
   );
 }
 
+// TODO error display
 function TileView() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
-    hash.url ? new Tileset(hash.url) : undefined,
+    hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
-  // const [zxy, setZxy] = createSignal<[number,number,number]>([0,0,0]);
+  const [zxy] = createSignal<[number,number,number] | undefined>(zxyFromHash(hash.zxy));
 
   createEffect(() => {
     const t = tileset();
     if (t) {
       location.hash = createHash(location.hash, {
-        url: t.url,
+        url: encodeURIComponent(t.getStateUrl()),
       });
     }
   });
@@ -190,7 +201,7 @@ function TileView() {
     const formData = new FormData(event.target as HTMLFormElement);
     const urlValue = formData.get("url");
     if (typeof urlValue === "string") {
-      setTileset(new Tileset(urlValue));
+      setTileset(tilesetFromString(urlValue));
     }
   };
 
@@ -200,10 +211,11 @@ function TileView() {
         <h1 class="text-xl">Tile inspector</h1>
         <form onSubmit={loadTileset}>
           <input
-            class="border"
+            class="border w-100"
             type="text"
             name="url"
             placeholder="TileJSON or .pmtiles"
+            value={tileset() ? tileset()?.getStateUrl() : ""}
           />
           <button class="px-4 bg-indigo-500" type="submit">
             load
@@ -211,11 +223,14 @@ function TileView() {
           left up right down
           parent
           child
+          { GIT_SHA }
+
+          {zxy}
         </form>
       </div>
-      <Show when={tileset() !== undefined} fallback={<span>fallback</span>}>
+      <Show when={tileset() && zxy()} fallback={<span>fallback</span>}>
         <div class="flex w-full h-full">
-          <ZoomableTile />
+          <ZoomableTile zxy={zxy()!} tileset={tileset()!}/>
         </div>
       </Show>
     </div>

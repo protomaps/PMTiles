@@ -1,3 +1,5 @@
+export const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "").substr(0, 8);
+
 // Get the hash contents as a map.
 export function parseHash(hash: string): Record<string, string> {
   const retval: Record<string, string> = {};
@@ -24,3 +26,11 @@ export function createHash(
     })
     .join("&")}`;
 }
+
+export function zxyFromHash(s: string): [number,number,number] | undefined {
+  const split = s.split("/");
+  if (split.length !== 3) return undefined;
+  return split.map(n => +n) as [number,number,number];
+}
+
+

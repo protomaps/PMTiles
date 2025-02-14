@@ -20,7 +20,6 @@
     "d3-scale-chromatic": "^3.1.0",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
-    "fflate": "^0.8.2",
     "maplibre-gl": "^5.1.0",
     "pbf": "^4.0.1",
     "pmtiles": "^4.2.1",
@@ -32,14 +31,17 @@
     "@maplibre/maplibre-gl-style-spec": "^23.1.0",
     "@tailwindcss/vite": "^4.0.3",
     "@types/d3-axis": "^3.0.6",
+    "@types/d3-path": "^3.1.1",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-selection": "^3.0.11",
     "@types/d3-transition": "^3.0.9",
     "@types/d3-zoom": "^3.0.8",
     "@types/node": "^22.13.1",
+    "jsdom": "^26.0.0",
     "tailwindcss": "^4.0.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.11",
-    "vite-plugin-solid": "^2.11.0"
+    "vite-plugin-solid": "^2.11.0",
+    "vitest": "^3.0.5"
   }
 }

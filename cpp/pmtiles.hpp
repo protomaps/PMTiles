@@ -321,13 +321,13 @@ uint64_t decode_varint(const char **data, const char *end) {
 	return decode_varint_impl(data, end);
 }
 
-void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
+void rotate(int64_t n, uint32_t &x, uint32_t &y, uint32_t rx, uint32_t ry) {
 	if (ry == 0) {
 		if (rx != 0) {
 			x = n - 1 - x;
 			y = n - 1 - y;
 		}
-		int64_t t = x;
+		uint32_t t = x;
 		x = y;
 		y = t;
 	}
@@ -402,11 +402,11 @@ inline zxy tileid_to_zxy(uint64_t tileid) {
 	uint8_t z = (bit_width(3 * tileid + 1) - 1) / 2;
 	uint64_t acc = ((1L << (z * 2)) - 1) / 3;
 	uint64_t pos = tileid - acc;
-	int64_t x = 0, y = 0;
+	uint32_t x = 0, y = 0;
 	for (uint8_t a = 0; a < z; a++) {
         uint64_t s = 1 << a;
-        uint64_t rx = s & (pos / 2);
-        uint64_t ry = s & (pos ^ rx);
+        uint32_t rx = s & (pos / 2);
+        uint32_t ry = s & (pos ^ rx);
 		rotate(s, x, y, rx, ry);
         pos >>= 1;
         x += rx;
@@ -423,13 +423,13 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 		throw std::overflow_error("tile x/y outside zoom level bounds");
 	}
 	uint64_t acc = ((1LL << (z * 2U)) - 1) / 3;
-	int64_t tx = x, ty = y;
+	uint32_t tx = x, ty = y;
 	int a = z - 1;
-	for (int64_t s = 1LL << a; s > 0; s >>= 1) {
-		int64_t rx = s & tx;
-		int64_t ry = s & ty;
+	for (uint32_t s = 1LL << a; s > 0; s >>= 1) {
+		uint32_t rx = s & tx;
+		uint32_t ry = s & ty;
 		rotate(s, tx, ty, rx, ry);
-		acc += ((3 * rx) ^ ry) << a;
+		acc += ((3LL * rx) ^ ry) << a;
 		a--;
 	}
 	return acc;

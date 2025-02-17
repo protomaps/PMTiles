@@ -18,7 +18,7 @@ class Entry:
 
 def rotate(n, x, y, rx, ry):
     if ry == 0:
-        if rx == 1:
+        if rx != 0:
             x = n - 1 - x
             y = n - 1 - y
         x, y = y, x
@@ -32,12 +32,14 @@ def zxy_to_tileid(z, x, y):
         raise ValueError("tile x/y outside zoom level bounds")
 
     acc = ((1 << (z * 2)) - 1) // 3
-    for a in reversed(range(0, z)):
-        rx = (x >> a) & 1
-        ry = (y >> a) & 1
+    a = z - 1
+    while a >= 0:
         s = 1 << a
+        rx = s & x
+        ry = s & y
+        acc += ((3 * rx) ^ ry) << a
         (x, y) = rotate(s, x, y, rx, ry)
-        acc += s * s * ((3 * rx) ^ ry)
+        a -= 1
     return acc
 
 
@@ -49,14 +51,16 @@ def tileid_to_zxy(tile_id):
     pos = tile_id - acc
     x = 0
     y = 0
-    for a in range(0, z):
-        rx = (pos // 2) & 1
-        ry = (pos ^ rx) & 1
-        s = 1 << a
+    s = 1
+    n = 1 << z
+    while s < n:
+        rx = (pos // 2) & s
+        ry = (pos ^ rx) & s
         (x, y) = rotate(s, x, y, rx, ry)
-        pos //= 4
-        x += s * rx
-        y += s * ry
+        x += rx
+        y += ry
+        pos >>= 1
+        s <<= 1
     return (z, x, y)
 
 

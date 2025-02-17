@@ -62,17 +62,13 @@ function rotate(
   rx: number,
   ry: number
 ): [number, number] {
-  let [tx, ty] = [x, y];
   if (ry === 0) {
-    if (rx === 1) {
-      tx = n - 1 - tx;
-      ty = n - 1 - ty;
+    if (rx !== 0) {
+      return [n - 1 - y, n - 1 - x];
     }
-    const t = tx;
-    tx = ty;
-    tx = t;
+    return [y, x];
   }
-  return [tx, ty];
+  return [x, y];
 }
 
 /**
@@ -82,40 +78,50 @@ export function zxyToTileId(z: number, x: number, y: number): number {
   if (z > 26) {
     throw new Error("Tile zoom level exceeds max safe number limit (26)");
   }
-  if (x > 2 ** z - 1 || y > 2 ** z - 1) {
+  if (x >= 1 << z || y >= 1 << z) {
     throw new Error("tile x/y outside zoom level bounds");
   }
+  let acc = ((1 << z) * (1 << z) - 1) / 3;
+  let a = z - 1;
   let [tx, ty] = [x, y];
-  let acc = (4 ** z - 1) / 3;
-  for (let a = z - 1; a >= 0; a--) {
-    const rx = (tx >> a) & 1;
-    const ry = (ty >> a) & 1;
-    const s = 2 ** a;
+  for (let s = 1 << a; s > 0; s >>= 1) {
+    const rx = tx & s;
+    const ry = ty & s;
+    acc += ((3 * rx) ^ ry) * (1 << a);
     [tx, ty] = rotate(s, tx, ty, rx, ry);
-    acc += s * s * ((3 * rx) ^ ry);
+    a--;
   }
   return acc;
+}
+
+function tileIdToZ(i: number): number {
+  const c = 3 * i + 1;
+  if (c < 0x100000000) {
+    return 31 - Math.clz32(c);
+  }
+  return 63 - Math.clz32(c / 0x100000000);
 }
 
 /**
  * Convert a Hilbert TileID to Z,X,Y.
  */
 export function tileIdToZxy(i: number): [number, number, number] {
-  const z = Math.floor(Math.log2(3 * i + 1)) >> 1;
+  const z = tileIdToZ(i) >> 1;
   if (z > 26)
     throw new Error("Tile zoom level exceeds max safe number limit (26)");
-  const acc = (4 ** z - 1) / 3;
-  let pos = i - acc;
+  const acc = ((1 << z) * (1 << z) - 1) / 3;
+
+  let t = i - acc;
   let x = 0;
   let y = 0;
-  for (let a = 0; a < z; a++) {
-    const rx = (pos >> 1) & 1;
-    const ry = (pos ^ rx) & 1;
-    const s = 2 ** a;
+  const n = 1 << z;
+  for (let s = 1; s < n; s <<= 1) {
+    const rx = s & (t / 2);
+    const ry = s & (t ^ rx);
     [x, y] = rotate(s, x, y, rx, ry);
-    pos = Math.floor(pos / 4);
-    x += s * rx;
-    y += s * ry;
+    t = t / 2;
+    x += rx;
+    y += ry;
   }
   return [z, x, y];
 }

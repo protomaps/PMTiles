@@ -323,7 +323,7 @@ uint64_t decode_varint(const char **data, const char *end) {
 
 void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
 	if (ry == 0) {
-		if (rx == 1) {
+		if (rx != 0) {
 			x = n - 1 - x;
 			y = n - 1 - y;
 		}
@@ -404,13 +404,13 @@ inline zxy tileid_to_zxy(uint64_t tileid) {
 	uint64_t pos = tileid - acc;
 	int64_t x = 0, y = 0;
 	for (uint8_t a = 0; a < z; a++) {
-        uint64_t rx = (pos / 2) & 1;
-        uint64_t ry = (pos ^ rx) & 1;
         uint64_t s = 1 << a;
+        uint64_t rx = s & (pos / 2);
+        uint64_t ry = s & (pos ^ rx);
 		rotate(s, x, y, rx, ry);
-        pos /= 4;
-        x += s * rx;
-        y += s * ry;
+        pos >>= 1;
+        x += rx;
+        y += ry;
 	}
 	return zxy(z, static_cast<int>(x), static_cast<int>(y));
 }
@@ -424,12 +424,13 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 	}
 	uint64_t acc = ((1LL << (z * 2U)) - 1) / 3;
 	int64_t tx = x, ty = y;
-	for (int32_t a = z - 1; a >= 0; a--) {
-		int64_t rx = (tx >> a) & 1;
-		int64_t ry = (ty >> a) & 1;
-		int64_t s = 1LL << a;
+	int a = z - 1;
+	for (int64_t s = 1LL << a; s > 0; s >>= 1) {
+		int64_t rx = s & tx;
+		int64_t ry = s & ty;
 		rotate(s, tx, ty, rx, ry);
-		acc += s * s * ((3 * rx) ^ ry);
+		acc += ((3 * rx) ^ ry) << a;
+		a--;
 	}
 	return acc;
 }

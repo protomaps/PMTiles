@@ -1,3 +1,6 @@
+4.3.0
+* improve ZXY to HilbertID conversion by @ciscorn [#527]
+
 4.2.1
 * MapLibre adapter detects erroneous tileset bounds and shows console error [#508]
 

@@ -136,7 +136,7 @@ class TileJSONTileset implements Tileset {
     const resp = await fetch(this.url);
     const j = await resp.json();
     const template = j.tiles[0];
-    const pathname = URL.parse(template).pathname;
+    const pathname = (new URL(template)).pathname;
     return pathname.endsWith(".pbf") || pathname.endsWith(".mvt");
   }
 
@@ -166,7 +166,7 @@ class TileJSONTileset implements Tileset {
 
 // from a input box or a URL param state.
 export const tilesetFromString = (url: string):Tileset => {
-  const parsed = URL.parse(url);
+  const parsed = new URL(url);
   if (parsed.pathname.endsWith(".json")) {
     return new TileJSONTileset(url);
   }

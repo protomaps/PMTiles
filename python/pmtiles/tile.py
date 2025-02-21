@@ -1,6 +1,6 @@
-from enum import Enum
-import io
 import gzip
+import io
+from enum import Enum
 
 
 class Entry:
@@ -16,28 +16,13 @@ class Entry:
         return f"id={self.tile_id} offset={self.offset} length={self.length} runlength={self.run_length}"
 
 
-def rotate(n, xy, rx, ry):
+def rotate(n, x, y, rx, ry):
     if ry == 0:
-        if rx == 1:
-            xy[0] = n - 1 - xy[0]
-            xy[1] = n - 1 - xy[1]
-        xy[0], xy[1] = xy[1], xy[0]
-
-
-def t_on_level(z, pos):
-    n = 1 << z
-    rx, ry, t = pos, pos, pos
-    xy = [0, 0]
-    s = 1
-    while s < n:
-        rx = 1 & (t // 2)
-        ry = 1 & (t ^ rx)
-        rotate(s, xy, rx, ry)
-        xy[0] += s * rx
-        xy[1] += s * ry
-        t //= 4
-        s *= 2
-    return z, xy[0], xy[1]
+        if rx != 0:
+            x = n - 1 - x
+            y = n - 1 - y
+        x, y = y, x
+    return x, y
 
 
 def zxy_to_tileid(z, x, y):
@@ -45,41 +30,38 @@ def zxy_to_tileid(z, x, y):
         raise OverflowError("tile zoom exceeds 64-bit limit")
     if x > (1 << z) - 1 or y > (1 << z) - 1:
         raise ValueError("tile x/y outside zoom level bounds")
-    acc = 0
-    tz = 0
-    while tz < z:
-        acc += (0x1 << tz) * (0x1 << tz)
-        tz += 1
-    n = 1 << z
-    rx = 0
-    ry = 0
-    d = 0
-    xy = [x, y]
-    s = n // 2
-    while s > 0:
-        if (xy[0] & s) > 0:
-            rx = 1
-        else:
-            rx = 0
-        if (xy[1] & s) > 0:
-            ry = 1
-        else:
-            ry = 0
-        d += s * s * ((3 * rx) ^ ry)
-        rotate(s, xy, rx, ry)
-        s //= 2
-    return acc + d
+
+    acc = ((1 << (z * 2)) - 1) // 3
+    a = z - 1
+    while a >= 0:
+        s = 1 << a
+        rx = s & x
+        ry = s & y
+        acc += ((3 * rx) ^ ry) << a
+        (x, y) = rotate(s, x, y, rx, ry)
+        a -= 1
+    return acc
 
 
 def tileid_to_zxy(tile_id):
-    num_tiles = 0
-    acc = 0
-    for z in range(0,32):
-        num_tiles = (1 << z) * (1 << z)
-        if acc + num_tiles > tile_id:
-            return t_on_level(z, tile_id - acc)
-        acc += num_tiles
-    raise OverflowError("tile zoom exceeds 64-bit limit")
+    z = ((3 * tile_id + 1).bit_length() - 1) // 2
+    if z >= 32:
+        raise OverflowError("tile zoom exceeds 64-bit limit")
+    acc = ((1 << (z * 2)) - 1) // 3
+    pos = tile_id - acc
+    x = 0
+    y = 0
+    s = 1
+    n = 1 << z
+    while s < n:
+        rx = (pos // 2) & s
+        ry = (pos ^ rx) & s
+        (x, y) = rotate(s, x, y, rx, ry)
+        x += rx
+        y += ry
+        pos >>= 1
+        s <<= 1
+    return (z, x, y)
 
 
 def find_tile(entries, tile_id):
@@ -195,11 +177,14 @@ def serialize_directory(entries):
 
     return gzip.compress(b_io.getvalue())
 
+
 class SpecVersionUnsupported(Exception):
     pass
 
+
 class MagicNumberNotFound(Exception):
     pass
+
 
 def deserialize_header(buf):
     if buf[0:7].decode() != "PMTiles":
@@ -282,7 +267,7 @@ def serialize_header(h):
     write_int32(max_lon_e7)
     max_lat_e7 = h.get("max_lat_e7", int(90 * 10000000))
     write_int32(max_lat_e7)
-    write_uint8(h.get("center_zoom",h["min_zoom"]))
+    write_uint8(h.get("center_zoom", h["min_zoom"]))
     write_int32(h.get("center_lon_e7", round((min_lon_e7 + max_lon_e7) / 2)))
     write_int32(h.get("center_lat_e7", round((min_lat_e7 + max_lat_e7) / 2)))
 

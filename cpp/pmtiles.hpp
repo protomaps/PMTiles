@@ -321,33 +321,16 @@ uint64_t decode_varint(const char **data, const char *end) {
 	return decode_varint_impl(data, end);
 }
 
-void rotate(int64_t n, int64_t &x, int64_t &y, int64_t rx, int64_t ry) {
+void rotate(int64_t n, uint32_t &x, uint32_t &y, uint32_t rx, uint32_t ry) {
 	if (ry == 0) {
-		if (rx == 1) {
+		if (rx != 0) {
 			x = n - 1 - x;
 			y = n - 1 - y;
 		}
-		int64_t t = x;
+		uint32_t t = x;
 		x = y;
 		y = t;
 	}
-}
-
-zxy t_on_level(uint8_t z, uint64_t pos) {
-	int64_t n = 1LL << z;
-	int64_t rx, ry, s, t = pos;
-	int64_t tx = 0;
-	int64_t ty = 0;
-
-	for (s = 1; s < n; s *= 2) {
-		rx = 1LL & (t / 2);
-		ry = 1LL & (t ^ rx);
-		rotate(s, tx, ty, rx, ry);
-		tx += s * rx;
-		ty += s * ry;
-		t /= 4;
-	}
-	return zxy(z, static_cast<int>(tx), static_cast<int>(ty));
 }
 
 int write_varint(std::back_insert_iterator<std::string> data, uint64_t value) {
@@ -405,16 +388,31 @@ entryv3 find_tile(const std::vector<entryv3> &entries, uint64_t tile_id) {
 
 }  // end anonymous namespace
 
+// Note: std::bit_width is available in C++20 and later.
+static uint8_t bit_width(uint64_t n) {
+    uint8_t count = 0;
+    while (n > 0) { count++; n >>= 1; }
+    return count;
+}
+
 inline zxy tileid_to_zxy(uint64_t tileid) {
-	uint64_t acc = 0;
-	for (uint8_t t_z = 0; t_z < 32; t_z++) {
-		uint64_t num_tiles = (1LL << t_z) * (1LL << t_z);
-		if (acc + num_tiles > tileid) {
-			return t_on_level(t_z, tileid - acc);
-		}
-		acc += num_tiles;
+	if (tileid > 6148914691236517204) {
+		throw std::overflow_error("tile zoom exceeds 64-bit limit");
 	}
-	throw std::overflow_error("tile zoom exceeds 64-bit limit");
+	uint8_t z = (bit_width(3 * tileid + 1) - 1) / 2;
+	uint64_t acc = ((1L << (z * 2)) - 1) / 3;
+	uint64_t pos = tileid - acc;
+	uint32_t x = 0, y = 0;
+	for (uint8_t a = 0; a < z; a++) {
+        uint64_t s = 1 << a;
+        uint32_t rx = s & (pos / 2);
+        uint32_t ry = s & (pos ^ rx);
+		rotate(s, x, y, rx, ry);
+        pos >>= 1;
+        x += rx;
+        y += ry;
+	}
+	return zxy(z, static_cast<int>(x), static_cast<int>(y));
 }
 
 inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
@@ -424,19 +422,17 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 	if (x > (1U << z) - 1U || y > (1U << z) - 1U) {
 		throw std::overflow_error("tile x/y outside zoom level bounds");
 	}
-	uint64_t acc = 0;
-	for (uint8_t t_z = 0; t_z < z; t_z++) acc += (1LL << t_z) * (1LL << t_z);
-	int64_t n = 1LL << z;
-	int64_t rx, ry, s, d = 0;
-	int64_t tx = x;
-	int64_t ty = y;
-	for (s = n / 2; s > 0; s /= 2) {
-		rx = (tx & s) > 0;
-		ry = (ty & s) > 0;
-		d += s * s * ((3LL * rx) ^ ry);
+	uint64_t acc = ((1LL << (z * 2U)) - 1) / 3;
+	uint32_t tx = x, ty = y;
+	int a = z - 1;
+	for (uint32_t s = 1LL << a; s > 0; s >>= 1) {
+		uint32_t rx = s & tx;
+		uint32_t ry = s & ty;
 		rotate(s, tx, ty, rx, ry);
+		acc += ((3LL * rx) ^ ry) << a;
+		a--;
 	}
-	return acc + d;
+	return acc;
 }
 
 // returns an uncompressed byte buffer

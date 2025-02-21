@@ -22,6 +22,8 @@ export interface Tileset {
   getVectorLayers(): Promise<string[]>;
   isOverlay(): Promise<boolean>;
   isVector(): Promise<boolean>;
+
+  needsAddProtocol(): boolean;
 }
 
 abstract class PMTilesTileset {
@@ -76,11 +78,18 @@ class RemotePMTilesTileset extends PMTilesTileset implements Tileset {
   getMaplibreSourceUrl() {
     return "pmtiles://" + this.url; 
   }
+
+  needsAddProtocol() {
+    return false;
+  }
 }
 
 class LocalPMTilesTileset extends PMTilesTileset implements Tileset {
+  name: string;
+
   constructor(file: File) {
     super(new PMTiles(new FileSource(file)));
+    this.name = file.name;
   }
 
   // the local file cannot be persisted in the URL.
@@ -89,7 +98,11 @@ class LocalPMTilesTileset extends PMTilesTileset implements Tileset {
   }
 
   getMaplibreSourceUrl() {
-    return "";
+    return "pmtiles://" + this.name;
+  }
+
+  needsAddProtocol() {
+    return true;
   }
 }
 
@@ -98,6 +111,10 @@ class TileJSONTileset implements Tileset {
 
   constructor(url: string) {
     this.url = url;
+  }
+
+  needsAddProtocol() {
+    return false;
   }
 
   async getBounds() {

@@ -185,7 +185,7 @@ function TileView() {
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
-  const [zxy] = createSignal<[number,number,number] | undefined>(zxyFromHash(hash.zxy));
+  const [zxy] = createSignal<[number,number,number] | undefined>(hash.zxy ? zxyFromHash(hash.zxy) : [0,0,0]);
 
   createEffect(() => {
     const t = tileset();

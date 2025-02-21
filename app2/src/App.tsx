@@ -54,20 +54,25 @@ function MapView(props: { tileset: Tileset }) {
     maxWidth: "none",
   });
 
+  const protocol = new Protocol({metadata:true});
+  addProtocol("pmtiles", protocol.tile);
+
   let map: MaplibreMap;
 
-  onMount(() => {
+  onMount(async () => {
     if (!mapContainer) {
       console.error("Could not mount map element");
       return;
+    }
+
+    if (props.tileset.needsAddProtocol()) {
+      protocol.add(props.tileset.archive);
     }
 
     setRTLTextPlugin(
       "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
       true
     );
-    const protocol = new Protocol({metadata:true});
-    addProtocol("pmtiles", protocol.tile);
 
     map = new MaplibreMap({
       hash: "map",
@@ -91,18 +96,7 @@ function MapView(props: { tileset: Tileset }) {
             url: props.tileset.getMaplibreSourceUrl()
           }
         },
-        layers: [
-          ...layers("basemap", "white", "en"),
-          {
-            id: "water2",
-            type: "fill",
-            source: "tileset",
-            "source-layer": "water",
-            paint: {
-              "fill-color":"black"
-            }
-          }
-        ]
+        layers: layers("basemap", "white", "en"),
       },
     });
 
@@ -132,6 +126,54 @@ function MapView(props: { tileset: Tileset }) {
         popup.addTo(map);
       }
     });
+
+    // load the actual style
+    const vectorLayers = await props.tileset.getVectorLayers();
+    for (let vectorLayer of vectorLayers) {
+      map.addLayer({
+        id: "tileset_fill_" + vectorLayer,
+        type: "fill",
+        source: "tileset",
+        "source-layer": vectorLayer,
+        paint: {
+          "fill-color":"steelblue",
+          "fill-opacity": 0.1
+        },
+        filter: ["==", ["geometry-type"], "Polygon"]
+      });
+      map.addLayer({
+        id: "tileset_line_" + vectorLayer,
+        type: "line",
+        source: "tileset",
+        "source-layer": vectorLayer,
+        paint: {
+          "line-color":"steelblue"
+        },
+        filter: ["==", ["geometry-type"], "LineString"]
+      });
+      map.addLayer({
+        id: "tileset_circle_outline_" + vectorLayer,
+        type: "circle",
+        source: "tileset",
+        "source-layer": vectorLayer,
+        paint: {
+          "circle-color":"red",
+          "circle-radius": 3
+        },
+        filter: ["==", ["geometry-type"], "Point"]
+      });
+      map.addLayer({
+        id: "tileset_circle_" + vectorLayer,
+        type: "circle",
+        source: "tileset",
+        "source-layer": vectorLayer,
+        paint: {
+          "circle-color":"steelblue",
+          "circle-radius": 2
+        },
+        filter: ["==", ["geometry-type"], "Point"]
+      });
+    }
   });
 
   const fitToBounds = async () => {
@@ -151,7 +193,7 @@ function MapView(props: { tileset: Tileset }) {
         <button class="px-4 bg-indigo-500 rounded" type="button" onClick={fitToBounds}>
           fit to bounds
         </button>
-        zoom level: {zoom()}
+        zoom level: {zoom().toFixed(2)}
       </div>
       <div ref={mapContainer} class="h-full flex-1" />
       <div class="hidden" ref={hiddenRef} />
@@ -193,7 +235,7 @@ function App() {
     const t = tileset();
     if (t) {
       location.hash = createHash(location.hash, {
-        url: encodeURIComponent(t.getStateUrl()),
+        url: t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
         showMetadata: showMetadata() ? "true" : undefined,
       });
     }
@@ -213,25 +255,35 @@ function App() {
   };
 
   const ExampleChooser = () => {
-   return <span>
-      <button
-        type="button"
-        onClick={() => {
-          loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
-        }}
-      >
-        https://demo-bucket.protomaps.com/v4.pmtiles
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          loadSample("https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles");
-        }}
-      >
-        https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles
-      </button>
-      or drag and drop here...
-    </span> 
+   return <div class="h-full flex items-center justify-center">
+    <div>
+      Load a sample .pmtiles:
+      <div class="border border-gray-500">
+        <button
+          class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
+          type="button"
+          onClick={() => {
+            loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
+          }}
+        >
+          <div>https://demo-bucket.protomaps.com/v4.pmtiles</div>
+          <div class="text-xs">vector, global OpenStreetMap data</div>
+        </button>
+
+        <button
+          class="block p-2 flex justify-start flex-col"
+          type="button"
+          onClick={() => {
+            loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
+          }}
+        >
+          <div>https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles</div>
+          <div class="text-xs">raster, USGS landsat</div>
+        </button>
+      </div>
+      or drag and drop a local file here
+    </div> 
+  </div>
   }
 
   const drop: JSX.EventHandler<HTMLDivElement, DragEvent> = (event) => {
@@ -248,31 +300,34 @@ function App() {
 
   return (
     <div class="flex flex-col h-dvh w-full" ondragover={dragover} ondrop={drop}>
-      <div class="flex-0">
-        <h1 class="text-xl">Map view</h1>
-        <form onSubmit={loadTileset}>
-          <input
-            class="border w-100"
-            type="text"
-            name="url"
-            placeholder="TileJSON or .pmtiles"
-            value={tileset() ? tileset()?.getStateUrl() : ""}
-          />
-          <button class="px-4 bg-indigo-500" type="submit">
-            load
-          </button>
-          <button
-            class="px-4 rounded bg-indigo-500"
-            onClick={() => {
-              setShowMetadata(!showMetadata());
-            }}
-            type="button"
-          >
-            toggle metadata
-          </button>
-          <a href={`/archive/#url=${tileset()?.getStateUrl()}`}>archive inspector</a>
-          <a href="https://github.com/protomaps/PMTiles" target="_blank">{GIT_SHA}</a>
-        </form>
+      <div class="flex-0 flex items-center">
+        <div class="flex items-center p-2 flex-grow">
+          <h1 class="text-xl">Map view</h1>
+          <form onSubmit={loadTileset}>
+            <input
+              class="border w-100 mx-2 px-2"
+              type="text"
+              name="url"
+              placeholder="TileJSON or .pmtiles"
+              value={tileset() ? tileset()?.getStateUrl() : ""}
+            />
+            <button class="px-4 mx-2 bg-indigo-500 rounded" type="submit">
+              load
+            </button>
+            <button
+              class="px-4 rounded bg-indigo-500"
+              onClick={() => {
+                setShowMetadata(!showMetadata());
+              }}
+              type="button"
+            >
+              toggle metadata
+            </button>
+            <a href="https://github.com/protomaps/PMTiles" target="_blank">{GIT_SHA}</a>
+          </form>
+        </div>
+        <a class="bg-gray-100 p-2" href={`/archive/#url=${tileset()?.getStateUrl()}`}>archive</a>
+        <a class="bg-gray-200 p-2" href={`/tile/#url=${tileset()?.getStateUrl()}`}>tile</a>
       </div>
       <Show
         when={tileset()}

@@ -1,3 +1,9 @@
+## 2.0.1
+* Fix IIFE build - fflate needs browser build instead of node one
+
+## 2.0.0
+* Update to pmtiles.js v4
+
 ## 1.0.0
 
 * Port code to TypeScript.

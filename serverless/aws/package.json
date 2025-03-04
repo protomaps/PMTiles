@@ -5,8 +5,8 @@
     "@biomejs/biome": "^1.5.3",
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^20.14.8",
-    "esbuild": "^0.20.0",
-    "tsx": "^4.7.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.19.3",
     "typescript": "^4.8.4",
     "yaml-cfn": "^0.3.2"
   },

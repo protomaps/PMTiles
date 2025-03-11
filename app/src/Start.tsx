@@ -98,7 +98,7 @@ const ExampleList = styled("div", {
 const EXAMPLE_FILES = [
   "https://demo-bucket.protomaps.com/v4.pmtiles",
   "https://data.source.coop/protomaps/openstreetmap/v4.pmtiles",
-  "https://pmtiles.io/stamen_toner(raster)CC-BY+ODbL_z3.pmtiles",
+  "https://r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles",
   "https://r2-public.protomaps.com/protomaps-sample-datasets/cb_2018_us_zcta510_500k.pmtiles",
   "https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles",
 ];

@@ -61,4 +61,10 @@ export const globalStyles = globalCss({
     color: "$white",
     fontFamily: "sans-serif",
   },
+  ".maplibregl-popup .maplibregl-popup-content": {
+    pointerEvents: "none",
+  },
+  ".maplibregl-popup.frozen .maplibregl-popup-content": {
+    pointerEvents: "auto",
+  },
 });

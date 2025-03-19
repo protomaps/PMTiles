@@ -460,6 +460,9 @@ function MaplibreMap(props: { file: PMTiles; mapHashPassed: boolean }) {
     });
 
     map.on("click", (e) => {
+      popupFrozen
+        ? popup.removeClassName("frozen")
+        : popup.addClassName("frozen");
       setPopupFrozen((p) => !p);
     });
 

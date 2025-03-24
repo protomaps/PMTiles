@@ -8,5 +8,6 @@ pytest~=8.3.5
 pytest-cov==2.5.1
 coverage==4.5.1
 rasterio~=1.0
+shapely~=2.0.0
 snuggs==1.4.2
 tqdm==4.48.2

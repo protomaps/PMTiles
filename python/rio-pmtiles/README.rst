@@ -45,9 +45,6 @@ Usage
       -o, --output PATH               Path to output file (optional alternative to
                                       a positional arg).
 
-      --append / --overwrite          Append tiles to an existing file or
-                                      overwrite.
-
       --title TEXT                    PMTiles dataset title.
       --description TEXT              PMTiles dataset description.
       --overlay                       Export as an overlay (the default).

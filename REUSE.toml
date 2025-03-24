@@ -1,9 +1,14 @@
 version = 1
 
 [[annotations]]
-path = ["app/**","cpp/**","js/**","openlayers/**","python/**","serverless/**"]
+path = ["app/**","cpp/**","js/**","openlayers/**","python/pmtiles/**","serverless/**"]
 SPDX-FileCopyrightText = "2021 and later, Protomaps LLC and contributors"
 SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = ["python/rio-pmtiles/**"]
+SPDX-FileCopyrightText = "2025 and later, Protomaps LLC and contributors; 2024-2021 Mapbox"
+SPDX-License-Identifier = "MIT"
 
 [[annotations]]
 path = "spec/**/*.md"

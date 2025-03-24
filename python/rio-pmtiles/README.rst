@@ -99,18 +99,16 @@ Performance
 -----------
 
 The rio-pmtiles command is suited for small to medium (~1 GB) raster sources.
-On a MacBook Air, the 1:10M scale Natural Earth raster
+On a MacBook Pro M1, the 1:10M scale Natural Earth raster
 (a 21,600 x 10,800 pixel, 700 MB TIFF) exports to PMTiles (levels 1 through 5)
-in 45 seconds.
+in 15 seconds.
 
 .. code-block:: console
 
     $ time GDAL_CACHEMAX=256 rio pmtiles NE1_HR_LC.tif \
     > -o ne.pmtiles --zoom-levels 1..5 -j 4
 
-    real    0m44.925s
-    user    1m20.152s
-    sys     0m22.428s
+    14.87s user 10.40s system 258% cpu 9.787 total
 
 Installation
 ------------

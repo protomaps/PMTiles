@@ -50,7 +50,7 @@ jobs:
       - run: cd js && npm ci && npm test
       - run: cd js && npm run biome-check
       - run: cd python/pmtiles && python -m unittest test/test_*
-      - run: cd python/rio_pmtiles && pip install -r requirements-dev.txt && PYTHONPATH=. pytest tests
+      - run: cd python/rio-pmtiles && pip install -r requirements-dev.txt && PYTHONPATH=. pytest tests
       - run: cd cpp && make
       - run: cd serverless/cloudflare && npm ci && npm test
       - run: cd serverless/vtfilter && npm ci && npm test

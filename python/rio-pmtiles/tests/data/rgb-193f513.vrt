@@ -1,0 +1,40 @@
+<VRTDataset rasterXSize="4024" rasterYSize="3457">
+  <SRS>PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["Unknown datum based upon the WGS 84 ellipsoid",DATUM["Not_specified_based_on_WGS_84_spheroid",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]]]</SRS>
+  <GeoTransform> -1.0618653799999999e+06,  3.0003792667509481e+02,  0.0000000000000000e+00,  3.5412780899999999e+06,  0.0000000000000000e+00, -3.0004178272980499e+02</GeoTransform>
+  <VRTRasterBand dataType="Byte" band="1">
+    <NoDataValue>0</NoDataValue>
+    <ColorInterp>Red</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">RGB.byte.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="791" RasterYSize="718" DataType="Byte" BlockXSize="791" BlockYSize="3" />
+      <SrcRect xOff="0" yOff="0" xSize="791" ySize="718" />
+      <DstRect xOff="3879.01087338305" yOff="2380.87870129508" xSize="791" ySize="718" />
+      <NODATA>0</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="2">
+    <NoDataValue>0</NoDataValue>
+    <ColorInterp>Green</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">RGB.byte.tif</SourceFilename>
+      <SourceBand>2</SourceBand>
+      <SourceProperties RasterXSize="791" RasterYSize="718" DataType="Byte" BlockXSize="791" BlockYSize="3" />
+      <SrcRect xOff="0" yOff="0" xSize="791" ySize="718" />
+      <DstRect xOff="3879.01087338305" yOff="2380.87870129508" xSize="791" ySize="718" />
+      <NODATA>0</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="3">
+    <NoDataValue>0</NoDataValue>
+    <ColorInterp>Blue</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">RGB.byte.tif</SourceFilename>
+      <SourceBand>3</SourceBand>
+      <SourceProperties RasterXSize="791" RasterYSize="718" DataType="Byte" BlockXSize="791" BlockYSize="3" />
+      <SrcRect xOff="0" yOff="0" xSize="791" ySize="718" />
+      <DstRect xOff="3879.01087338305" yOff="2380.87870129508" xSize="791" ySize="718" />
+      <NODATA>0</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>

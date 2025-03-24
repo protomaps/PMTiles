@@ -7,3 +7,4 @@
 * remove multiprocessing implementation in favor of concurrent.futures; remove `--implementation` option
 * remove quadkey feature
 * replace progress estimation with exact counts; add pyroaring dependency
+* remove --image-dump feature

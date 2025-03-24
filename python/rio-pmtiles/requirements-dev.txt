@@ -4,7 +4,7 @@ coveralls==1.5.1
 mercantile==1.1.6
 pmtiles~=3.0
 pyroaring~=1.0
-pytest<3.9
+pytest~=8.3.5
 pytest-cov==2.5.1
 coverage==4.5.1
 rasterio~=1.0

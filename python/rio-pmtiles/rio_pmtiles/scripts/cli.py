@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 
 
 def resolve_inout(
-    input=None, output=None, files=None, overwrite=False, append=False, num_inputs=None
+    input=None, output=None, files=None, num_inputs=None
 ):
     """Resolves inputs and outputs from standard args and options.
 
@@ -52,10 +52,6 @@ def resolve_inout(
         A single output filename, optional.
     files : str
         A sequence of filenames in which the last is the output filename.
-    overwrite : bool
-        Whether to force overwriting the output file.
-    append : bool
-        Whether to append to the output file.
     num_inputs : int
         Raise exceptions if the number of resolved input files is higher
         or lower than this number.
@@ -110,12 +106,6 @@ def extract_features(ctx, param, value):
     metavar="INPUT [OUTPUT]",
 )
 @output_opt
-@click.option(
-    "--append/--overwrite",
-    default=True,
-    is_flag=True,
-    help="Append tiles to an existing file or overwrite.",
-)
 @click.option("--title", help="PMTiles dataset title.")
 @click.option("--description", help="PMTiles dataset description.")
 @click.option(
@@ -222,7 +212,6 @@ def pmtiles(
     ctx,
     files,
     output,
-    append,
     title,
     description,
     layer_type,
@@ -273,7 +262,7 @@ def pmtiles(
     log = logging.getLogger(__name__)
 
     output, files = resolve_inout(
-        files=files, output=output, overwrite=not (append), append=append, num_inputs=1,
+        files=files, output=output, num_inputs=1,
     )
     inputfile = files[0]
 
@@ -370,14 +359,6 @@ def pmtiles(
         south = max(-85.051129, south)
         east = min(180 - EPS, east)
         north = min(85.051129, north)
-
-        output_exists = os.path.exists(output)
-        if append:
-            appending = output_exists
-        elif output_exists:
-            appending = False
-            log.info("Overwrite mode chosen, unlinking output file.")
-            os.unlink(output)
 
         outfile = open(output, "wb")
         outfile.write(b"\x00" * 16384)

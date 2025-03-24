@@ -53,21 +53,6 @@ def test_export_metadata(tmpdir, data, filename):
     with Output(outputfile) as p:
         assert p.metadata()['name'] == filename
 
-def test_export_overwrite(tmpdir, data):
-    """Overwrites existing file"""
-    inputfile = str(data.join("RGB.byte.tif"))
-    output = tmpdir.join("export.pmtiles")
-    output.write("lolwut")
-    outputfile = str(output)
-    runner = CliRunner()
-    result = runner.invoke(
-        main_group, ["pmtiles", "--overwrite", inputfile, outputfile]
-    )
-    assert result.exit_code == 0
-
-    with Output(outputfile) as p:
-        assert p.metadata()['name'] == "RGB.byte.tif"
-
 def test_export_metadata_output_opt(tmpdir, data):
     inputfile = str(data.join("RGB.byte.tif"))
     outputfile = str(tmpdir.join("export.pmtiles"))
@@ -246,65 +231,12 @@ def test_progress_bar(tmpdir, data, filename):
     assert "100%" in result.output
 
 
-@pytest.mark.parametrize(
-    "minzoom,maxzoom,exp_num_tiles,sources",
-    [(4, 10, 70, ["rgb-193f513.vrt", "rgb-fa48952.vrt"])],
-)
-def test_appending_export_count(
-    tmpdir, data, minzoom, maxzoom, exp_num_tiles, sources):
-    """Appending adds to the tileset but does not duplicate any"""
-    inputfiles = [str(data.join(source)) for source in sources]
-    outputfile = str(tmpdir.join("export.pmtiles"))
-    runner = CliRunner()
-    result = runner.invoke(
-        main_group,
-        [
-            "pmtiles",
-            "--zoom-levels",
-            "{}..{}".format(minzoom, maxzoom),
-            inputfiles[0],
-            outputfile,
-        ],
-    )
-    assert result.exit_code == 0
-
-    with open(outputfile, 'rb') as f:
-        src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 12
-
-    result = runner.invoke(
-        main_group,
-        [
-            "pmtiles",
-            "--append",
-            "--zoom-levels",
-            "{}..{}".format(minzoom, maxzoom),
-            inputfiles[1],
-            outputfile,
-        ],
-    )
-    assert result.exit_code == 0
-
-    with open(outputfile, 'rb') as f:
-        src = MmapSource(f)
-        assert len(list(all_tiles(src))) == exp_num_tiles
-
-
 @pytest.mark.parametrize("inputfiles", [[], ["a.tif", "b.tif"]])
 def test_input_required(inputfiles):
     """We require exactly one input file"""
     runner = CliRunner()
     result = runner.invoke(main_group, ["pmtiles"] + inputfiles + ["foo.pmtiles"])
     assert result.exit_code == 2
-
-
-def test_append_or_overwrite_required(tmpdir):
-    """If the output files exists --append or --overwrite is required"""
-    outputfile = tmpdir.join("export.pmtiles")
-    outputfile.ensure()
-    runner = CliRunner()
-    result = runner.invoke(main_group, ["pmtiles", "a.tif", str(outputfile)])
-    assert result.exit_code == 1
 
 
 @pytest.mark.parametrize("filename", ["RGBA.byte.tif"])

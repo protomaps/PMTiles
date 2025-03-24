@@ -28,6 +28,7 @@ def test_cli_help():
     runner = CliRunner()
     result = runner.invoke(main_group, ["pmtiles", "--help"])
     assert result.exit_code == 0
+    print(result.output)
     assert "Export a dataset to PMTiles." in result.output
 
 

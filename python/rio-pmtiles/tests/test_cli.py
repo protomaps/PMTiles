@@ -217,7 +217,6 @@ def test_progress_bar(tmpdir, data, filename):
         main_group,
         [
             "pmtiles",
-            "-#",
             "--zoom-levels",
             "4..11",
             "--rgba",
@@ -249,7 +248,6 @@ def test_cutline_progress_bar(tmpdir, data, rgba_cutline_path, filename):
         main_group,
         [
             "pmtiles",
-            "-#",
             "--zoom-levels",
             "4..11",
             "--rgba",
@@ -275,7 +273,6 @@ def test_invalid_cutline(tmpdir, data, rgba_points_path, filename):
         main_group,
         [
             "pmtiles",
-            "-#",
             "--zoom-levels",
             "4..11",
             "--rgba",

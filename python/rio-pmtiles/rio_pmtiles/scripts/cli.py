@@ -106,8 +106,8 @@ def extract_features(ctx, param, value):
     metavar="INPUT [OUTPUT]",
 )
 @output_opt
-@click.option("--title", help="PMTiles dataset title.")
-@click.option("--description", help="PMTiles dataset description.")
+@click.option("--name", help="PMTiles metadata name.")
+@click.option("--description", help="PMTiles metadata description.")
 @click.option(
     "--overlay",
     "layer_type",
@@ -212,7 +212,7 @@ def pmtiles(
     ctx,
     files,
     output,
-    title,
+    name,
     description,
     layer_type,
     img_format,
@@ -251,7 +251,7 @@ def pmtiles(
     nearest to the one at which one tile may contain the entire source
     dataset.
 
-    If a title or description for the output file are not provided,
+    If a name or description for the output file are not provided,
     they will be taken from the input dataset's filename.
 
     This command is suited for small to medium (~1 GB) sized sources.
@@ -286,7 +286,7 @@ def pmtiles(
                 base_kwds.update(nodata=dst_nodata)
 
             # Name and description.
-            title = title or os.path.basename(src.name)
+            name = name or os.path.basename(src.name)
             description = description or src.name
 
             # Compute the geographic bounding box of the dataset.
@@ -364,7 +364,7 @@ def pmtiles(
         outfile.write(b"\x00" * 16384)
         entries = []
 
-        metadata = gzip.compress(json.dumps({'name':title,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}'}).encode())
+        metadata = gzip.compress(json.dumps({'name':name,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}'}).encode())
         outfile.write(metadata)
 
         header = {}

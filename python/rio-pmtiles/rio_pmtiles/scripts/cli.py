@@ -123,12 +123,12 @@ def extract_features(ctx, param, value):
     "--format",
     "img_format",
     type=click.Choice(["JPEG", "PNG", "WEBP"]),
-    default="JPEG",
+    default="WEBP",
     help="Tile image format.",
 )
 @click.option(
     "--tile-size",
-    default=256,
+    default=512,
     show_default=True,
     type=int,
     help="Width and height of individual square tiles to create.",
@@ -166,7 +166,7 @@ def extract_features(ctx, param, value):
 @click.option(
     "--resampling",
     type=click.Choice(RESAMPLING_METHODS),
-    default="nearest",
+    default="bilinear",
     show_default=True,
     help="Resampling method to use.",
 )

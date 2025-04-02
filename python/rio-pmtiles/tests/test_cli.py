@@ -11,6 +11,7 @@ from rasterio.rio.main import main_group
 
 from pmtiles.reader import Reader, MmapSource, all_tiles
 import rio_pmtiles.scripts.cli
+from rio_pmtiles.scripts.cli import guess_maxzoom
 
 from conftest import mock
 
@@ -285,3 +286,14 @@ def test_invalid_cutline(tmpdir, data, rgba_points_path, filename):
         ],
     )
     assert result.exit_code == 1
+
+@pytest.mark.parametrize(
+    "crs,bounds,width,height,tile_size,maxzoom",
+    [
+        ("EPSG:4326",[-180,-90,180,90],256,256,256,0),
+        ("EPSG:4326",[-180,-90,180,90],512,512,256,1),
+        ("EPSG:4326",[-180,-90,180.00000000007202,90],512,1,256,1),
+    ],
+)
+def test_guess_maxzoom(crs, bounds, width, height, tile_size, maxzoom):
+    assert guess_maxzoom(crs, bounds, width, height, tile_size) == maxzoom

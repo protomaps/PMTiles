@@ -35,6 +35,7 @@ from rio_pmtiles.worker import init_worker, process_tile
 DEFAULT_NUM_WORKERS = None
 RESAMPLING_METHODS = [method.name for method in Resampling]
 TILES_CRS = "EPSG:3857"
+WEBMERC_EXTENT = 40075016.68
 
 log = logging.getLogger(__name__)
 
@@ -95,6 +96,17 @@ def extract_features(ctx, param, value):
             return list(iter_features(iter(src)))
     else:
         return None
+
+def guess_maxzoom(crs, bounds, width, height, tile_size):
+    (west, east), (south, north) = transform(
+        crs, "EPSG:3857", bounds[::2], bounds[1::2]
+    )
+    if east <= -WEBMERC_EXTENT/2:
+        east = -east
+    res_x = (east - west) / width
+    res_y = (north - south) / height
+    raster_resolution = min(res_x, res_y)
+    return math.ceil(math.log2(WEBMERC_EXTENT / (tile_size * raster_resolution)))
 
 
 @click.command(short_help="Export a dataset to PMTiles.")
@@ -323,10 +335,8 @@ def pmtiles(
         if zoom_levels:
             minzoom, maxzoom = map(int, zoom_levels.split(".."))
         else:
-            zw = int(round(math.log(360.0 / (east - west), 2.0)))
-            zh = int(round(math.log(170.1022 / (north - south), 2.0)))
-            minzoom = min(zw, zh)
-            maxzoom = max(zw, zh)
+            minzoom = 0
+            maxzoom = guess_maxzoom(src.crs, src.bounds, src.width, src.height, tile_size)
 
         log.debug("Zoom range: %d..%d", minzoom, maxzoom)
 

@@ -11,6 +11,7 @@ from rasterio.rio.main import main_group
 
 from pmtiles.reader import Reader, MmapSource, all_tiles
 import rio_pmtiles.scripts.cli
+from rio_pmtiles.scripts.cli import guess_maxzoom
 
 from conftest import mock
 
@@ -72,7 +73,7 @@ def test_export_tiles(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 def test_export_zoom(tmpdir, data):
     inputfile = str(data.join("RGB.byte.tif"))
@@ -96,7 +97,7 @@ def test_export_jobs(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_export_src_nodata(tmpdir, data):
@@ -111,7 +112,7 @@ def test_export_src_nodata(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_export_bilinear(tmpdir, data):
@@ -125,7 +126,7 @@ def test_export_bilinear(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_skip_empty(tmpdir, empty_data):
@@ -153,7 +154,7 @@ def test_include_empty(tmpdir, empty_data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_invalid_format_rgba(tmpdir, empty_data):
@@ -217,7 +218,6 @@ def test_progress_bar(tmpdir, data, filename):
         main_group,
         [
             "pmtiles",
-            "-#",
             "--zoom-levels",
             "4..11",
             "--rgba",
@@ -249,7 +249,6 @@ def test_cutline_progress_bar(tmpdir, data, rgba_cutline_path, filename):
         main_group,
         [
             "pmtiles",
-            "-#",
             "--zoom-levels",
             "4..11",
             "--rgba",
@@ -275,7 +274,6 @@ def test_invalid_cutline(tmpdir, data, rgba_points_path, filename):
         main_group,
         [
             "pmtiles",
-            "-#",
             "--zoom-levels",
             "4..11",
             "--rgba",
@@ -288,3 +286,14 @@ def test_invalid_cutline(tmpdir, data, rgba_points_path, filename):
         ],
     )
     assert result.exit_code == 1
+
+@pytest.mark.parametrize(
+    "crs,bounds,width,height,tile_size,maxzoom",
+    [
+        ("EPSG:4326",[-180,-90,180,90],256,256,256,0),
+        ("EPSG:4326",[-180,-90,180,90],512,512,256,1),
+        ("EPSG:4326",[-180,-90,180.00000000007202,90],512,1,256,1),
+    ],
+)
+def test_guess_maxzoom(crs, bounds, width, height, tile_size, maxzoom):
+    assert guess_maxzoom(crs, bounds, width, height, tile_size) == maxzoom

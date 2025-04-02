@@ -35,6 +35,7 @@ from rio_pmtiles.worker import init_worker, process_tile
 DEFAULT_NUM_WORKERS = None
 RESAMPLING_METHODS = [method.name for method in Resampling]
 TILES_CRS = "EPSG:3857"
+WEBMERC_EXTENT = 40075016.68
 
 log = logging.getLogger(__name__)
 
@@ -96,6 +97,17 @@ def extract_features(ctx, param, value):
     else:
         return None
 
+def guess_maxzoom(crs, bounds, width, height, tile_size):
+    (west, east), (south, north) = transform(
+        crs, "EPSG:3857", bounds[::2], bounds[1::2]
+    )
+    if east <= -WEBMERC_EXTENT/2:
+        east = -east
+    res_x = (east - west) / width
+    res_y = (north - south) / height
+    raster_resolution = min(res_x, res_y)
+    return math.ceil(math.log2(WEBMERC_EXTENT / (tile_size * raster_resolution)))
+
 
 @click.command(short_help="Export a dataset to PMTiles.")
 @click.argument(
@@ -106,8 +118,8 @@ def extract_features(ctx, param, value):
     metavar="INPUT [OUTPUT]",
 )
 @output_opt
-@click.option("--title", help="PMTiles dataset title.")
-@click.option("--description", help="PMTiles dataset description.")
+@click.option("--name", help="PMTiles metadata name.")
+@click.option("--description", help="PMTiles metadata description.")
 @click.option(
     "--overlay",
     "layer_type",
@@ -123,12 +135,12 @@ def extract_features(ctx, param, value):
     "--format",
     "img_format",
     type=click.Choice(["JPEG", "PNG", "WEBP"]),
-    default="JPEG",
+    default="WEBP",
     help="Tile image format.",
 )
 @click.option(
     "--tile-size",
-    default=256,
+    default=512,
     show_default=True,
     type=int,
     help="Width and height of individual square tiles to create.",
@@ -166,7 +178,7 @@ def extract_features(ctx, param, value):
 @click.option(
     "--resampling",
     type=click.Choice(RESAMPLING_METHODS),
-    default="nearest",
+    default="bilinear",
     show_default=True,
     help="Resampling method to use.",
 )
@@ -175,7 +187,7 @@ def extract_features(ctx, param, value):
     "--rgba", default=False, is_flag=True, help="Select RGBA output. For PNG or WEBP only."
 )
 @click.option(
-    "--progress-bar", "-#", default=False, is_flag=True, help="Don't display progress bar."
+    "--silent", default=False, is_flag=True, help="Don't display progress bar."
 )
 @click.option(
     "--cutline",
@@ -212,7 +224,7 @@ def pmtiles(
     ctx,
     files,
     output,
-    title,
+    name,
     description,
     layer_type,
     img_format,
@@ -223,7 +235,7 @@ def pmtiles(
     dst_nodata,
     resampling,
     rgba,
-    progress_bar,
+    silent,
     cutline,
     open_options,
     creation_options,
@@ -251,7 +263,7 @@ def pmtiles(
     nearest to the one at which one tile may contain the entire source
     dataset.
 
-    If a title or description for the output file are not provided,
+    If a name or description for the output file are not provided,
     they will be taken from the input dataset's filename.
 
     This command is suited for small to medium (~1 GB) sized sources.
@@ -286,7 +298,7 @@ def pmtiles(
                 base_kwds.update(nodata=dst_nodata)
 
             # Name and description.
-            title = title or os.path.basename(src.name)
+            name = name or os.path.basename(src.name)
             description = description or src.name
 
             # Compute the geographic bounding box of the dataset.
@@ -323,10 +335,8 @@ def pmtiles(
         if zoom_levels:
             minzoom, maxzoom = map(int, zoom_levels.split(".."))
         else:
-            zw = int(round(math.log(360.0 / (east - west), 2.0)))
-            zh = int(round(math.log(170.1022 / (north - south), 2.0)))
-            minzoom = min(zw, zh)
-            maxzoom = max(zw, zh)
+            minzoom = 0
+            maxzoom = guess_maxzoom(src.crs, src.bounds, src.width, src.height, tile_size)
 
         log.debug("Zoom range: %d..%d", minzoom, maxzoom)
 
@@ -364,7 +374,7 @@ def pmtiles(
         outfile.write(b"\x00" * 16384)
         entries = []
 
-        metadata = gzip.compress(json.dumps({'name':title,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}'}).encode())
+        metadata = gzip.compress(json.dumps({'name':name,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}'}).encode())
         outfile.write(metadata)
 
         header = {}
@@ -409,10 +419,10 @@ def pmtiles(
                 z, x, y = tileid_to_zxy(tile_id)
                 yield mercantile.Tile(x,y,z)
 
-        if progress_bar:
-            pbar = tqdm(total=len(tiles))
-        else:
+        if silent:
             pbar = None
+        else:
+            pbar = tqdm(total=len(tiles))
 
         tile_data_offset = 0
 

@@ -73,7 +73,7 @@ def test_export_tiles(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 def test_export_zoom(tmpdir, data):
     inputfile = str(data.join("RGB.byte.tif"))
@@ -97,7 +97,7 @@ def test_export_jobs(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_export_src_nodata(tmpdir, data):
@@ -112,7 +112,7 @@ def test_export_src_nodata(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_export_bilinear(tmpdir, data):
@@ -126,7 +126,7 @@ def test_export_bilinear(tmpdir, data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_skip_empty(tmpdir, empty_data):
@@ -154,7 +154,7 @@ def test_include_empty(tmpdir, empty_data):
 
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
-        assert len(list(all_tiles(src))) == 6
+        assert len(list(all_tiles(src))) == 19
 
 
 def test_invalid_format_rgba(tmpdir, empty_data):

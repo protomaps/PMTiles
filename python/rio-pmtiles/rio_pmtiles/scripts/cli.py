@@ -175,7 +175,7 @@ def extract_features(ctx, param, value):
     "--rgba", default=False, is_flag=True, help="Select RGBA output. For PNG or WEBP only."
 )
 @click.option(
-    "--progress-bar", "-#", default=False, is_flag=True, help="Don't display progress bar."
+    "--silent", default=False, is_flag=True, help="Don't display progress bar."
 )
 @click.option(
     "--cutline",
@@ -223,7 +223,7 @@ def pmtiles(
     dst_nodata,
     resampling,
     rgba,
-    progress_bar,
+    silent,
     cutline,
     open_options,
     creation_options,
@@ -409,10 +409,10 @@ def pmtiles(
                 z, x, y = tileid_to_zxy(tile_id)
                 yield mercantile.Tile(x,y,z)
 
-        if progress_bar:
-            pbar = tqdm(total=len(tiles))
-        else:
+        if silent:
             pbar = None
+        else:
+            pbar = tqdm(total=len(tiles))
 
         tile_data_offset = 0
 

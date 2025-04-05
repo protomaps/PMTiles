@@ -1,7 +1,7 @@
-[![pmtiles npm](https://img.shields.io/npm/v/pmtiles)](https://www.npmjs.com/package/pmtiles)
-[![pmtiles pypi](https://img.shields.io/pypi/v/pmtiles)](https://pypi.org/project/pmtiles/)
-[![rio-pmtiles pypi](https://img.shields.io/pypi/v/rio-pmtiles)](https://pypi.org/project/rio-pmtiles/)
-[![ol-pmtiles npm](https://img.shields.io/npm/v/ol-pmtiles)](https://www.npmjs.com/package/ol-pmtiles)
+[![pmtiles npm](https://img.shields.io/npm/v/pmtiles?label=npm%20pmtiles)](https://www.npmjs.com/package/pmtiles)
+[![pmtiles pypi](https://img.shields.io/pypi/v/pmtiles?label=pypi%20pmtiles)](https://pypi.org/project/pmtiles/)
+[![rio-pmtiles pypi](https://img.shields.io/pypi/v/rio-pmtiles?label=pypi%20rio-pmtiles)](https://pypi.org/project/rio-pmtiles/)
+[![ol-pmtiles npm](https://img.shields.io/npm/v/ol-pmtiles?label=npm%20ol-pmtiles)](https://www.npmjs.com/package/ol-pmtiles)
 
 🔎 **PMTiles Viewer:** [https://pmtiles.io/](https://pmtiles.io) 🔎
 

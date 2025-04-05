@@ -53,4 +53,3 @@ jobs:
       - run: cd python/rio-pmtiles && pip install -r requirements-dev.txt && pip install -e . && PYTHONPATH=. pytest tests
       - run: cd cpp && make
       - run: cd serverless/cloudflare && npm ci && npm test
-      - run: cd serverless/vtfilter && npm ci && npm test

@@ -111,7 +111,7 @@ function MapView(props: { tileset: Tileset }) {
             tiles: [
               "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f",
             ],
-            maxzoom: 15
+            maxzoom: 15,
           },
           tileset: {
             type: "vector",
@@ -124,7 +124,7 @@ function MapView(props: { tileset: Tileset }) {
 
     // map.showTileBoundaries = true;
     map.addControl(new NavigationControl({}), "top-left");
-    map.addControl(new AttributionControl({compact:false}));
+    map.addControl(new AttributionControl({ compact: false }));
 
     setZoom(map.getZoom());
     map.on("zoom", (e) => {

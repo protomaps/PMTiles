@@ -217,30 +217,8 @@ function DirectoryTable(props: {
   setOpenedLeaf: Setter<number | undefined>;
 }) {
   return (
-    <div class="w-full h-64">
-      {/*      directory size: kb
-      total entries: number
-      total addressed tiles: numbber
-      average leaf size: x
-      total tile contents: x
-*/}{" "}
-      <table class="w-full">
-        <tbody>
-          <tr>
-            <td># Addressed Tiles in directory</td>
-            <td>0</td>
-            <td># Tile Contents in directory</td>
-            <td>0</td>
-          </tr>
-          <tr>
-            <td># Entries in directory</td>
-            <td>0</td>
-            <td>Directory size</td>
-            <td>abc</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="overflow-y-scroll h-full">
+    <div class="flex-1 overflow-hidden">
+      <div class="h-full overflow-y-scroll">
         <table class="text-right table-auto border-separate border-spacing-1 w-full">
           <thead>
             <tr>
@@ -358,19 +336,27 @@ function ArchiveView() {
 
   return (
     <div class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white">
-      <div class="">
-        <h1 class="text-xl">Archive inspector</h1>
-        <form onSubmit={loadTileset}>
-          <input type="text" name="url" placeholder="url for .pmtiles" />
-          <button class="px-4 bg-indigo-500" type="submit">
-            load
-          </button>
-        </form>
-      </div>
+      <h1 class="text-xl">Archive inspector</h1>
+      <form onSubmit={loadTileset}>
+        <input type="text" name="url" placeholder="url for .pmtiles" />
+        <button class="px-4 bg-indigo-500" type="submit">
+          load
+        </button>
+      </form>
       <Show when={tileset()} fallback={<span>fallback</span>}>
         {(t) => (
-          <div class="w-full flex grow font-mono text-sm">
-            <div class="w-1/3 flex flex-col h-full">
+          <div class="w-full flex grow font-mono text-sm flex-1 overflow-hidden">
+            <div
+              classList={{
+                "w-1/3": leafEntries(),
+                "w-1/2": !leafEntries(),
+                flex: true,
+                "flex-col": true,
+                "h-full": true,
+                "flex-1": true,
+                "overflow-hidden": true,
+              }}
+            >
               <Show when={header()}>
                 {(h) => (
                   <div>
@@ -415,20 +401,18 @@ function ArchiveView() {
               <div>tile compression: ?</div>
               <div>tile type: ?</div>
 
-              <div class="h-full">
-                <DirectoryTable
-                  entries={rootEntries()}
-                  tilesetUrl={t().source.getKey()}
-                  setHoveredTile={setHoveredTile}
-                  setOpenedLeaf={setOpenedLeaf}
-                  clustered={h().clustered}
-                />
-              </div>
+              <DirectoryTable
+                entries={rootEntries()}
+                tilesetUrl={t().source.getKey()}
+                setHoveredTile={setHoveredTile}
+                setOpenedLeaf={setOpenedLeaf}
+                clustered={h().clustered}
+              />
             </div>
-            <div class="flex w-1/3 h-full">
-              <div class="w-full">
-                <Show when={leafEntries()}>
-                  {(l) => (
+            <Show when={leafEntries()}>
+              {(l) => (
+                <div class="flex w-1/3 h-full flex-1 overflow-hidden">
+                  <div class="w-full flex flex-1 overflow-hidden">
                     <DirectoryTable
                       entries={l()}
                       tilesetUrl={t().source.getKey()}
@@ -436,11 +420,18 @@ function ArchiveView() {
                       setOpenedLeaf={setOpenedLeaf}
                       clustered={h().clustered}
                     />
-                  )}
-                </Show>
-              </div>
-            </div>
-            <div class="flex w-1/3 flex-col">
+                  </div>
+                </div>
+              )}
+            </Show>
+            <div
+              classList={{
+                flex: true,
+                "w-1/3": leafEntries(),
+                "w-1/2": !leafEntries(),
+                "flex-col": true,
+              }}
+            >
               <div>
                 <div>min zoom: ?</div>
                 <div>max zoom: ?</div>

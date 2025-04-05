@@ -10,7 +10,7 @@ export function LayersPanel(props: {
   });
 
   return (
-    <div class="bg-white rounded p-4">
+    <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-4">
       <input type="checkbox" id={"checkall"} />
       <label for={"checkall"}>All Layers</label>
       <For each={vectorLayers()}>

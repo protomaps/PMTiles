@@ -2,6 +2,7 @@
 import { render } from "solid-js/web";
 import "./index.css";
 import {
+  AttributionControl,
   Map as MaplibreMap,
   NavigationControl,
   Popup,
@@ -92,13 +93,13 @@ function MapView(props: { tileset: Tileset }) {
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches
     ) {
-      console.log("Dark mode");
       flavor = "black";
     }
 
     map = new MaplibreMap({
       hash: "map",
       container: mapContainer,
+      attributionControl: false,
       style: {
         version: 8,
         glyphs:
@@ -110,9 +111,7 @@ function MapView(props: { tileset: Tileset }) {
             tiles: [
               "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f",
             ],
-            maxzoom: 15,
-            attribution:
-              'Basemap <a href="https://github.com/protomaps/basemaps">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
+            maxzoom: 15
           },
           tileset: {
             type: "vector",
@@ -123,8 +122,9 @@ function MapView(props: { tileset: Tileset }) {
       },
     });
 
-    map.showTileBoundaries = true;
-    map.addControl(new NavigationControl({}), "bottom-left");
+    // map.showTileBoundaries = true;
+    map.addControl(new NavigationControl({}), "top-left");
+    map.addControl(new AttributionControl({compact:false}));
 
     setZoom(map.getZoom());
     map.on("zoom", (e) => {

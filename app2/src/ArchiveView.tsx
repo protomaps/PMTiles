@@ -114,13 +114,21 @@ function MapView(props: {
       true,
     );
 
+    let flavor = "white";
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      flavor = "black";
+    }
+
     map = new MaplibreMap({
       container: mapContainer,
       style: {
         version: 8,
         glyphs:
           "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-        sprite: "https://protomaps.github.io/basemaps-assets/sprites/v4/white",
+        sprite: `https://protomaps.github.io/basemaps-assets/sprites/v4/${flavor}`,
         sources: {
           basemap: {
             type: "vector",
@@ -148,7 +156,7 @@ function MapView(props: {
           },
         },
         layers: [
-          ...layers("basemap", "white", "en"),
+          ...layers("basemap", flavor, "en"),
           {
             id: "archive",
             source: "archive",
@@ -349,7 +357,7 @@ function ArchiveView() {
   };
 
   return (
-    <div class="flex flex-col h-dvh w-full">
+    <div class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white">
       <div class="">
         <h1 class="text-xl">Archive inspector</h1>
         <form onSubmit={loadTileset}>

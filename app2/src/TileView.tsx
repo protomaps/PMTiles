@@ -241,7 +241,7 @@ function TileView() {
   };
 
   return (
-    <div class="flex flex-col h-dvh w-full">
+    <div class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white">
       <div class="flex-0">
         <h1 class="text-xl">Tile inspector</h1>
         <form onSubmit={loadTileset}>

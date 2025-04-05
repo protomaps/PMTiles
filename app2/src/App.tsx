@@ -1,16 +1,29 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import "./index.css";
-import { Map as MaplibreMap, Popup, setRTLTextPlugin, addProtocol, NavigationControl } from "maplibre-gl";
-import { type JSX, Show, createEffect, createResource, createSignal, onMount } from "solid-js";
+import {
+  Map as MaplibreMap,
+  NavigationControl,
+  Popup,
+  addProtocol,
+  setRTLTextPlugin,
+} from "maplibre-gl";
+import {
+  type JSX,
+  Show,
+  createEffect,
+  createResource,
+  createSignal,
+  onMount,
+} from "solid-js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { default as layers } from "protomaps-themes-base";
 import { GIT_SHA, createHash, parseHash } from "./utils";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
-import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
-import { LayersPanel } from "./LayersPanel";
 import { Protocol } from "pmtiles";
+import { LayersPanel } from "./LayersPanel";
+import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
 
 declare module "solid-js" {
   namespace JSX {
@@ -54,7 +67,7 @@ function MapView(props: { tileset: Tileset }) {
     maxWidth: "none",
   });
 
-  const protocol = new Protocol({metadata:true});
+  const protocol = new Protocol({ metadata: true });
   addProtocol("pmtiles", protocol.tile);
 
   let map: MaplibreMap;
@@ -71,8 +84,17 @@ function MapView(props: { tileset: Tileset }) {
 
     setRTLTextPlugin(
       "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
-      true
+      true,
     );
+
+    let flavor = "white";
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      console.log("Dark mode");
+      flavor = "black";
+    }
 
     map = new MaplibreMap({
       hash: "map",
@@ -81,7 +103,7 @@ function MapView(props: { tileset: Tileset }) {
         version: 8,
         glyphs:
           "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-        sprite: "https://protomaps.github.io/basemaps-assets/sprites/v4/white",
+        sprite: `https://protomaps.github.io/basemaps-assets/sprites/v4/${flavor}`,
         sources: {
           basemap: {
             type: "vector",
@@ -89,14 +111,15 @@ function MapView(props: { tileset: Tileset }) {
               "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f",
             ],
             maxzoom: 15,
-            attribution: 'Basemap <a href="https://github.com/protomaps/basemaps">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+            attribution:
+              'Basemap <a href="https://github.com/protomaps/basemaps">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
           },
           tileset: {
             type: "vector",
-            url: props.tileset.getMaplibreSourceUrl()
-          }
+            url: props.tileset.getMaplibreSourceUrl(),
+          },
         },
-        layers: layers("basemap", "white", "en"),
+        layers: layers("basemap", flavor, "en"),
       },
     });
 
@@ -118,7 +141,14 @@ function MapView(props: { tileset: Tileset }) {
       if (hiddenRef) {
         hiddenRef.innerHTML = "";
         render(
-          () => <PopupContent url={props.tileset.getStateUrl()} z={z} x={tileX} y={tileY} />,
+          () => (
+            <PopupContent
+              url={props.tileset.getStateUrl()}
+              z={z}
+              x={tileX}
+              y={tileY}
+            />
+          ),
           hiddenRef,
         );
         popup.setHTML(hiddenRef.innerHTML);
@@ -129,49 +159,49 @@ function MapView(props: { tileset: Tileset }) {
 
     // load the actual style
     const vectorLayers = await props.tileset.getVectorLayers();
-    for (let vectorLayer of vectorLayers) {
+    for (const vectorLayer of vectorLayers) {
       map.addLayer({
-        id: "tileset_fill_" + vectorLayer,
+        id: `tileset_fill_${vectorLayer}`,
         type: "fill",
         source: "tileset",
         "source-layer": vectorLayer,
         paint: {
-          "fill-color":"steelblue",
-          "fill-opacity": 0.1
+          "fill-color": "steelblue",
+          "fill-opacity": 0.1,
         },
-        filter: ["==", ["geometry-type"], "Polygon"]
+        filter: ["==", ["geometry-type"], "Polygon"],
       });
       map.addLayer({
-        id: "tileset_line_" + vectorLayer,
+        id: `tileset_line_${vectorLayer}`,
         type: "line",
         source: "tileset",
         "source-layer": vectorLayer,
         paint: {
-          "line-color":"steelblue"
+          "line-color": "steelblue",
         },
-        filter: ["==", ["geometry-type"], "LineString"]
+        filter: ["==", ["geometry-type"], "LineString"],
       });
       map.addLayer({
-        id: "tileset_circle_outline_" + vectorLayer,
+        id: `tileset_circle_outline_${vectorLayer}`,
         type: "circle",
         source: "tileset",
         "source-layer": vectorLayer,
         paint: {
-          "circle-color":"red",
-          "circle-radius": 3
+          "circle-color": "red",
+          "circle-radius": 3,
         },
-        filter: ["==", ["geometry-type"], "Point"]
+        filter: ["==", ["geometry-type"], "Point"],
       });
       map.addLayer({
-        id: "tileset_circle_" + vectorLayer,
+        id: `tileset_circle_${vectorLayer}`,
         type: "circle",
         source: "tileset",
         "source-layer": vectorLayer,
         paint: {
-          "circle-color":"steelblue",
-          "circle-radius": 2
+          "circle-color": "steelblue",
+          "circle-radius": 2,
         },
-        filter: ["==", ["geometry-type"], "Point"]
+        filter: ["==", ["geometry-type"], "Point"],
       });
     }
   });
@@ -180,17 +210,21 @@ function MapView(props: { tileset: Tileset }) {
     const bounds = await props.tileset.getBounds();
     map.fitBounds(
       [
-        [bounds[0],bounds[1]],
-        [bounds[2],bounds[3]],
+        [bounds[0], bounds[1]],
+        [bounds[2], bounds[3]],
       ],
-      { animate: false }
+      { animate: false },
     );
-  }
+  };
 
   return (
     <div class="flex-1 flex flex-col relative">
       <div class="flex-0">
-        <button class="px-4 bg-indigo-500 rounded" type="button" onClick={fitToBounds}>
+        <button
+          class="px-4 bg-indigo-500 rounded"
+          type="button"
+          onClick={fitToBounds}
+        >
           fit to bounds
         </button>
         zoom level: {zoom().toFixed(2)}
@@ -198,28 +232,29 @@ function MapView(props: { tileset: Tileset }) {
       <div ref={mapContainer} class="h-full flex-1" />
       <div class="hidden" ref={hiddenRef} />
       <div class="absolute right-8 top-8">
-        <LayersPanel tileset={props.tileset} setActiveLayers={setActiveLayers}/>
+        <LayersPanel
+          tileset={props.tileset}
+          setActiveLayers={setActiveLayers}
+        />
       </div>
     </div>
   );
 }
 
-const JsonView = (props: {tileset:Tileset}) => {
+const JsonView = (props: { tileset: Tileset }) => {
   const [data] = createResource(async () => {
     return await props.tileset.getMetadata();
   });
 
-  return <div>
+  return (
     <div>
-      min lon, min lat, max lon, max lat: 
+      <div>min lon, min lat, max lon, max lat:</div>
+      <div>center zoom: </div>
+      <div>center lon, center lat:</div>
+      <json-viewer data={data()} />
     </div>
-    <div>center zoom: </div>
-    <div>
-      center lon, center lat: 
-    </div>
-    <json-viewer data={data()} />;
-  </div>
-}
+  );
+};
 
 // TODO error display
 function App() {
@@ -255,36 +290,40 @@ function App() {
   };
 
   const ExampleChooser = () => {
-   return <div class="h-full flex items-center justify-center">
-    <div>
-      Load a sample .pmtiles:
-      <div class="border border-gray-500">
-        <button
-          class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
-          type="button"
-          onClick={() => {
-            loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
-          }}
-        >
-          <div>https://demo-bucket.protomaps.com/v4.pmtiles</div>
-          <div class="text-xs">vector, global OpenStreetMap data</div>
-        </button>
+    return (
+      <div class="h-full flex items-center justify-center">
+        <div>
+          Load a sample .pmtiles:
+          <div class="border border-gray-500">
+            <button
+              class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
+              type="button"
+              onClick={() => {
+                loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
+              }}
+            >
+              <div>https://demo-bucket.protomaps.com/v4.pmtiles</div>
+              <div class="text-xs">vector, global OpenStreetMap data</div>
+            </button>
 
-        <button
-          class="block p-2 flex justify-start flex-col"
-          type="button"
-          onClick={() => {
-            loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
-          }}
-        >
-          <div>https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles</div>
-          <div class="text-xs">raster, USGS landsat</div>
-        </button>
+            <button
+              class="block p-2 flex justify-start flex-col"
+              type="button"
+              onClick={() => {
+                loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
+              }}
+            >
+              <div>
+                https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles
+              </div>
+              <div class="text-xs">raster, USGS landsat</div>
+            </button>
+          </div>
+          or drag and drop a local file here
+        </div>
       </div>
-      or drag and drop a local file here
-    </div> 
-  </div>
-  }
+    );
+  };
 
   const drop: JSX.EventHandler<HTMLDivElement, DragEvent> = (event) => {
     event.preventDefault();
@@ -299,7 +338,11 @@ function App() {
   };
 
   return (
-    <div class="flex flex-col h-dvh w-full" ondragover={dragover} ondrop={drop}>
+    <div
+      class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white"
+      ondragover={dragover}
+      ondrop={drop}
+    >
       <div class="flex-0 flex items-center">
         <div class="flex items-center p-2 flex-grow">
           <h1 class="text-xl">Map view</h1>
@@ -323,26 +366,39 @@ function App() {
             >
               toggle metadata
             </button>
-            <a href="https://github.com/protomaps/PMTiles" target="_blank">{GIT_SHA}</a>
+            <a
+              href="https://github.com/protomaps/PMTiles"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {GIT_SHA}
+            </a>
           </form>
         </div>
-        <a class="bg-gray-100 p-2" href={`/archive/#url=${tileset()?.getStateUrl()}`}>archive</a>
-        <a class="bg-gray-200 p-2" href={`/tile/#url=${tileset()?.getStateUrl()}`}>tile</a>
+        <a
+          class="bg-gray-100 p-2"
+          href={`/archive/#url=${tileset()?.getStateUrl()}`}
+        >
+          archive
+        </a>
+        <a
+          class="bg-gray-200 p-2"
+          href={`/tile/#url=${tileset()?.getStateUrl()}`}
+        >
+          tile
+        </a>
       </div>
-      <Show
-        when={tileset()}
-        fallback={<ExampleChooser/>}
-      >
-        {(t) => 
-        <div class="flex w-full h-full">
-          <MapView tileset={t()} />
-          <Show when={showMetadata()}>
-            <div class="w-1/2">
-              <JsonView tileset={t()}/>
-            </div>
-          </Show>
-        </div>
-        }
+      <Show when={tileset()} fallback={<ExampleChooser />}>
+        {(t) => (
+          <div class="flex w-full h-full">
+            <MapView tileset={t()} />
+            <Show when={showMetadata()}>
+              <div class="w-1/2">
+                <JsonView tileset={t()} />
+              </div>
+            </Show>
+          </div>
+        )}
       </Show>
     </div>
   );

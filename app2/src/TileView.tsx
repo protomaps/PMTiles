@@ -2,17 +2,17 @@
 import { render } from "solid-js/web";
 import "./index.css";
 
+import { VectorTile } from "@mapbox/vector-tile";
 import { axisBottom, axisRight } from "d3-axis";
+import { path } from "d3-path";
 import { scaleLinear } from "d3-scale";
 import { type Selection, create } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
+import Protobuf from "pbf";
 import { type JSX, Show, createEffect, createSignal, onMount } from "solid-js";
+import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { GIT_SHA, createHash, parseHash, zxyFromHash } from "./utils";
-import { VectorTile } from "@mapbox/vector-tile";
-import Protobuf from "pbf";
-import { path } from "d3-path";
-import { LayersPanel } from "./LayersPanel";
 
 interface Feature {
   path: string;
@@ -38,7 +38,7 @@ function parseTile(data: ArrayBuffer) {
       if (feature.type === 1) {
         for (const ring of geom) {
           for (const pt of ring) {
-            p.rect(pt.x-4, pt.y-4, 8, 8);
+            p.rect(pt.x - 4, pt.y - 4, 8, 8);
           }
         }
       } else {
@@ -56,17 +56,20 @@ function parseTile(data: ArrayBuffer) {
         path: p.toString(),
         type: feature.type,
         id: feature.id,
-        properties: feature.properties
+        properties: feature.properties,
       });
     }
 
-    layers.push({name: name, features: features})
+    layers.push({ name: name, features: features });
   }
 
   return layers;
 }
 
-function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
+function ZoomableTile(props: {
+  zxy: [number, number, number];
+  tileset: Tileset;
+}) {
   let containerRef: HTMLDivElement | undefined;
   let svg: Selection<SVGSVGElement, undefined, null, undefined>;
   let zoom: ZoomBehavior<Element, unknown>;
@@ -79,7 +82,6 @@ function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
   onMount(() => {
     const height = containerRef.clientHeight;
     const width = containerRef.clientWidth;
-
 
     if (!containerRef) {
       return;
@@ -108,7 +110,15 @@ function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
 
     svg = create("svg").attr("width", width).attr("height", height);
     view = svg.append("g");
-    view.append("rect").attr("width", 4096).attr("height", 4096).attr("x",0).attr("y",0).attr("fill","none").attr("strokeWidth","1").attr("stroke","blue");
+    view
+      .append("rect")
+      .attr("width", 4096)
+      .attr("height", 4096)
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("fill", "none")
+      .attr("strokeWidth", "1")
+      .attr("stroke", "blue");
     const gX = svg.append("g").attr("class", "axis axis--x").call(xAxis);
     const gY = svg.append("g").attr("class", "axis axis--y").call(yAxis);
 
@@ -134,7 +144,13 @@ function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
 
     Object.assign(svg.call(zoom as any).node() as SVGSVGElement, {});
 
-    svg.call(zoom.transform, zoomIdentity.translate(width/2,height/2).scale(height/4096*0.75).translate(-4096/2,-4096/2));
+    svg.call(
+      zoom.transform,
+      zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale((height / 4096) * 0.75)
+        .translate(-4096 / 2, -4096 / 2),
+    );
 
     const resizeObserver = new ResizeObserver(() => {
       svg.attr("width", containerRef.clientWidth);
@@ -159,11 +175,25 @@ function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
     const zxy = props.zxy;
     const tileset = props.tileset;
     console.log("tileset", tileset);
-    const data = await tileset.getZxy(zxy[0],zxy[1],zxy[2]);
+    const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
     if (!data) return; // TODO show error
     const results = parseTile(data);
-    const layer = view.selectAll("g").data(results).join("g").attr("stroke","blue");
-    layer.selectAll("path").data(d => d.features).join("path").attr("d", f => f.path).style("opacity",1).attr("fill","none").attr("strokeWidth",1).on("mouseover", (_e,d) => {console.log(d);})
+    const layer = view
+      .selectAll("g")
+      .data(results)
+      .join("g")
+      .attr("stroke", "blue");
+    layer
+      .selectAll("path")
+      .data((d) => d.features)
+      .join("path")
+      .attr("d", (f) => f.path)
+      .style("opacity", 1)
+      .attr("fill", "none")
+      .attr("strokeWidth", 1)
+      .on("mouseover", (_e, d) => {
+        console.log(d);
+      });
   });
 
   return (
@@ -172,9 +202,12 @@ function ZoomableTile(props:{zxy:[number,number,number], tileset: Tileset}) {
         reset
       </button>
       <div class="absolute right-8 flex">
-        <LayersPanel tileset={props.tileset} setActiveLayers={setActiveLayers}/>
+        <LayersPanel
+          tileset={props.tileset}
+          setActiveLayers={setActiveLayers}
+        />
       </div>
-      <div ref={containerRef} class="h-full"/>
+      <div ref={containerRef} class="h-full" />
     </div>
   );
 }
@@ -185,7 +218,9 @@ function TileView() {
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
-  const [zxy] = createSignal<[number,number,number] | undefined>(hash.zxy ? zxyFromHash(hash.zxy) : [0,0,0]);
+  const [zxy] = createSignal<[number, number, number] | undefined>(
+    hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
+  );
 
   createEffect(() => {
     const t = tileset();
@@ -220,17 +255,14 @@ function TileView() {
           <button class="px-4 bg-indigo-500" type="submit">
             load
           </button>
-          left up right down
-          parent
-          child
-          { GIT_SHA }
-
+          left up right down parent child
+          {GIT_SHA}
           {zxy}
         </form>
       </div>
       <Show when={tileset() && zxy()} fallback={<span>fallback</span>}>
         <div class="flex w-full h-full">
-          <ZoomableTile zxy={zxy()!} tileset={tileset()!}/>
+          <ZoomableTile zxy={zxy()!} tileset={tileset()!} />
         </div>
       </Show>
     </div>

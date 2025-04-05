@@ -13,11 +13,11 @@ interface Metadata {
 }
 
 export interface Tileset {
-  getZxy (z: number, x: number, y:number): Promise<ArrayBuffer | undefined>;
-  getMetadata (): Promise<Metadata>;
-  getStateUrl (): string | undefined;
+  getZxy(z: number, x: number, y: number): Promise<ArrayBuffer | undefined>;
+  getMetadata(): Promise<Metadata>;
+  getStateUrl(): string | undefined;
   getMaplibreSourceUrl(): string;
-  getBounds(): Promise<[number,number,number,number]>;
+  getBounds(): Promise<[number, number, number, number]>;
 
   getVectorLayers(): Promise<string[]>;
   isOverlay(): Promise<boolean>;
@@ -29,27 +29,27 @@ export interface Tileset {
 abstract class PMTilesTileset {
   archive: PMTiles;
 
-  constructor(p:PMTiles) {
+  constructor(p: PMTiles) {
     this.archive = p;
   }
 
-  async getZxy(z: number,x: number,y: number) {
-    const resp = await this.archive.getZxy(z,x,y);
+  async getZxy(z: number, x: number, y: number) {
+    const resp = await this.archive.getZxy(z, x, y);
     if (resp) return resp.data;
   }
 
-  async getBounds():Promise<[number,number,number,number]> {
+  async getBounds(): Promise<[number, number, number, number]> {
     const h = await this.archive.getHeader();
     return [h.minLon, h.minLat, h.maxLon, h.maxLat];
   }
 
   async isVector() {
     const h = await this.archive.getHeader();
-    return h.tileType == TileType.Mvt;
+    return h.tileType === TileType.Mvt;
   }
 
   async getMetadata() {
-    return await this.archive.getMetadata() as Metadata;
+    return (await this.archive.getMetadata()) as Metadata;
   }
 
   async isOverlay() {
@@ -59,7 +59,7 @@ abstract class PMTilesTileset {
 
   async getVectorLayers() {
     const m = await this.getMetadata();
-    return m.vector_layers.map(l => l.id);
+    return m.vector_layers.map((l) => l.id);
   }
 }
 
@@ -76,7 +76,7 @@ class RemotePMTilesTileset extends PMTilesTileset implements Tileset {
   }
 
   getMaplibreSourceUrl() {
-    return "pmtiles://" + this.url; 
+    return `pmtiles://${this.url}`;
   }
 
   needsAddProtocol() {
@@ -98,7 +98,7 @@ class LocalPMTilesTileset extends PMTilesTileset implements Tileset {
   }
 
   getMaplibreSourceUrl() {
-    return "pmtiles://" + this.name;
+    return `pmtiles://${this.name}`;
   }
 
   needsAddProtocol() {
@@ -121,22 +121,22 @@ class TileJSONTileset implements Tileset {
     const resp = await fetch(this.url);
     const j = await resp.json();
     console.log(j);
-    return j.bounds as [number,number,number,number];
+    return j.bounds as [number, number, number, number];
   }
 
   getMaplibreSourceUrl() {
-    return this.url; 
+    return this.url;
   }
 
   async isOverlay() {
-    return true; 
+    return true;
   }
 
   async isVector() {
     const resp = await fetch(this.url);
     const j = await resp.json();
     const template = j.tiles[0];
-    const pathname = (new URL(template)).pathname;
+    const pathname = new URL(template).pathname;
     return pathname.endsWith(".pbf") || pathname.endsWith(".mvt");
   }
 
@@ -144,11 +144,14 @@ class TileJSONTileset implements Tileset {
     return this.url;
   }
 
-  async getZxy(z:number,x:number,y:number) {
+  async getZxy(z: number, x: number, y: number) {
     const resp = await fetch(this.url);
     const j = await resp.json();
     const template = j.tiles[0];
-    const tileURL = template.replace("{z}",z).replace("{x}",x).replace("{y}",y);
+    const tileURL = template
+      .replace("{z}", z)
+      .replace("{x}", x)
+      .replace("{y}", y);
     const tileResp = await fetch(tileURL);
     return await tileResp.arrayBuffer();
   }
@@ -160,19 +163,19 @@ class TileJSONTileset implements Tileset {
 
   async getVectorLayers() {
     const metadata = await this.getMetadata();
-    return metadata.vector_layers.map((l:VectorLayer) => l.id);
+    return metadata.vector_layers.map((l: VectorLayer) => l.id);
   }
 }
 
 // from a input box or a URL param state.
-export const tilesetFromString = (url: string):Tileset => {
+export const tilesetFromString = (url: string): Tileset => {
   const parsed = new URL(url);
   if (parsed.pathname.endsWith(".json")) {
     return new TileJSONTileset(url);
   }
   return new RemotePMTilesTileset(url);
-}
+};
 
-export const tilesetFromFile = (file: File):Tileset => {
+export const tilesetFromFile = (file: File): Tileset => {
   return new LocalPMTilesTileset(file);
-}
+};

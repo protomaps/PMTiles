@@ -27,10 +27,8 @@ export function createHash(
     .join("&")}`;
 }
 
-export function zxyFromHash(s: string): [number,number,number] | undefined {
+export function zxyFromHash(s: string): [number, number, number] | undefined {
   const split = s.split("/");
   if (split.length !== 3) return undefined;
-  return split.map(n => +n) as [number,number,number];
+  return split.map((n) => +n) as [number, number, number];
 }
-
-

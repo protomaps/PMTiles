@@ -6,7 +6,10 @@ export function LayersPanel(props: {
   setActiveLayers: Setter<string[] | undefined>;
 }) {
   const [vectorLayers] = createResource(async () => {
-    return props.tileset.getVectorLayers();
+    if (await props.tileset.isVector()) {
+      return props.tileset.getVectorLayers();
+    }
+    return [];
   });
 
   return (

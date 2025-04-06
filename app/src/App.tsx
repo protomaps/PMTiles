@@ -60,8 +60,6 @@ function MapView(props: { tileset: Tileset }) {
   const [zoom, setZoom] = createSignal<number>(0);
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
 
-  console.log(activeLayers);
-
   const popup = new Popup({
     closeButton: false,
     closeOnClick: false,
@@ -113,10 +111,6 @@ function MapView(props: { tileset: Tileset }) {
             ],
             maxzoom: 15,
           },
-          tileset: {
-            type: "vector",
-            url: props.tileset.getMaplibreSourceUrl(),
-          },
         },
         layers: layers("basemap", flavor, "en"),
       },
@@ -156,53 +150,67 @@ function MapView(props: { tileset: Tileset }) {
         popup.addTo(map);
       }
     });
-
-    // load the actual style
-    const vectorLayers = await props.tileset.getVectorLayers();
-    for (const vectorLayer of vectorLayers) {
-      map.addLayer({
-        id: `tileset_fill_${vectorLayer}`,
-        type: "fill",
-        source: "tileset",
-        "source-layer": vectorLayer,
-        paint: {
-          "fill-color": "steelblue",
-          "fill-opacity": 0.1,
-        },
-        filter: ["==", ["geometry-type"], "Polygon"],
+    if (await props.tileset.isVector()) {
+      map.addSource("tileset", {
+          type: "vector",
+          url: props.tileset.getMaplibreSourceUrl(),
+      });
+      const vectorLayers = await props.tileset.getVectorLayers();
+      for (const vectorLayer of vectorLayers) {
+        map.addLayer({
+          id: `tileset_fill_${vectorLayer}`,
+          type: "fill",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "fill-color": "steelblue",
+            "fill-opacity": 0.1,
+          },
+          filter: ["==", ["geometry-type"], "Polygon"],
+        });
+        map.addLayer({
+          id: `tileset_line_${vectorLayer}`,
+          type: "line",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "line-color": "steelblue",
+          },
+          filter: ["==", ["geometry-type"], "LineString"],
+        });
+        map.addLayer({
+          id: `tileset_circle_outline_${vectorLayer}`,
+          type: "circle",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "circle-color": "red",
+            "circle-radius": 3,
+          },
+          filter: ["==", ["geometry-type"], "Point"],
+        });
+        map.addLayer({
+          id: `tileset_circle_${vectorLayer}`,
+          type: "circle",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "circle-color": "steelblue",
+            "circle-radius": 2,
+          },
+          filter: ["==", ["geometry-type"], "Point"],
+        });
+      }
+    } else {
+      map.addSource("tileset", {
+          type: "raster",
+          url: props.tileset.getMaplibreSourceUrl(),
       });
       map.addLayer({
-        id: `tileset_line_${vectorLayer}`,
-        type: "line",
         source: "tileset",
-        "source-layer": vectorLayer,
-        paint: {
-          "line-color": "steelblue",
-        },
-        filter: ["==", ["geometry-type"], "LineString"],
-      });
-      map.addLayer({
-        id: `tileset_circle_outline_${vectorLayer}`,
-        type: "circle",
-        source: "tileset",
-        "source-layer": vectorLayer,
-        paint: {
-          "circle-color": "red",
-          "circle-radius": 3,
-        },
-        filter: ["==", ["geometry-type"], "Point"],
-      });
-      map.addLayer({
-        id: `tileset_circle_${vectorLayer}`,
-        type: "circle",
-        source: "tileset",
-        "source-layer": vectorLayer,
-        paint: {
-          "circle-color": "steelblue",
-          "circle-radius": 2,
-        },
-        filter: ["==", ["geometry-type"], "Point"],
-      });
+        id: "tileset_raster",
+        type: "raster"
+      })
     }
   });
 

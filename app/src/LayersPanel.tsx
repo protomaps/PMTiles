@@ -4,6 +4,7 @@ import type { Tileset } from "./tileset";
 export function LayersPanel(props: {
   tileset: Tileset;
   setActiveLayers: Setter<string[] | undefined>;
+  layerFeatureCounts?: Record<string, number>;
 }) {
   const [vectorLayers] = createResource(async () => {
     if (await props.tileset.isVector()) {
@@ -20,7 +21,9 @@ export function LayersPanel(props: {
         {(l) => (
           <div>
             <input type="checkbox" id={`check_${l}`} />
-            <label for={`check_${l}`}>{l}</label>
+            <label for={`check_${l}`}>
+              {l} ({props.layerFeatureCounts[l] || 0})
+            </label>
           </div>
         )}
       </For>

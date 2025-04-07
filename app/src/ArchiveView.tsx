@@ -348,8 +348,8 @@ function ArchiveView() {
           <div class="w-full flex grow font-mono text-sm flex-1 overflow-hidden">
             <div
               classList={{
-                "w-1/3": leafEntries(),
-                "w-1/2": !leafEntries(),
+                "w-1/3": leafEntries() !== undefined,
+                "w-1/2": leafEntries() === undefined,
                 flex: true,
                 "flex-col": true,
                 "h-full": true,
@@ -402,11 +402,11 @@ function ArchiveView() {
               <div>tile type: ?</div>
 
               <DirectoryTable
-                entries={rootEntries()}
+                entries={rootEntries() || []}
                 tilesetUrl={t().source.getKey()}
                 setHoveredTile={setHoveredTile}
                 setOpenedLeaf={setOpenedLeaf}
-                clustered={h().clustered}
+                clustered={header()?.clustered}
               />
             </div>
             <Show when={leafEntries()}>
@@ -418,7 +418,7 @@ function ArchiveView() {
                       tilesetUrl={t().source.getKey()}
                       setHoveredTile={setHoveredTile}
                       setOpenedLeaf={setOpenedLeaf}
-                      clustered={h().clustered}
+                      clustered={header()?.clustered}
                     />
                   </div>
                 </div>
@@ -427,8 +427,8 @@ function ArchiveView() {
             <div
               classList={{
                 flex: true,
-                "w-1/3": leafEntries(),
-                "w-1/2": !leafEntries(),
+                "w-1/3": leafEntries() !== undefined,
+                "w-1/2": leafEntries() === undefined,
                 "flex-col": true,
               }}
             >

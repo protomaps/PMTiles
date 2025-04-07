@@ -9,7 +9,14 @@ import { scaleLinear } from "d3-scale";
 import { type Selection, create } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
 import Protobuf from "pbf";
-import { type JSX, Show, createEffect, createSignal, onMount } from "solid-js";
+import {
+  type JSX,
+  Show,
+  createEffect,
+  createResource,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { GIT_SHA, createHash, parseHash, zxyFromHash } from "./utils";
@@ -66,6 +73,15 @@ function parseTile(data: ArrayBuffer) {
   return layers;
 }
 
+function layerFeatureCounts(parsedTile?: VectorTile): Record<string, number> {
+  const result: Record<string, number> = {};
+  if (!parsedTile) return result;
+  for (const layer of parsedTile) {
+    result[layer.name] = layer.features.length;
+  }
+  return result;
+}
+
 function ZoomableTile(props: {
   zxy: [number, number, number];
   tileset: Tileset;
@@ -76,8 +92,6 @@ function ZoomableTile(props: {
   let view: Selection<SVGSVGElement, undefined, null, undefined>;
 
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
-
-  console.log(activeLayers);
 
   onMount(() => {
     const height = containerRef.clientHeight;
@@ -171,16 +185,20 @@ function ZoomableTile(props: {
       .call(zoom.transform as any, zoomIdentity);
   };
 
-  createEffect(async () => {
+  const [parsedTile] = createResource(async () => {
     const zxy = props.zxy;
     const tileset = props.tileset;
-    console.log("tileset", tileset);
     const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
     if (!data) return; // TODO show error
-    const results = parseTile(data);
+    return parseTile(data);
+  });
+
+  createEffect(async () => {
+    const tile = parsedTile();
+    if (!tile) return;
     const layer = view
       .selectAll("g")
-      .data(results)
+      .data(tile)
       .join("g")
       .attr("stroke", "blue");
     layer
@@ -205,6 +223,7 @@ function ZoomableTile(props: {
         <LayersPanel
           tileset={props.tileset}
           setActiveLayers={setActiveLayers}
+          layerFeatureCounts={layerFeatureCounts(parsedTile())}
         />
       </div>
       <div ref={containerRef} class="h-full" />

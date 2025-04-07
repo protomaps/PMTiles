@@ -152,8 +152,8 @@ function MapView(props: { tileset: Tileset }) {
     });
     if (await props.tileset.isVector()) {
       map.addSource("tileset", {
-          type: "vector",
-          url: props.tileset.getMaplibreSourceUrl(),
+        type: "vector",
+        url: props.tileset.getMaplibreSourceUrl(),
       });
       const vectorLayers = await props.tileset.getVectorLayers();
       for (const vectorLayer of vectorLayers) {
@@ -203,14 +203,14 @@ function MapView(props: { tileset: Tileset }) {
       }
     } else {
       map.addSource("tileset", {
-          type: "raster",
-          url: props.tileset.getMaplibreSourceUrl(),
+        type: "raster",
+        url: props.tileset.getMaplibreSourceUrl(),
       });
       map.addLayer({
         source: "tileset",
         id: "tileset_raster",
-        type: "raster"
-      })
+        type: "raster",
+      });
     }
   });
 
@@ -315,16 +315,14 @@ function App() {
             </button>
 
             <button
-              class="block p-2 flex justify-start flex-col"
+              class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
               type="button"
               onClick={() => {
-                loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
+                loadSample("https://air.mtn.tw/flowers.pmtiles");
               }}
             >
-              <div>
-                https://pmtiles.io/usgs-mt-whitney-8-15-webp-512.pmtiles
-              </div>
-              <div class="text-xs">raster, USGS landsat</div>
+              <div>https://air.mtn.tw/flowers.pmtiles</div>
+              <div class="text-xs">raster, aerial orthomosaic (CC0)</div>
             </button>
           </div>
           or drag and drop a local file here

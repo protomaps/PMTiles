@@ -10,21 +10,22 @@ import {
   setRTLTextPlugin,
 } from "maplibre-gl";
 import {
-  type JSX,
   Show,
   createEffect,
   createResource,
   createSignal,
   onMount,
+  type Setter,
 } from "solid-js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { default as layers } from "protomaps-themes-base";
-import { GIT_SHA, createHash, parseHash } from "./utils";
+import { createHash, parseHash } from "./utils";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
 import { LayersPanel } from "./LayersPanel";
-import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
+import { type Tileset, tilesetFromString } from "./tileset";
+import { Frame, ExampleChooser } from "./Frame";
 
 declare module "solid-js" {
   namespace JSX {
@@ -54,7 +55,11 @@ const PopupContent = (props: {
   );
 };
 
-function MapView(props: { tileset: Tileset }) {
+function MapView(props: {
+  tileset: Tileset;
+  showMetadata: boolean;
+  setShowMetadata: Setter<boolean>;
+}) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);
@@ -226,25 +231,41 @@ function MapView(props: { tileset: Tileset }) {
   };
 
   return (
-    <div class="flex-1 flex flex-col relative">
-      <div class="flex-0">
-        <button
-          class="px-4 bg-indigo-500 rounded"
-          type="button"
-          onClick={fitToBounds}
-        >
-          fit to bounds
-        </button>
-        zoom level: {zoom().toFixed(2)}
+    <div class="flex w-full h-full">
+      <div class="flex-1 flex flex-col relative">
+        <div class="flex-0">
+          <button
+            class="px-4 bg-indigo-500 rounded"
+            type="button"
+            onClick={fitToBounds}
+          >
+            fit to bounds
+          </button>
+          <button
+            class="px-4 rounded bg-indigo-500"
+            onClick={() => {
+              props.setShowMetadata(!props.showMetadata);
+            }}
+            type="button"
+          >
+            toggle metadata
+          </button>
+          zoom level: {zoom().toFixed(2)}
+        </div>
+        <div ref={mapContainer} class="h-full flex-1" />
+        <div class="hidden" ref={hiddenRef} />
+        <div class="absolute right-8 top-8">
+          <LayersPanel
+            tileset={props.tileset}
+            setActiveLayers={setActiveLayers}
+          />
+        </div>
       </div>
-      <div ref={mapContainer} class="h-full flex-1" />
-      <div class="hidden" ref={hiddenRef} />
-      <div class="absolute right-8 top-8">
-        <LayersPanel
-          tileset={props.tileset}
-          setActiveLayers={setActiveLayers}
-        />
-      </div>
+      <Show when={props.showMetadata}>
+        <div class="w-1/2">
+          <JsonView tileset={props.tileset} />
+        </div>
+      </Show>
     </div>
   );
 }
@@ -270,6 +291,7 @@ function App() {
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
+
   const [showMetadata, setShowMetadata] = createSignal<boolean>(
     hash.showMetadata === "true" || false,
   );
@@ -284,129 +306,21 @@ function App() {
     }
   });
 
-  const loadTileset: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    const urlValue = formData.get("url");
-    if (typeof urlValue === "string") {
-      setTileset(tilesetFromString(urlValue));
-    }
-  };
-
-  const loadSample = (url: string) => {
-    setTileset(tilesetFromString(url));
-  };
-
-  const ExampleChooser = () => {
-    return (
-      <div class="h-full flex items-center justify-center">
-        <div>
-          Load a sample .pmtiles:
-          <div class="border border-gray-500">
-            <button
-              class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
-              type="button"
-              onClick={() => {
-                loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
-              }}
-            >
-              <div>https://demo-bucket.protomaps.com/v4.pmtiles</div>
-              <div class="text-xs">vector, global OpenStreetMap data</div>
-            </button>
-
-            <button
-              class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
-              type="button"
-              onClick={() => {
-                loadSample("https://air.mtn.tw/flowers.pmtiles");
-              }}
-            >
-              <div>https://air.mtn.tw/flowers.pmtiles</div>
-              <div class="text-xs">raster, aerial orthomosaic (CC0)</div>
-            </button>
-          </div>
-          or drag and drop a local file here
-        </div>
-      </div>
-    );
-  };
-
-  const drop: JSX.EventHandler<HTMLDivElement, DragEvent> = (event) => {
-    event.preventDefault();
-    if (event.dataTransfer) {
-      setTileset(tilesetFromFile(event.dataTransfer.files[0]));
-    }
-  };
-
-  const dragover: JSX.EventHandler<HTMLDivElement, Event> = (event) => {
-    event.preventDefault();
-    return false;
-  };
-
   return (
-    <div
-      class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white"
-      ondragover={dragover}
-      ondrop={drop}
-    >
-      <div class="flex-0 flex items-center">
-        <div class="flex items-center p-2 flex-grow">
-          <h1 class="text-xl">Map view</h1>
-          <form onSubmit={loadTileset}>
-            <input
-              class="border w-100 mx-2 px-2"
-              type="text"
-              name="url"
-              placeholder="TileJSON or .pmtiles"
-              value={tileset() ? tileset()?.getStateUrl() : ""}
-            />
-            <button class="px-4 mx-2 bg-indigo-500 rounded" type="submit">
-              load
-            </button>
-            <button
-              class="px-4 rounded bg-indigo-500"
-              onClick={() => {
-                setShowMetadata(!showMetadata());
-              }}
-              type="button"
-            >
-              toggle metadata
-            </button>
-            <a
-              href="https://github.com/protomaps/PMTiles"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {GIT_SHA}
-            </a>
-          </form>
-        </div>
-        <a
-          class="bg-gray-100 p-2"
-          href={`/archive/#url=${tileset()?.getStateUrl()}`}
-        >
-          archive
-        </a>
-        <a
-          class="bg-gray-200 p-2"
-          href={`/tile/#url=${tileset()?.getStateUrl()}`}
-        >
-          tile
-        </a>
-      </div>
-      <Show when={tileset()} fallback={<ExampleChooser />}>
+    <Frame tileset={tileset()} setTileset={setTileset}>
+      <Show
+        when={tileset()}
+        fallback={<ExampleChooser setTileset={setTileset} />}
+      >
         {(t) => (
-          <div class="flex w-full h-full">
-            <MapView tileset={t()} />
-            <Show when={showMetadata()}>
-              <div class="w-1/2">
-                <JsonView tileset={t()} />
-              </div>
-            </Show>
-          </div>
+          <MapView
+            tileset={t()}
+            showMetadata={showMetadata()}
+            setShowMetadata={setShowMetadata}
+          />
         )}
       </Show>
-    </div>
+    </Frame>
   );
 }
 

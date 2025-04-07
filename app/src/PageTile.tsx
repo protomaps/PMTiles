@@ -232,7 +232,7 @@ function ZoomableTile(props: {
 }
 
 // TODO error display
-function TileView() {
+function PageTile() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
@@ -291,5 +291,5 @@ function TileView() {
 const root = document.getElementById("root");
 
 if (root) {
-  render(() => <TileView />, root);
+  render(() => <PageTile />, root);
 }

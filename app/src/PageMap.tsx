@@ -286,7 +286,7 @@ const JsonView = (props: { tileset: Tileset }) => {
 };
 
 // TODO error display
-function App() {
+function PageMap() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
@@ -327,5 +327,5 @@ function App() {
 const root = document.getElementById("root");
 
 if (root) {
-  render(() => <App />, root);
+  render(() => <PageMap />, root);
 }

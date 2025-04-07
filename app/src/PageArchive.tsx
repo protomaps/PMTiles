@@ -272,7 +272,7 @@ function DirectoryTable(props: {
 
 // TODO error display
 // url parameters: url (cannot be tilejson, must be local or remote pmtiles)
-function ArchiveView() {
+function PageArchive() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<PMTiles | undefined>(
     hash.url ? new PMTiles(hash.url) : undefined,
@@ -455,5 +455,5 @@ function ArchiveView() {
 const root = document.getElementById("root");
 
 if (root) {
-  render(() => <ArchiveView />, root);
+  render(() => <PageArchive />, root);
 }

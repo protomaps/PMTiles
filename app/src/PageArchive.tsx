@@ -21,6 +21,8 @@ import {
   onMount,
 } from "solid-js";
 import { createHash, parseHash } from "./utils";
+import { Frame, ExampleChooser } from "./Frame";
+import { type Tileset, tilesetFromString } from "./tileset";
 
 function MapView(props: {
   entries: Entry[] | undefined;
@@ -272,23 +274,17 @@ function DirectoryTable(props: {
 
 // TODO error display
 // url parameters: url (cannot be tilejson, must be local or remote pmtiles)
-function PageArchive() {
-  const hash = parseHash(location.hash);
-  const [tileset, setTileset] = createSignal<PMTiles | undefined>(
-    hash.url ? new PMTiles(hash.url) : undefined,
-  );
-
-  const [header] = createResource(tileset, async (t) => {
-    return await t.getHeader();
+function ArchiveView(props: {tileset: Tileset}) {
+  const [header] = createResource(props.tileset, async (t) => {
+    return await t.archive.getHeader();
   });
 
-  const [rootEntries] = createResource(tileset, async (t) => {
-    const header = await t.getHeader();
-    return await t.cache.getDirectory(
-      t.source,
-      header.rootDirectoryOffset,
-      header.rootDirectoryLength,
-      header,
+  const [rootEntries] = createResource(header, async (h) => {
+    return await props.tileset.archive.cache.getDirectory(
+      props.tileset.archive.source,
+      h.rootDirectoryOffset,
+      h.rootDirectoryLength,
+      h,
     );
   });
 
@@ -297,7 +293,6 @@ function PageArchive() {
 
   const [leafEntries] = createResource(openedLeaf, async (o) => {
     const h = header();
-    const t = tileset();
     const root = rootEntries();
 
     if (!root) return;
@@ -305,150 +300,153 @@ function PageArchive() {
 
     const found = root.find((e) => e.tileId === o);
     if (!found) return;
-    if (!t) return;
 
-    return await t.cache.getDirectory(
-      t.source,
+    return await props.tileset.archive.cache.getDirectory(
+      props.tileset.archive.source,
       h.leafDirectoryOffset + found.offset,
       found.length,
       h,
     );
   });
 
+  // openedLeaf: openedLeaf()?.toString(),
+
+  return (
+    <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
+      <div class="w-full flex grow font-mono text-sm flex-1 overflow-hidden">
+        <div
+          classList={{
+            "w-1/3": leafEntries() !== undefined,
+            "w-1/2": leafEntries() === undefined,
+            flex: true,
+            "flex-col": true,
+            "h-full": true,
+            "flex-1": true,
+            "overflow-hidden": true,
+          }}
+        >
+          <Show when={header()}>
+            {(h) => (
+              <div>
+                <table class="text-right table-auto border-separate border-spacing-1">
+                  <thead>
+                    <tr>
+                      <th>Layout (bytes)</th>
+                      <th>offset</th>
+                      <th>length</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Root</td>
+                      <td>{h().rootDirectoryOffset}</td>
+                      <td>{h().rootDirectoryLength}</td>
+                    </tr>
+                    <tr>
+                      <td>Metadata</td>
+                      <td>{h().jsonMetadataOffset}</td>
+                      <td>{h().jsonMetadataLength}</td>
+                    </tr>
+                    <tr>
+                      <td>Leaves</td>
+                      <td>{h().leafDirectoryOffset}</td>
+                      <td>{h().leafDirectoryLength}</td>
+                    </tr>
+                    <tr>
+                      <td>Tile Data</td>
+                      <td>{h().tileDataOffset}</td>
+                      <td>{h().tileDataLength}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div>clustered: {h().clustered}</div>
+                <div>total entries: {h().numTileEntries}</div>
+                <div>total contents: {h().numTileContents}</div>
+              </div>
+            )}
+          </Show>
+          <div>internal compression: ?</div>
+          <div>tile compression: ?</div>
+          <div>tile type: ?</div>
+
+          <DirectoryTable
+            entries={rootEntries() || []}
+            tilesetUrl={props.tileset.getStateUrl()}
+            setHoveredTile={setHoveredTile}
+            setOpenedLeaf={setOpenedLeaf}
+            clustered={header()?.clustered}
+          />
+        </div>
+        <Show when={leafEntries()}>
+          {(l) => (
+            <div class="flex w-1/3 h-full flex-1 overflow-hidden">
+              <div class="w-full flex flex-1 overflow-hidden">
+                <DirectoryTable
+                  entries={l()}
+                  tilesetUrl={props.tileset.getStateUrl()}
+                  setHoveredTile={setHoveredTile}
+                  setOpenedLeaf={setOpenedLeaf}
+                  clustered={header()?.clustered}
+                />
+              </div>
+            </div>
+          )}
+        </Show>
+        <div
+          classList={{
+            flex: true,
+            "w-1/3": leafEntries() !== undefined,
+            "w-1/2": leafEntries() === undefined,
+            "flex-col": true,
+          }}
+        >
+          <div>
+            <div>min zoom: ?</div>
+            <div>max zoom: ?</div>
+            <div>
+              min lon, min lat, max lon, max lat: {0}, {0}, {0}, {0}
+            </div>
+            <div>center zoom: {0}</div>
+            <div>
+              center lon, center lat: {0}, {0}
+            </div>
+          </div>
+          <MapView entries={leafEntries()} hoveredTile={hoveredTile()} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// TODO error display
+function PageArchive() {
+  const hash = parseHash(location.hash);
+  const [tileset, setTileset] = createSignal<Tileset | undefined>(
+    hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
+  );
+
   createEffect(() => {
     const t = tileset();
     if (t) {
       location.hash = createHash(location.hash, {
-        url: t.source.getKey(),
-        openedLeaf: openedLeaf()?.toString(),
+        url: t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
       });
     }
   });
 
-  const loadTileset: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    const urlValue = formData.get("url");
-    if (typeof urlValue === "string") {
-      setTileset(new PMTiles(urlValue));
-    }
-  };
-
   return (
-    <div class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white">
-      <h1 class="text-xl">Archive inspector</h1>
-      <form onSubmit={loadTileset}>
-        <input type="text" name="url" placeholder="url for .pmtiles" />
-        <button class="px-4 bg-indigo-500" type="submit">
-          load
-        </button>
-      </form>
-      <Show when={tileset()} fallback={<span>fallback</span>}>
+    <Frame tileset={tileset()} setTileset={setTileset} page="archive">
+      <Show
+        when={tileset()}
+        fallback={<ExampleChooser setTileset={setTileset} />}
+      >
         {(t) => (
-          <div class="w-full flex grow font-mono text-sm flex-1 overflow-hidden">
-            <div
-              classList={{
-                "w-1/3": leafEntries() !== undefined,
-                "w-1/2": leafEntries() === undefined,
-                flex: true,
-                "flex-col": true,
-                "h-full": true,
-                "flex-1": true,
-                "overflow-hidden": true,
-              }}
-            >
-              <Show when={header()}>
-                {(h) => (
-                  <div>
-                    <table class="text-right table-auto border-separate border-spacing-1">
-                      <thead>
-                        <tr>
-                          <th>Layout (bytes)</th>
-                          <th>offset</th>
-                          <th>length</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Root</td>
-                          <td>{h().rootDirectoryOffset}</td>
-                          <td>{h().rootDirectoryLength}</td>
-                        </tr>
-                        <tr>
-                          <td>Metadata</td>
-                          <td>{h().jsonMetadataOffset}</td>
-                          <td>{h().jsonMetadataLength}</td>
-                        </tr>
-                        <tr>
-                          <td>Leaves</td>
-                          <td>{h().leafDirectoryOffset}</td>
-                          <td>{h().leafDirectoryLength}</td>
-                        </tr>
-                        <tr>
-                          <td>Tile Data</td>
-                          <td>{h().tileDataOffset}</td>
-                          <td>{h().tileDataLength}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div>clustered: {h().clustered}</div>
-                    <div>total entries: {h().numTileEntries}</div>
-                    <div>total contents: {h().numTileContents}</div>
-                  </div>
-                )}
-              </Show>
-              <div>internal compression: ?</div>
-              <div>tile compression: ?</div>
-              <div>tile type: ?</div>
-
-              <DirectoryTable
-                entries={rootEntries() || []}
-                tilesetUrl={t().source.getKey()}
-                setHoveredTile={setHoveredTile}
-                setOpenedLeaf={setOpenedLeaf}
-                clustered={header()?.clustered}
-              />
-            </div>
-            <Show when={leafEntries()}>
-              {(l) => (
-                <div class="flex w-1/3 h-full flex-1 overflow-hidden">
-                  <div class="w-full flex flex-1 overflow-hidden">
-                    <DirectoryTable
-                      entries={l()}
-                      tilesetUrl={t().source.getKey()}
-                      setHoveredTile={setHoveredTile}
-                      setOpenedLeaf={setOpenedLeaf}
-                      clustered={header()?.clustered}
-                    />
-                  </div>
-                </div>
-              )}
-            </Show>
-            <div
-              classList={{
-                flex: true,
-                "w-1/3": leafEntries() !== undefined,
-                "w-1/2": leafEntries() === undefined,
-                "flex-col": true,
-              }}
-            >
-              <div>
-                <div>min zoom: ?</div>
-                <div>max zoom: ?</div>
-                <div>
-                  min lon, min lat, max lon, max lat: {0}, {0}, {0}, {0}
-                </div>
-                <div>center zoom: {0}</div>
-                <div>
-                  center lon, center lat: {0}, {0}
-                </div>
-              </div>
-              <MapView entries={leafEntries()} hoveredTile={hoveredTile()} />
-            </div>
-          </div>
+          <ArchiveView
+            tileset={t()}
+          />
         )}
       </Show>
-    </div>
+    </Frame>
   );
 }
 

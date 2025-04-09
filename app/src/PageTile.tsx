@@ -20,6 +20,7 @@ import {
 import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { GIT_SHA, createHash, parseHash, zxyFromHash } from "./utils";
+import { Frame, ExampleChooser } from "./Frame";
 
 interface Feature {
   path: string;
@@ -231,60 +232,56 @@ function ZoomableTile(props: {
   );
 }
 
-// TODO error display
+function TileView(props: {tileset: Tileset}) {
+  const hash = parseHash(location.hash);
+  const [zxy] = createSignal<[number, number, number] | undefined>(
+    hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
+  );
+
+  return (
+    <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
+      <div class="flex-0">
+        left up right down parent child
+        {GIT_SHA}
+        {zxy}
+      </div>
+      <Show when={zxy()} fallback={<span>fallback</span>}>
+        <div class="flex w-full h-full">
+          <ZoomableTile zxy={zxy()!} tileset={props.tileset} />
+        </div>
+      </Show>
+    </div>
+  );
+}
+
 function PageTile() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
-  );
-  const [zxy] = createSignal<[number, number, number] | undefined>(
-    hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
   );
 
   createEffect(() => {
     const t = tileset();
     if (t) {
       location.hash = createHash(location.hash, {
-        url: encodeURIComponent(t.getStateUrl()),
+        url: t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
       });
     }
   });
 
-  const loadTileset: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    const urlValue = formData.get("url");
-    if (typeof urlValue === "string") {
-      setTileset(tilesetFromString(urlValue));
-    }
-  };
-
   return (
-    <div class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white">
-      <div class="flex-0">
-        <h1 class="text-xl">Tile inspector</h1>
-        <form onSubmit={loadTileset}>
-          <input
-            class="border w-100"
-            type="text"
-            name="url"
-            placeholder="TileJSON or .pmtiles"
-            value={tileset() ? tileset()?.getStateUrl() : ""}
+    <Frame tileset={tileset()} setTileset={setTileset} page="tile">
+      <Show
+        when={tileset()}
+        fallback={<ExampleChooser setTileset={setTileset} />}
+      >
+        {(t) => (
+          <TileView
+            tileset={t()}
           />
-          <button class="px-4 bg-indigo-500" type="submit">
-            load
-          </button>
-          left up right down parent child
-          {GIT_SHA}
-          {zxy}
-        </form>
-      </div>
-      <Show when={tileset() && zxy()} fallback={<span>fallback</span>}>
-        <div class="flex w-full h-full">
-          <ZoomableTile zxy={zxy()!} tileset={tileset()!} />
-        </div>
+        )}
       </Show>
-    </div>
+    </Frame>
   );
 }
 

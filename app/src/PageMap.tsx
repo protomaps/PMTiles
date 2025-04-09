@@ -307,7 +307,7 @@ function PageMap() {
   });
 
   return (
-    <Frame tileset={tileset()} setTileset={setTileset}>
+    <Frame tileset={tileset()} setTileset={setTileset} page="map">
       <Show
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}

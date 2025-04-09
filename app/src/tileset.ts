@@ -26,7 +26,7 @@ export interface Tileset {
   needsAddProtocol(): boolean;
 }
 
-abstract class PMTilesTileset {
+class PMTilesTileset {
   archive: PMTiles;
 
   constructor(p: PMTiles) {

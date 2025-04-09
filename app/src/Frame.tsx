@@ -43,10 +43,20 @@ export const ExampleChooser = (props: {
   );
 };
 
+function LinkTab(props: {page: string, tileset?: Tileset}) {
+  return <a
+    class="bg-gray-700 p-2"
+    href={`/${props.page === "map" ? "" : props.page + "/"}#url=${props.tileset?.getStateUrl()}`}
+  >
+    {props.page}
+  </a>
+}
+
 export function Frame(props: {
   tileset?: Tileset;
   setTileset: Setter<Tileset | undefined>;
   children: JSX.Element;
+  page: string;
 }) {
   const loadTileset: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
     event.preventDefault();
@@ -77,7 +87,16 @@ export function Frame(props: {
     >
       <div class="flex-0 flex items-center">
         <div class="flex items-center p-2 flex-grow">
-          <h1 class="text-xl">PMTiles map viewer</h1>
+          <Switch>
+            <Match when={props.page === "archive"}>
+              <LinkTab page="map" tileset={props.tileset}/>
+            </Match>
+            <Match when={props.page === "tile"}>
+              <LinkTab page="map" tileset={props.tileset}/>
+              <LinkTab page="archive" tileset={props.tileset}/>
+            </Match>
+          </Switch>
+          <h1 class="text-xl">PMTiles {props.page} viewer</h1>
           <form onSubmit={loadTileset}>
             <input
               class="border w-100 mx-2 px-2"
@@ -101,18 +120,15 @@ export function Frame(props: {
             </a>
           </form>
         </div>
-        <a
-          class="bg-gray-700 p-2"
-          href={`/archive/#url=${props.tileset?.getStateUrl()}`}
-        >
-          archive
-        </a>
-        <a
-          class="bg-gray-500 p-2"
-          href={`/tile/#url=${props.tileset?.getStateUrl()}`}
-        >
-          tile
-        </a>
+        <Switch>
+          <Match when={props.page === "map"}>
+            <LinkTab page="archive" tileset={props.tileset}/>
+            <LinkTab page="tile" tileset={props.tileset}/>
+          </Match>
+          <Match when={props.page === "archive"}>
+            <LinkTab page="tile" tileset={props.tileset}/>
+          </Match>
+        </Switch>
       </div>
       {props.children}
     </div>

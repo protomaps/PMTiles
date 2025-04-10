@@ -1,4 +1,4 @@
-import { For, type Setter, createResource } from "solid-js";
+import { For, type Setter, createResource, Show } from "solid-js";
 import type { Tileset } from "./tileset";
 
 export function LayersPanel(props: {
@@ -22,7 +22,10 @@ export function LayersPanel(props: {
           <div>
             <input type="checkbox" id={`check_${l}`} />
             <label for={`check_${l}`}>
-              {l} ({props.layerFeatureCounts[l] || 0})
+              {l}
+              <Show when={props.layerFeatureCounts !== undefined}>
+                ({props.layerFeatureCounts[l] || 0})
+              </Show>
             </label>
           </div>
         )}

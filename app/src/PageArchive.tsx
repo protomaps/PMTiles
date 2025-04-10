@@ -5,7 +5,7 @@ import {
   type GeoJSONSource,
   Map as MaplibreMap,
   setRTLTextPlugin,
-  getRTLTextPluginStatus
+  getRTLTextPluginStatus,
 } from "maplibre-gl";
 import { type Entry, PMTiles, tileIdToZxy } from "pmtiles";
 import { default as layers } from "protomaps-themes-base";
@@ -102,7 +102,10 @@ function MapView(props: {
           ],
         ],
       });
-      map.flyTo({ center: [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], zoom: Math.max(z-4,0) });
+      map.flyTo({
+        center: [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2],
+        zoom: Math.max(z - 4, 0),
+      });
     }
   });
 
@@ -112,7 +115,7 @@ function MapView(props: {
       return;
     }
 
-    if (getRTLTextPluginStatus() === 'unavailable') {
+    if (getRTLTextPluginStatus() === "unavailable") {
       setRTLTextPlugin(
         "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
         true,
@@ -140,8 +143,9 @@ function MapView(props: {
             tiles: [
               "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f",
             ],
-            attribution: "© <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
-            maxzoom: 15
+            attribution:
+              "© <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
+            maxzoom: 15,
           },
           archive: {
             type: "geojson",
@@ -187,7 +191,7 @@ function MapView(props: {
             type: "fill",
             paint: {
               "fill-color": "white",
-              "fill-opacity": 0.3
+              "fill-opacity": 0.3,
             },
           },
         ],
@@ -279,7 +283,7 @@ function DirectoryTable(props: {
 }
 
 // url parameters: url (cannot be tilejson, must be local or remote pmtiles)
-function ArchiveView(props: {tileset: Tileset}) {
+function ArchiveView(props: { tileset: Tileset }) {
   const [header] = createResource(props.tileset, async (t) => {
     return await t.archive.getHeader();
   });
@@ -325,7 +329,7 @@ function ArchiveView(props: {tileset: Tileset}) {
           flex: true,
           "flex-col": true,
           "h-full": true,
-          "flex-1": true
+          "flex-1": true,
         }}
       >
         <Show when={header()}>
@@ -414,7 +418,10 @@ function ArchiveView(props: {tileset: Tileset}) {
             center lon, center lat: {0}, {0}
           </div>
         </div>
-        <MapView entries={leafEntries() || rootEntries()} hoveredTile={hoveredTile()} />
+        <MapView
+          entries={leafEntries() || rootEntries()}
+          hoveredTile={hoveredTile()}
+        />
       </div>
     </div>
   );
@@ -441,11 +448,7 @@ function PageArchive() {
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}
       >
-        {(t) => (
-          <ArchiveView
-            tileset={t()}
-          />
-        )}
+        {(t) => <ArchiveView tileset={t()} />}
       </Show>
     </Frame>
   );

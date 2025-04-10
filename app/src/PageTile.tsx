@@ -232,7 +232,7 @@ function ZoomableTile(props: {
   );
 }
 
-function TileView(props: {tileset: Tileset}) {
+function TileView(props: { tileset: Tileset }) {
   const hash = parseHash(location.hash);
   const [zxy] = createSignal<[number, number, number] | undefined>(
     hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
@@ -241,9 +241,7 @@ function TileView(props: {tileset: Tileset}) {
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
       <Show when={zxy()} fallback={<span>fallback</span>}>
-        <div class="flex-0 p-4">
-          {zxy().join(", ")}
-        </div>
+        <div class="flex-0 p-4">{zxy().join(", ")}</div>
         <div class="flex w-full h-full">
           <ZoomableTile zxy={zxy()!} tileset={props.tileset} />
         </div>
@@ -273,11 +271,7 @@ function PageTile() {
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}
       >
-        {(t) => (
-          <TileView
-            tileset={t()}
-          />
-        )}
+        {(t) => <TileView tileset={t()} />}
       </Show>
     </Frame>
   );

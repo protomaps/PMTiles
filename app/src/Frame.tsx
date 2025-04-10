@@ -1,12 +1,17 @@
-import { type JSX, type Setter, type Accessor, createEffect, createSignal } from "solid-js";
+import {
+  type JSX,
+  type Setter,
+  type Accessor,
+  createEffect,
+  createSignal,
+} from "solid-js";
 
 import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
 import { GIT_SHA } from "./utils";
 
 export const ExampleChooser = (props: {
-  setTileset: Setter<Tileset | undefined>
+  setTileset: Setter<Tileset | undefined>;
 }) => {
-
   const loadSample = (url: string) => {
     props.setTileset(tilesetFromString(url));
   };
@@ -44,19 +49,30 @@ export const ExampleChooser = (props: {
   );
 };
 
-function LinkTab(props: {page: string, tileset: Accessor<Tileset>, lighter: boolean}) {
+function LinkTab(props: {
+  page: string;
+  tileset: Accessor<Tileset>;
+  lighter: boolean;
+}) {
   let fragment = "";
   const t = props.tileset();
   if (t) {
     fragment = `#url=${t.getStateUrl()}`;
   }
 
-  return <a
-    classList={{"bg-gray-700": !props.lighter, "bg-gray-500":props.lighter,"py-2":true, "px-4":true}}
-    href={`/${props.page === "map" ? "" : props.page + "/"}${fragment}`}
-  >
-    {props.page}
-  </a>
+  return (
+    <a
+      classList={{
+        "bg-gray-700": !props.lighter,
+        "bg-gray-500": props.lighter,
+        "py-2": true,
+        "px-4": true,
+      }}
+      href={`/${props.page === "map" ? "" : props.page + "/"}${fragment}`}
+    >
+      {props.page}
+    </a>
+  );
 }
 
 export function Frame(props: {
@@ -66,14 +82,14 @@ export function Frame(props: {
   page: string;
 }) {
   const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
-  
+
   const setTilesetHandlingErrors = (url: string) => {
     try {
       props.setTileset(tilesetFromString(url));
     } catch (e) {
-      setErrorMessage(e.message)
+      setErrorMessage(e.message);
     }
-  }
+  };
 
   const loadTileset: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
     setErrorMessage(undefined);
@@ -118,11 +134,11 @@ export function Frame(props: {
         <div class="flex items-center flex-grow">
           <Switch>
             <Match when={props.page === "archive"}>
-              <LinkTab page="map" tileset={props.tileset}/>
+              <LinkTab page="map" tileset={props.tileset} />
             </Match>
             <Match when={props.page === "tile"}>
-              <LinkTab page="map" tileset={props.tileset} lighter={true}/>
-              <LinkTab page="archive" tileset={props.tileset}/>
+              <LinkTab page="map" tileset={props.tileset} lighter={true} />
+              <LinkTab page="archive" tileset={props.tileset} />
             </Match>
           </Switch>
           <h1 class="text-xl mx-5">PMTiles {props.page} viewer</h1>
@@ -152,20 +168,18 @@ export function Frame(props: {
         </div>
         <Switch>
           <Match when={props.page === "map"}>
-            <LinkTab page="archive" tileset={props.tileset}/>
-            <LinkTab page="tile" tileset={props.tileset} lighter={true}/>
+            <LinkTab page="archive" tileset={props.tileset} />
+            <LinkTab page="tile" tileset={props.tileset} lighter={true} />
           </Match>
           <Match when={props.page === "archive"}>
-            <LinkTab page="tile" tileset={props.tileset}/>
+            <LinkTab page="tile" tileset={props.tileset} />
           </Match>
         </Switch>
       </div>
       <Show when={errorMessage()}>
         <div class="bg-red-900 px-2 py-3">{errorMessage}</div>
       </Show>
-      <div class="flex-1 overflow-auto">
-        {props.children}
-      </div>
+      <div class="flex-1 overflow-auto">{props.children}</div>
     </div>
   );
 }

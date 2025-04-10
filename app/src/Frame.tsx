@@ -124,6 +124,13 @@ export function Frame(props: {
     return false;
   };
 
+  let pageTitle = "PMTiles viewer";
+  if (props.page === "archive") {
+    pageTitle = "PMTiles archive inspector";
+  } else if (props.page === "tile") {
+    pageTitle = "PMTiles tile inspector";
+  }
+
   return (
     <div
       class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white"
@@ -141,7 +148,7 @@ export function Frame(props: {
               <LinkTab page="archive" tileset={props.tileset} />
             </Match>
           </Switch>
-          <h1 class="text-xl mx-5">PMTiles {props.page} viewer</h1>
+          <h1 class="text-xl mx-5">{pageTitle}</h1>
           <form onSubmit={loadTileset}>
             <input
               class="border w-120 mx-2 px-2"

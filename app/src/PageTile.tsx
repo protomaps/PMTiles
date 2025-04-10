@@ -189,30 +189,42 @@ function ZoomableTile(props: {
   const [parsedTile] = createResource(async () => {
     const zxy = props.zxy;
     const tileset = props.tileset;
-    const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
-    if (!data) return; // TODO show error
-    return parseTile(data);
+    if (await tileset.isVector()) {
+      const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
+      if (!data) return; // TODO show error
+      return parseTile(data);
+    } else {
+      return await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
+    }
   });
 
   createEffect(async () => {
     const tile = parsedTile();
     if (!tile) return;
-    const layer = view
-      .selectAll("g")
-      .data(tile)
-      .join("g")
-      .attr("stroke", "blue");
-    layer
-      .selectAll("path")
-      .data((d) => d.features)
-      .join("path")
-      .attr("d", (f) => f.path)
-      .style("opacity", 1)
-      .attr("fill", "none")
-      .attr("strokeWidth", 1)
-      .on("mouseover", (_e, d) => {
-        console.log(d);
-      });
+
+    if (tile instanceof Array) {
+      const layer = view
+        .selectAll("g")
+        .data(tile)
+        .join("g")
+        .attr("stroke", "blue");
+      layer
+        .selectAll("path")
+        .data((d) => d.features)
+        .join("path")
+        .attr("d", (f) => f.path)
+        .style("opacity", 1)
+        .attr("fill", "none")
+        .attr("strokeWidth", 1)
+        .on("mouseover", (_e, d) => {
+          console.log(d);
+        });
+    } else {
+      const blob = new Blob([tile], { type: "image/webp" });
+      const objectUrl = URL.createObjectURL(blob);
+      const img = view.append("image");
+      img.attr("href", objectUrl).attr("width", 4096).attr("height", 4096);
+    }
   });
 
   return (

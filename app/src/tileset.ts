@@ -26,8 +26,10 @@ export interface Tileset {
   needsAddProtocol(): boolean;
 }
 
-class PMTilesTileset {
+export class PMTilesTileset {
   archive: PMTiles;
+
+  getStateUrl(): string | undefined;
 
   constructor(p: PMTiles) {
     this.archive = p;

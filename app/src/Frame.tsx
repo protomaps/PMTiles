@@ -4,6 +4,9 @@ import {
   type Accessor,
   createEffect,
   createSignal,
+  Match,
+  Switch,
+  Show,
 } from "solid-js";
 
 import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
@@ -51,8 +54,8 @@ export const ExampleChooser = (props: {
 
 function LinkTab(props: {
   page: string;
-  tileset: Accessor<Tileset>;
-  lighter: boolean;
+  tileset: Accessor<Tileset | undefined>;
+  lighter?: boolean;
 }) {
   let fragment = "";
   const t = props.tileset();
@@ -87,7 +90,9 @@ export function Frame(props: {
     try {
       props.setTileset(tilesetFromString(url));
     } catch (e) {
-      setErrorMessage(e.message);
+      if (e instanceof Error) {
+        setErrorMessage(e.message);
+      }
     }
   };
 
@@ -105,9 +110,11 @@ export function Frame(props: {
     const t = props.tileset();
     if (t) {
       try {
-        const header = await t.getHeader();
+        await t.getHeader();
       } catch (e) {
-        setErrorMessage(e.message);
+        if (e instanceof Error) {
+          setErrorMessage(e.message); // TODO HTTP error codes
+        }
       }
     }
   });
@@ -184,7 +191,7 @@ export function Frame(props: {
         </Switch>
       </div>
       <Show when={errorMessage()}>
-        <div class="bg-red-900 px-2 py-3">{errorMessage}</div>
+        <div class="bg-red-900 px-2 py-3">{errorMessage()}</div>
       </Show>
       <div class="flex-1 overflow-auto">{props.children}</div>
     </div>

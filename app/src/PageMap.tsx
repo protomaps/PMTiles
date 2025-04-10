@@ -25,7 +25,11 @@ import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
 import { LayersPanel } from "./LayersPanel";
-import { type Tileset, tilesetFromString } from "./tileset";
+import {
+  type Tileset,
+  type PMTilesTileset,
+  tilesetFromString,
+} from "./tileset";
 import { Frame, ExampleChooser } from "./Frame";
 
 declare module "solid-js" {
@@ -60,12 +64,12 @@ function MapView(props: {
   tileset: Tileset;
   showMetadata: boolean;
   setShowMetadata: Setter<boolean>;
-  setErrorMessage: Setter<string>;
 }) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
+  console.log(activeLayers);
 
   const popup = new Popup({
     closeButton: false,
@@ -85,7 +89,7 @@ function MapView(props: {
     }
 
     if (props.tileset.needsAddProtocol()) {
-      protocol.add(props.tileset.archive);
+      protocol.add((props.tileset as PMTilesTileset).archive);
     }
 
     if (getRTLTextPluginStatus() === "unavailable") {
@@ -297,8 +301,6 @@ function PageMap() {
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
-  const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
-
   const [showMetadata, setShowMetadata] = createSignal<boolean>(
     hash.showMetadata === "true" || false,
   );

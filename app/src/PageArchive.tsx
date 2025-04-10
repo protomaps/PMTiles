@@ -7,13 +7,12 @@ import {
   setRTLTextPlugin,
   getRTLTextPluginStatus,
 } from "maplibre-gl";
-import { type Entry, PMTiles, tileIdToZxy } from "pmtiles";
+import { type Entry, tileIdToZxy } from "pmtiles";
 import { default as layers } from "protomaps-themes-base";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import {
   For,
-  type JSX,
   type Setter,
   Show,
   createEffect,
@@ -23,7 +22,11 @@ import {
 } from "solid-js";
 import { createHash, parseHash } from "./utils";
 import { Frame, ExampleChooser } from "./Frame";
-import { type Tileset, tilesetFromString } from "./tileset";
+import {
+  type PMTilesTileset,
+  type Tileset,
+  tilesetFromString,
+} from "./tileset";
 
 function MapView(props: {
   entries: Entry[] | undefined;
@@ -221,7 +224,6 @@ function isContiguous(entries: Entry[], entry: Entry, idx: number) {
 function DirectoryTable(props: {
   entries: Entry[];
   tilesetUrl: string;
-  clustered: boolean;
   tileContents?: number;
   addressedTiles?: number;
   totalEntries?: number;
@@ -282,8 +284,7 @@ function DirectoryTable(props: {
   );
 }
 
-// url parameters: url (cannot be tilejson, must be local or remote pmtiles)
-function ArchiveView(props: { tileset: Tileset }) {
+function ArchiveView(props: { tileset: PMTilesTileset }) {
   const [header] = createResource(props.tileset, async (t) => {
     return await t.archive.getHeader();
   });
@@ -381,7 +382,6 @@ function ArchiveView(props: { tileset: Tileset }) {
           tilesetUrl={props.tileset.getStateUrl()}
           setHoveredTile={setHoveredTile}
           setOpenedLeaf={setOpenedLeaf}
-          clustered={header()?.clustered}
         />
       </div>
       <Show when={leafEntries()}>
@@ -393,7 +393,6 @@ function ArchiveView(props: { tileset: Tileset }) {
                 tilesetUrl={props.tileset.getStateUrl()}
                 setHoveredTile={setHoveredTile}
                 setOpenedLeaf={setOpenedLeaf}
-                clustered={header()?.clustered}
               />
             </div>
           </div>

@@ -10,7 +10,6 @@ import { type Selection, create } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
 import Protobuf from "pbf";
 import {
-  type JSX,
   Show,
   createEffect,
   createResource,
@@ -93,6 +92,7 @@ function ZoomableTile(props: {
   let view: Selection<SVGSVGElement, undefined, null, undefined>;
 
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
+  console.log(activeLayers);
 
   onMount(() => {
     const height = containerRef.clientHeight;

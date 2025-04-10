@@ -1,12 +1,12 @@
 import {
-  type JSX,
-  type Setter,
   type Accessor,
+  type JSX,
+  Match,
+  type Setter,
+  Show,
+  Switch,
   createEffect,
   createSignal,
-  Match,
-  Switch,
-  Show,
 } from "solid-js";
 
 import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
@@ -71,7 +71,7 @@ function LinkTab(props: {
         "py-2": true,
         "px-4": true,
       }}
-      href={`/${props.page === "map" ? "" : props.page + "/"}${fragment}`}
+      href={`/${props.page === "map" ? "" : `${props.page}/`}${fragment}`}
     >
       {props.page}
     </a>
@@ -164,7 +164,11 @@ export function Frame(props: {
               placeholder="TileJSON or .pmtiles"
               value={props.tileset()?.getStateUrl() || ""}
             />
-            <button class="mx-2" onClick={() => props.setTileset(undefined)}>
+            <button
+              type="button"
+              class="mx-2"
+              onClick={() => props.setTileset(undefined)}
+            >
               X
             </button>
             <button class="px-4 mx-2 bg-indigo-500 rounded" type="submit">

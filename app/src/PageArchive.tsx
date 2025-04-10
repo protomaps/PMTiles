@@ -4,8 +4,8 @@ import "./index.css";
 import {
   type GeoJSONSource,
   Map as MaplibreMap,
-  setRTLTextPlugin,
   getRTLTextPluginStatus,
+  setRTLTextPlugin,
 } from "maplibre-gl";
 import { type Entry, tileIdToZxy } from "pmtiles";
 import { default as layers } from "protomaps-themes-base";
@@ -20,13 +20,13 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import { createHash, parseHash } from "./utils";
-import { Frame, ExampleChooser } from "./Frame";
+import { ExampleChooser, Frame } from "./Frame";
 import {
   type PMTilesTileset,
   type Tileset,
   tilesetFromString,
 } from "./tileset";
+import { createHash, parseHash } from "./utils";
 
 function MapView(props: {
   entries: Entry[] | undefined;
@@ -126,10 +126,7 @@ function MapView(props: {
     }
 
     let flavor = "white";
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
       flavor = "black";
     }
 

@@ -7,30 +7,30 @@ import {
   NavigationControl,
   Popup,
   addProtocol,
-  setRTLTextPlugin,
   getRTLTextPluginStatus,
+  setRTLTextPlugin,
 } from "maplibre-gl";
 import {
+  type Setter,
   Show,
   createEffect,
   createResource,
   createSignal,
   onMount,
-  type Setter,
 } from "solid-js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { default as layers } from "protomaps-themes-base";
-import { createHash, parseHash } from "./utils";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
+import { ExampleChooser, Frame } from "./Frame";
 import { LayersPanel } from "./LayersPanel";
 import {
-  type Tileset,
   type PMTilesTileset,
+  type Tileset,
   tilesetFromString,
 } from "./tileset";
-import { Frame, ExampleChooser } from "./Frame";
+import { createHash, parseHash } from "./utils";
 
 declare module "solid-js" {
   namespace JSX {
@@ -100,10 +100,7 @@ function MapView(props: {
     }
 
     let flavor = "white";
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
       flavor = "black";
     }
 
@@ -308,8 +305,7 @@ function PageMap() {
   createEffect(() => {
     const t = tileset();
     location.hash = createHash(location.hash, {
-      url:
-        t && t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
+      url: t?.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
       showMetadata: showMetadata() ? "true" : undefined,
     });
   });

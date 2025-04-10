@@ -16,10 +16,10 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
+import { ExampleChooser, Frame } from "./Frame";
 import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { createHash, parseHash, zxyFromHash } from "./utils";
-import { Frame, ExampleChooser } from "./Frame";
 
 interface Feature {
   path: string;
@@ -193,16 +193,15 @@ function ZoomableTile(props: {
       const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
       if (!data) return; // TODO show error
       return parseTile(data);
-    } else {
-      return await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
     }
+    return await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
   });
 
   createEffect(async () => {
     const tile = parsedTile();
     if (!tile) return;
 
-    if (tile instanceof Array) {
+    if (Array.isArray(tile)) {
       const layer = view
         .selectAll("g")
         .data(tile)
@@ -253,10 +252,14 @@ function TileView(props: { tileset: Tileset }) {
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
       <Show when={zxy()} fallback={<span>fallback</span>}>
-        <div class="flex-0 p-4">{zxy().join(", ")}</div>
-        <div class="flex w-full h-full">
-          <ZoomableTile zxy={zxy()!} tileset={props.tileset} />
-        </div>
+        {(z) => (
+          <>
+            <div class="flex-0 p-4">{z().join(", ")}</div>
+            <div class="flex w-full h-full">
+              <ZoomableTile zxy={z()} tileset={props.tileset} />
+            </div>
+          </>
+        )}
       </Show>
     </div>
   );

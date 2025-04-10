@@ -1,4 +1,4 @@
-import { For, type Setter, createResource, Show } from "solid-js";
+import { For, type Setter, Show, createResource } from "solid-js";
 import type { Tileset } from "./tileset";
 
 export function LayersPanel(props: {

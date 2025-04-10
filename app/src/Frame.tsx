@@ -1,11 +1,12 @@
-import { type JSX, type Setter } from "solid-js";
+import { type JSX, type Setter, type Accessor, createEffect, createSignal } from "solid-js";
 
 import { type Tileset, tilesetFromFile, tilesetFromString } from "./tileset";
 import { GIT_SHA } from "./utils";
 
 export const ExampleChooser = (props: {
-  setTileset: Setter<Tileset | undefined>;
+  setTileset: Setter<Tileset | undefined>
 }) => {
+
   const loadSample = (url: string) => {
     props.setTileset(tilesetFromString(url));
   };
@@ -14,9 +15,9 @@ export const ExampleChooser = (props: {
     <div class="h-full flex items-center justify-center">
       <div>
         Load a sample .pmtiles:
-        <div class="border border-gray-500">
+        <div>
           <button
-            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
+            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
             type="button"
             onClick={() => {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
@@ -27,7 +28,7 @@ export const ExampleChooser = (props: {
           </button>
 
           <button
-            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full"
+            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
             type="button"
             onClick={() => {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
@@ -43,29 +44,57 @@ export const ExampleChooser = (props: {
   );
 };
 
-function LinkTab(props: {page: string, tileset?: Tileset}) {
+function LinkTab(props: {page: string, tileset: Accessor<Tileset>, lighter: boolean}) {
+  let fragment = "";
+  const t = props.tileset();
+  if (t) {
+    fragment = `#url=${t.getStateUrl()}`;
+  }
+
   return <a
-    class="bg-gray-700 p-2"
-    href={`/${props.page === "map" ? "" : props.page + "/"}#url=${props.tileset?.getStateUrl()}`}
+    classList={{"bg-gray-700": !props.lighter, "bg-gray-500":props.lighter,"py-2":true, "px-4":true}}
+    href={`/${props.page === "map" ? "" : props.page + "/"}${fragment}`}
   >
     {props.page}
   </a>
 }
 
 export function Frame(props: {
-  tileset?: Tileset;
+  tileset: Accessor<Tileset | undefined>;
   setTileset: Setter<Tileset | undefined>;
   children: JSX.Element;
   page: string;
 }) {
+  const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
+  
+  const setTilesetHandlingErrors = (url: string) => {
+    try {
+      props.setTileset(tilesetFromString(url));
+    } catch (e) {
+      setErrorMessage(e.message)
+    }
+  }
+
   const loadTileset: JSX.EventHandler<HTMLFormElement, Event> = (event) => {
+    setErrorMessage(undefined);
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
     const urlValue = formData.get("url");
-    if (typeof urlValue === "string") {
-      props.setTileset(tilesetFromString(urlValue));
+    if (typeof urlValue === "string" && urlValue.length > 0) {
+      setTilesetHandlingErrors(urlValue);
     }
   };
+
+  createEffect(async () => {
+    const t = props.tileset();
+    if (t) {
+      try {
+        const header = await t.getHeader();
+      } catch (e) {
+        setErrorMessage(e.message);
+      }
+    }
+  });
 
   const drop: JSX.EventHandler<HTMLDivElement, DragEvent> = (event) => {
     event.preventDefault();
@@ -86,51 +115,57 @@ export function Frame(props: {
       ondrop={drop}
     >
       <div class="flex-0 flex items-center">
-        <div class="flex items-center p-2 flex-grow">
+        <div class="flex items-center flex-grow">
           <Switch>
             <Match when={props.page === "archive"}>
               <LinkTab page="map" tileset={props.tileset}/>
             </Match>
             <Match when={props.page === "tile"}>
-              <LinkTab page="map" tileset={props.tileset}/>
+              <LinkTab page="map" tileset={props.tileset} lighter={true}/>
               <LinkTab page="archive" tileset={props.tileset}/>
             </Match>
           </Switch>
-          <h1 class="text-xl">PMTiles {props.page} viewer</h1>
+          <h1 class="text-xl mx-5">PMTiles {props.page} viewer</h1>
           <form onSubmit={loadTileset}>
             <input
-              class="border w-100 mx-2 px-2"
+              class="border w-120 mx-2 px-2"
               type="text"
               name="url"
               placeholder="TileJSON or .pmtiles"
-              value={props.tileset?.getStateUrl() || ""}
+              value={props.tileset()?.getStateUrl() || ""}
             />
-            <button class="px-4 mx-2 bg-indigo-500 rounded" type="submit">
-              load
+            <button class="mx-2" onClick={() => props.setTileset(undefined)}>
+              X
             </button>
             <button class="px-4 mx-2 bg-indigo-500 rounded" type="submit">
-              clear
+              load
             </button>
             <a
               href="https://github.com/protomaps/PMTiles"
               target="_blank"
               rel="noreferrer"
+              class="text-xs"
             >
-              {GIT_SHA}
+              @{GIT_SHA}
             </a>
           </form>
         </div>
         <Switch>
           <Match when={props.page === "map"}>
             <LinkTab page="archive" tileset={props.tileset}/>
-            <LinkTab page="tile" tileset={props.tileset}/>
+            <LinkTab page="tile" tileset={props.tileset} lighter={true}/>
           </Match>
           <Match when={props.page === "archive"}>
             <LinkTab page="tile" tileset={props.tileset}/>
           </Match>
         </Switch>
       </div>
-      {props.children}
+      <Show when={errorMessage()}>
+        <div class="bg-red-900 px-2 py-3">{errorMessage}</div>
+      </Show>
+      <div class="flex-1 overflow-auto">
+        {props.children}
+      </div>
     </div>
   );
 }

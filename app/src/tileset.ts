@@ -39,13 +39,17 @@ class PMTilesTileset {
   }
 
   async getBounds(): Promise<[number, number, number, number]> {
-    const h = await this.archive.getHeader();
+    const h = await this.getHeader();
     return [h.minLon, h.minLat, h.maxLon, h.maxLat];
   }
 
   async isVector() {
-    const h = await this.archive.getHeader();
+    const h = await this.getHeader();
     return h.tileType === TileType.Mvt;
+  }
+
+  async getHeader() {
+    return await this.archive.getHeader();
   }
 
   async getMetadata() {
@@ -120,7 +124,6 @@ class TileJSONTileset implements Tileset {
   async getBounds() {
     const resp = await fetch(this.url);
     const j = await resp.json();
-    console.log(j);
     return j.bounds as [number, number, number, number];
   }
 

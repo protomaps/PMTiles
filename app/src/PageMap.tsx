@@ -8,6 +8,7 @@ import {
   Popup,
   addProtocol,
   setRTLTextPlugin,
+  getRTLTextPluginStatus
 } from "maplibre-gl";
 import {
   Show,
@@ -59,6 +60,7 @@ function MapView(props: {
   tileset: Tileset;
   showMetadata: boolean;
   setShowMetadata: Setter<boolean>;
+  setErrorMessage: Setter<string>;
 }) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
@@ -86,10 +88,12 @@ function MapView(props: {
       protocol.add(props.tileset.archive);
     }
 
-    setRTLTextPlugin(
-      "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
-      true,
-    );
+    if (getRTLTextPluginStatus() === 'unavailable') {
+      setRTLTextPlugin(
+        "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
+        true,
+      );
+    }
 
     let flavor = "white";
     if (
@@ -115,6 +119,7 @@ function MapView(props: {
               "https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=1003762824b9687f",
             ],
             maxzoom: 15,
+            attribution: "© <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>"
           },
         },
         layers: layers("basemap", flavor, "en"),
@@ -123,7 +128,7 @@ function MapView(props: {
 
     // map.showTileBoundaries = true;
     map.addControl(new NavigationControl({}), "top-left");
-    map.addControl(new AttributionControl({ compact: false }));
+    map.addControl(new AttributionControl({ compact: false }), "bottom-right");
 
     setZoom(map.getZoom());
     map.on("zoom", (e) => {
@@ -233,7 +238,7 @@ function MapView(props: {
   return (
     <div class="flex w-full h-full">
       <div class="flex-1 flex flex-col relative">
-        <div class="flex-0">
+        <div class="flex-0 p-4">
           <button
             class="px-4 bg-indigo-500 rounded"
             type="button"
@@ -285,12 +290,12 @@ const JsonView = (props: { tileset: Tileset }) => {
   );
 };
 
-// TODO error display
 function PageMap() {
   const hash = parseHash(location.hash);
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
+  const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
 
   const [showMetadata, setShowMetadata] = createSignal<boolean>(
     hash.showMetadata === "true" || false,
@@ -298,16 +303,14 @@ function PageMap() {
 
   createEffect(() => {
     const t = tileset();
-    if (t) {
-      location.hash = createHash(location.hash, {
-        url: t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
-        showMetadata: showMetadata() ? "true" : undefined,
-      });
-    }
+    location.hash = createHash(location.hash, {
+      url: t && t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
+      showMetadata: showMetadata() ? "true" : undefined,
+    });
   });
 
   return (
-    <Frame tileset={tileset()} setTileset={setTileset} page="map">
+    <Frame tileset={tileset} setTileset={setTileset} page="map">
       <Show
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}

@@ -19,7 +19,7 @@ import {
 } from "solid-js";
 import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
-import { GIT_SHA, createHash, parseHash, zxyFromHash } from "./utils";
+import { createHash, parseHash, zxyFromHash } from "./utils";
 import { Frame, ExampleChooser } from "./Frame";
 
 interface Feature {
@@ -240,12 +240,10 @@ function TileView(props: {tileset: Tileset}) {
 
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
-      <div class="flex-0">
-        left up right down parent child
-        {GIT_SHA}
-        {zxy}
-      </div>
       <Show when={zxy()} fallback={<span>fallback</span>}>
+        <div class="flex-0 p-4">
+          {zxy().join(", ")}
+        </div>
         <div class="flex w-full h-full">
           <ZoomableTile zxy={zxy()!} tileset={props.tileset} />
         </div>
@@ -270,7 +268,7 @@ function PageTile() {
   });
 
   return (
-    <Frame tileset={tileset()} setTileset={setTileset} page="tile">
+    <Frame tileset={tileset} setTileset={setTileset} page="tile">
       <Show
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}

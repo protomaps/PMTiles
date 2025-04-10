@@ -1,4 +1,4 @@
-export const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "").substr(0, 8);
+export const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "dev").substr(0, 8);
 
 // Get the hash contents as a map.
 export function parseHash(hash: string): Record<string, string> {

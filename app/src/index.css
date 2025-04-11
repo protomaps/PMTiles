@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+.axis .domain {
+	display: none;
+}
+.axis line {
+	stroke-opacity: 0.3;
+	shape-rendering: crispEdges;
+}
+.view {
+	fill: none;
+	stroke: #000;
+}
+
+.rect {
+	fill: red;
+}
+
+@media (prefers-color-scheme: dark) {
+	.maplibregl-ctrl.maplibregl-ctrl-group {
+		filter: invert(1);
+	}
+	details.maplibregl-ctrl.maplibregl-ctrl-attrib {
+		background-color: black;
+	}
+	details.maplibregl-ctrl.maplibregl-ctrl-attrib a {
+		color: white;
+	}
+}

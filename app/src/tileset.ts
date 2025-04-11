@@ -1,0 +1,186 @@
+// a TileJSON or a .pmtiles archive, local or remote
+// gets metadata, tiles, etc
+
+import { FileSource, PMTiles, TileType } from "pmtiles";
+
+interface VectorLayer {
+  id: string;
+}
+
+interface Metadata {
+  type?: string;
+  vector_layers: VectorLayer[];
+}
+
+export interface Tileset {
+  getZxy(z: number, x: number, y: number): Promise<ArrayBuffer | undefined>;
+  getMetadata(): Promise<Metadata>;
+  getStateUrl(): string | undefined;
+  getMaplibreSourceUrl(): string;
+  getBounds(): Promise<[number, number, number, number]>;
+
+  getVectorLayers(): Promise<string[]>;
+  isOverlay(): Promise<boolean>;
+  isVector(): Promise<boolean>;
+
+  needsAddProtocol(): boolean;
+}
+
+export class PMTilesTileset {
+  archive: PMTiles;
+
+  getStateUrl(): string | undefined;
+
+  constructor(p: PMTiles) {
+    this.archive = p;
+  }
+
+  async getZxy(z: number, x: number, y: number) {
+    const resp = await this.archive.getZxy(z, x, y);
+    if (resp) return resp.data;
+  }
+
+  async getBounds(): Promise<[number, number, number, number]> {
+    const h = await this.getHeader();
+    return [h.minLon, h.minLat, h.maxLon, h.maxLat];
+  }
+
+  async isVector() {
+    const h = await this.getHeader();
+    return h.tileType === TileType.Mvt;
+  }
+
+  async getHeader() {
+    return await this.archive.getHeader();
+  }
+
+  async getMetadata() {
+    return (await this.archive.getMetadata()) as Metadata;
+  }
+
+  async isOverlay() {
+    const m = await this.getMetadata();
+    return m.type === "overlay";
+  }
+
+  async getVectorLayers() {
+    const m = await this.getMetadata();
+    return m.vector_layers.map((l) => l.id);
+  }
+}
+
+class RemotePMTilesTileset extends PMTilesTileset implements Tileset {
+  url: string;
+
+  constructor(url: string) {
+    super(new PMTiles(url));
+    this.url = url;
+  }
+
+  getStateUrl() {
+    return this.url;
+  }
+
+  getMaplibreSourceUrl() {
+    return `pmtiles://${this.url}`;
+  }
+
+  needsAddProtocol() {
+    return false;
+  }
+}
+
+class LocalPMTilesTileset extends PMTilesTileset implements Tileset {
+  name: string;
+
+  constructor(file: File) {
+    super(new PMTiles(new FileSource(file)));
+    this.name = file.name;
+  }
+
+  // the local file cannot be persisted in the URL.
+  getStateUrl() {
+    return undefined;
+  }
+
+  getMaplibreSourceUrl() {
+    return `pmtiles://${this.name}`;
+  }
+
+  needsAddProtocol() {
+    return true;
+  }
+}
+
+class TileJSONTileset implements Tileset {
+  url: string;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  needsAddProtocol() {
+    return false;
+  }
+
+  async getBounds() {
+    const resp = await fetch(this.url);
+    const j = await resp.json();
+    return j.bounds as [number, number, number, number];
+  }
+
+  getMaplibreSourceUrl() {
+    return this.url;
+  }
+
+  async isOverlay() {
+    return true;
+  }
+
+  async isVector() {
+    const resp = await fetch(this.url);
+    const j = await resp.json();
+    const template = j.tiles[0];
+    const pathname = new URL(template).pathname;
+    return pathname.endsWith(".pbf") || pathname.endsWith(".mvt");
+  }
+
+  getStateUrl() {
+    return this.url;
+  }
+
+  async getZxy(z: number, x: number, y: number) {
+    const resp = await fetch(this.url);
+    const j = await resp.json();
+    const template = j.tiles[0];
+    const tileURL = template
+      .replace("{z}", z)
+      .replace("{x}", x)
+      .replace("{y}", y);
+    const tileResp = await fetch(tileURL);
+    return await tileResp.arrayBuffer();
+  }
+
+  async getMetadata() {
+    const resp = await fetch(this.url);
+    return await resp.json();
+  }
+
+  async getVectorLayers() {
+    const metadata = await this.getMetadata();
+    return metadata.vector_layers.map((l: VectorLayer) => l.id);
+  }
+}
+
+// from a input box or a URL param state.
+export const tilesetFromString = (url: string): Tileset => {
+  const parsed = new URL(url);
+  if (parsed.pathname.endsWith(".json")) {
+    return new TileJSONTileset(url);
+  }
+  return new RemotePMTilesTileset(url);
+};
+
+export const tilesetFromFile = (file: File): Tileset => {
+  return new LocalPMTilesTileset(file);
+};

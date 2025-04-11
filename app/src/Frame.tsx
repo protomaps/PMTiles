@@ -157,7 +157,7 @@ export function Frame(props: {
           </Switch>
           <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
           <form class="flex flex-1 items-center" onSubmit={loadTileset}>
-            <span class="relative flex flex-1">
+            <span class="relative flex flex-1 items-center">
               <input
                 class="border mx-2 px-2 flex-1"
                 type="text"
@@ -168,10 +168,10 @@ export function Frame(props: {
               <Show when={props.tileset()}>
                 <button
                   type="button"
-                  class="absolute right-4"
+                  class="absolute right-4 bg-indigo-800 rounded text-sm px-2"
                   onClick={() => props.setTileset(undefined)}
                 >
-                  X
+                  clear
                 </button>
               </Show>
             </span>

@@ -23,6 +23,7 @@ import { default as layers } from "protomaps-themes-base";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
+import { FeaturePopup } from "./FeaturePopup";
 import { ExampleChooser, Frame } from "./Frame";
 import { LayersPanel } from "./LayersPanel";
 import {
@@ -48,8 +49,9 @@ const PopupContent = (props: {
 }) => {
   return (
     <div>
+      <FeaturePopup/>
       <a
-        class="underline"
+        class="underline text-black"
         target="_blank"
         rel="noreferrer"
         href={`/tile/#zxy=${props.z}/${props.x}/${props.y}&url=${encodeURIComponent(props.url)}`}
@@ -70,6 +72,7 @@ function MapView(props: {
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
+  const [showTileBoundaries, setShowTileBoundaries] = createSignal<boolean>(false);
   console.log(activeLayers);
 
   const popup = new Popup({
@@ -129,7 +132,10 @@ function MapView(props: {
       },
     });
 
-    // map.showTileBoundaries = true;
+    createEffect(() => {
+      map.showTileBoundaries = showTileBoundaries();
+    });
+
     map.addControl(new NavigationControl({}), "top-left");
     map.addControl(new AttributionControl({ compact: false }), "bottom-right");
 
@@ -271,8 +277,12 @@ function MapView(props: {
           </button>
           <span>zoom: {zoom().toFixed(2)}</span>
           <span>
-            <input type="checkbox" />
-            show tile boundaries
+            <input id="showTileBoundaries" checked={showTileBoundaries()} type="checkbox"
+              onChange={() => {
+                setShowTileBoundaries(!showTileBoundaries());
+              }}
+            />
+            <label for="showTileBoundaries">show tile boundaries</label>
           </span>
           <button
             class="px-4 rounded bg-indigo-500"

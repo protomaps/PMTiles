@@ -26,7 +26,7 @@ export function LayersPanel(props: {
             <label class="ml-2 text-sm" for={`check_${l}`}>
               {l}
               <Show when={props.layerFeatureCounts !== undefined}>
-                ({props.layerFeatureCounts[l] || 0})
+                <span class="ml-1">({props.layerFeatureCounts[l] || 0})</span>
               </Show>
             </label>
           </div>

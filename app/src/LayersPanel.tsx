@@ -16,12 +16,14 @@ export function LayersPanel(props: {
   return (
     <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-4">
       <input type="checkbox" id={"checkall"} />
-      <label for={"checkall"}>All Layers</label>
+      <label class="ml-2 text-sm" for={"checkall"}>
+        All Layers
+      </label>
       <For each={vectorLayers()}>
         {(l) => (
-          <div>
+          <div class="ml-2">
             <input type="checkbox" id={`check_${l}`} />
-            <label for={`check_${l}`}>
+            <label class="ml-2 text-sm" for={`check_${l}`}>
               {l}
               <Show when={props.layerFeatureCounts !== undefined}>
                 ({props.layerFeatureCounts[l] || 0})

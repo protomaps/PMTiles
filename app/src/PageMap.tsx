@@ -64,6 +64,7 @@ function MapView(props: {
   tileset: Tileset;
   showMetadata: boolean;
   setShowMetadata: Setter<boolean>;
+  mapHashPassed: boolean;
 }) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
@@ -131,6 +132,10 @@ function MapView(props: {
     // map.showTileBoundaries = true;
     map.addControl(new NavigationControl({}), "top-left");
     map.addControl(new AttributionControl({ compact: false }), "bottom-right");
+
+    if (!props.mapHashPassed) {
+      fitToBounds();
+    }
 
     setZoom(map.getZoom());
     map.on("zoom", (e) => {
@@ -212,6 +217,21 @@ function MapView(props: {
             },
             filter: ["==", ["geometry-type"], "Point"],
           });
+          map.addLayer({
+            id: `tileset_point_label_${vectorLayer}`,
+            type: "symbol",
+            source: "tileset",
+            "source-layer": vectorLayer,
+            layout: {
+              "text-field": ["get", "name"],
+              "text-font": ["Noto Sans Regular"],
+              "text-size": 10,
+            },
+            paint: {
+              "text-color": "white",
+            },
+            filter: ["==", ["geometry-type"], "Point"],
+          });
         }
       } else {
         map.addSource("tileset", {
@@ -240,8 +260,8 @@ function MapView(props: {
 
   return (
     <div class="flex w-full h-full">
-      <div class="flex-1 flex flex-col relative">
-        <div class="flex-0 p-4">
+      <div class="flex-1 flex flex-col">
+        <div class="flex-0 p-4 flex justify-between">
           <button
             class="px-4 bg-indigo-500 rounded"
             type="button"
@@ -249,6 +269,11 @@ function MapView(props: {
           >
             fit to bounds
           </button>
+          <span>zoom: {zoom().toFixed(2)}</span>
+          <span>
+            <input type="checkbox" />
+            show tile boundaries
+          </span>
           <button
             class="px-4 rounded bg-indigo-500"
             onClick={() => {
@@ -258,19 +283,20 @@ function MapView(props: {
           >
             toggle metadata
           </button>
-          zoom level: {zoom().toFixed(2)}
         </div>
-        <div ref={mapContainer} class="h-full flex-1" />
-        <div class="hidden" ref={hiddenRef} />
-        <div class="absolute right-8 top-8">
-          <LayersPanel
-            tileset={props.tileset}
-            setActiveLayers={setActiveLayers}
-          />
+        <div class="relative flex-1 h-full">
+          <div ref={mapContainer} class="h-full flex-1" />
+          <div class="hidden" ref={hiddenRef} />
+          <div class="absolute right-2 top-2 border border-gray-700 rounded">
+            <LayersPanel
+              tileset={props.tileset}
+              setActiveLayers={setActiveLayers}
+            />
+          </div>
         </div>
       </div>
       <Show when={props.showMetadata}>
-        <div class="w-1/2">
+        <div class="w-1/2 p-4">
           <JsonView tileset={props.tileset} />
         </div>
       </Show>
@@ -295,6 +321,7 @@ const JsonView = (props: { tileset: Tileset }) => {
 
 function PageMap() {
   const hash = parseHash(location.hash);
+  const mapHashPassed = hash.map !== undefined;
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
@@ -321,6 +348,7 @@ function PageMap() {
             tileset={t()}
             showMetadata={showMetadata()}
             setShowMetadata={setShowMetadata}
+            mapHashPassed={mapHashPassed}
           />
         )}
       </Show>

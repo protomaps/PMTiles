@@ -145,7 +145,7 @@ export function Frame(props: {
       ondrop={drop}
     >
       <div class="flex-0 flex items-center">
-        <div class="flex items-center flex-grow">
+        <div class="flex items-center flex-grow flex-1">
           <Switch>
             <Match when={props.page === "archive"}>
               <LinkTab page="map" tileset={props.tileset} />
@@ -155,30 +155,34 @@ export function Frame(props: {
               <LinkTab page="archive" tileset={props.tileset} />
             </Match>
           </Switch>
-          <h1 class="text-xl mx-5">{pageTitle}</h1>
-          <form onSubmit={loadTileset}>
-            <input
-              class="border w-120 mx-2 px-2"
-              type="text"
-              name="url"
-              placeholder="TileJSON or .pmtiles"
-              value={props.tileset()?.getStateUrl() || ""}
-            />
-            <button
-              type="button"
-              class="mx-2"
-              onClick={() => props.setTileset(undefined)}
-            >
-              X
-            </button>
-            <button class="px-4 mx-2 bg-indigo-500 rounded" type="submit">
+          <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
+          <form class="flex flex-1 items-center" onSubmit={loadTileset}>
+            <span class="relative flex flex-1">
+              <input
+                class="border mx-2 px-2 flex-1"
+                type="text"
+                name="url"
+                placeholder="TileJSON or .pmtiles"
+                value={props.tileset()?.getStateUrl() || ""}
+              />
+              <Show when={props.tileset()}>
+                <button
+                  type="button"
+                  class="absolute right-4"
+                  onClick={() => props.setTileset(undefined)}
+                >
+                  X
+                </button>
+              </Show>
+            </span>
+            <button class="px-4 ml-2 bg-indigo-500 rounded" type="submit">
               load
             </button>
             <a
               href="https://github.com/protomaps/PMTiles"
               target="_blank"
               rel="noreferrer"
-              class="text-xs"
+              class="text-xs mx-4"
             >
               @{GIT_SHA}
             </a>

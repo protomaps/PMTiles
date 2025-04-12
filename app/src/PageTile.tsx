@@ -28,7 +28,7 @@ interface Feature {
   properties: unknown;
 }
 
-function parseTile(data: ArrayBuffer) {
+function parseTile(data: ArrayBuffer, vectorLayers: string[]) {
   const tile = new VectorTile(new Protobuf(new Uint8Array(data)));
   const layers = [];
   let maxExtent = 0;
@@ -65,6 +65,7 @@ function parseTile(data: ArrayBuffer) {
         id: feature.id,
         properties: feature.properties,
         layerName: name,
+        color: colorForIdx(vectorLayers.indexOf(name)),
       });
     }
 
@@ -194,7 +195,8 @@ function ZoomableTile(props: {
     if (await tileset.isVector()) {
       const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
       if (!data) return; // TODO show error
-      return parseTile(data);
+      const vectorLayers = await props.tileset.getVectorLayers();
+      return parseTile(data, vectorLayers);
     }
     return await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
   });
@@ -210,14 +212,15 @@ function ZoomableTile(props: {
 
     if (Array.isArray(tile)) {
       const layer = view.selectAll("g").data(tile).join("g");
+
       layer
         .selectAll("path")
         .data((d) => d.features)
         .join("path")
         .attr("d", (f) => f.path)
         .style("opacity", 0.3)
-        .attr("fill", (d) => (d.type === 3 ? "red" : "none"))
-        .attr("stroke", (d) => (d.type === 2 ? "red" : "none"))
+        .attr("fill", (d) => (d.type === 3 ? d.color : "none"))
+        .attr("stroke", (d) => (d.type === 2 ? d.color : "none"))
         .attr("strokeWidth", 1)
         .on("mouseover", function (_e, d) {
           if (d.type === 2) {
@@ -228,9 +231,9 @@ function ZoomableTile(props: {
         })
         .on("mouseout", function (_e, d) {
           if (d.type === 2) {
-            select(this).attr("stroke", "red");
+            select(this).attr("stroke", d.color);
           } else {
-            select(this).attr("fill", "red");
+            select(this).attr("fill", d.color);
           }
         })
         .on("mousedown", (_e, d) => {

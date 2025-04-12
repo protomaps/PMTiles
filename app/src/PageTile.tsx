@@ -211,7 +211,11 @@ function ZoomableTile(props: {
     if (!tile) return;
 
     if (Array.isArray(tile)) {
-      const layer = view.selectAll("g").data(tile).join("g");
+      const visibility = layerVisibility();
+      const layersToShow = tile.filter((l) => {
+        return visibility.find((v) => v.id === l.name && v.visible);
+      });
+      const layer = view.selectAll("g").data(layersToShow).join("g");
 
       layer
         .selectAll("path")

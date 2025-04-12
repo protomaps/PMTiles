@@ -26,4 +26,16 @@
 	details.maplibregl-ctrl.maplibregl-ctrl-attrib a {
 		color: white;
 	}
+
+	div.maplibregl-popup-content {
+		background-color: black;
+	}
+
+	div.maplibregl-popup-anchor-bottom div.maplibregl-popup-tip {
+		border-top-color: black;
+	}
+
+	div.maplibregl-popup-anchor-top div.maplibregl-popup-tip {
+		border-bottom-color: black;
+	}
 }

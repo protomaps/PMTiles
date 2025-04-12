@@ -31,7 +31,7 @@ import {
   type Tileset,
   tilesetFromString,
 } from "./tileset";
-import { createHash, parseHash } from "./utils";
+import { colorForIdx, createHash, parseHash } from "./utils";
 
 declare module "solid-js" {
   namespace JSX {
@@ -51,7 +51,7 @@ const PopupContent = (props: {
     <div>
       <FeaturePopup />
       <a
-        class="underline text-black"
+        class="underline"
         target="_blank"
         rel="noreferrer"
         href={`/tile/#zxy=${props.z}/${props.x}/${props.y}&url=${encodeURIComponent(props.url)}`}
@@ -74,6 +74,7 @@ function MapView(props: {
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
   const [showTileBoundaries, setShowTileBoundaries] =
     createSignal<boolean>(false);
+  const [inspectFeatures, setInspectFeatures] = createSignal<boolean>(false);
   console.log(activeLayers);
 
   const popup = new Popup({
@@ -108,6 +109,8 @@ function MapView(props: {
     if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
       flavor = "black";
     }
+
+    // const isOverlay = await props.tileset.isOverlay();
 
     map = new MaplibreMap({
       hash: "map",
@@ -180,14 +183,14 @@ function MapView(props: {
           url: props.tileset.getMaplibreSourceUrl(),
         });
         const vectorLayers = await props.tileset.getVectorLayers();
-        for (const vectorLayer of vectorLayers) {
+        for (const [i, vectorLayer] of vectorLayers.entries()) {
           map.addLayer({
             id: `tileset_fill_${vectorLayer}`,
             type: "fill",
             source: "tileset",
             "source-layer": vectorLayer,
             paint: {
-              "fill-color": "steelblue",
+              "fill-color": colorForIdx(i),
               "fill-opacity": 0.1,
             },
             filter: ["==", ["geometry-type"], "Polygon"],
@@ -198,7 +201,7 @@ function MapView(props: {
             source: "tileset",
             "source-layer": vectorLayer,
             paint: {
-              "line-color": "steelblue",
+              "line-color": colorForIdx(i),
             },
             filter: ["==", ["geometry-type"], "LineString"],
           });
@@ -208,7 +211,7 @@ function MapView(props: {
             source: "tileset",
             "source-layer": vectorLayer,
             paint: {
-              "circle-color": "red",
+              "circle-color": colorForIdx(i),
               "circle-radius": 3,
             },
             filter: ["==", ["geometry-type"], "Point"],
@@ -219,7 +222,7 @@ function MapView(props: {
             source: "tileset",
             "source-layer": vectorLayer,
             paint: {
-              "circle-color": "steelblue",
+              "circle-color": colorForIdx(i),
               "circle-radius": 2,
             },
             filter: ["==", ["geometry-type"], "Point"],
@@ -235,7 +238,7 @@ function MapView(props: {
               "text-size": 10,
             },
             paint: {
-              "text-color": "white",
+              "text-color": colorForIdx(i),
             },
             filter: ["==", ["geometry-type"], "Point"],
           });
@@ -279,6 +282,17 @@ function MapView(props: {
           <span>zoom: {zoom().toFixed(2)}</span>
           <span>
             <input
+              id="inspectFeatures"
+              checked={inspectFeatures()}
+              type="checkbox"
+              onChange={() => {
+                setInspectFeatures(!inspectFeatures());
+              }}
+            />
+            <label for="inspectFeatures">inspect features</label>
+          </span>
+          <span>
+            <input
               id="showTileBoundaries"
               checked={showTileBoundaries()}
               type="checkbox"
@@ -286,7 +300,7 @@ function MapView(props: {
                 setShowTileBoundaries(!showTileBoundaries());
               }}
             />
-            <label for="showTileBoundaries">show tile boundaries</label>
+            <label for="showTileBoundaries">inspect tile boundaries</label>
           </span>
           <button
             class="px-4 rounded bg-indigo-500"
@@ -301,7 +315,7 @@ function MapView(props: {
         <div class="relative flex-1 h-full">
           <div ref={mapContainer} class="h-full flex-1" />
           <div class="hidden" ref={hiddenRef} />
-          <div class="absolute right-2 top-2 border border-gray-700 rounded">
+          <div class="absolute right-2 top-2 ">
             <LayersPanel
               tileset={props.tileset}
               setActiveLayers={setActiveLayers}

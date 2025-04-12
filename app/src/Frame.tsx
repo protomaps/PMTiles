@@ -33,7 +33,9 @@ export const ExampleChooser = (props: {
             }}
           >
             <div>demo-bucket.protomaps.com/v4.pmtiles</div>
-            <div class="text-xs">vector, global OpenStreetMap data</div>
+            <div class="text-xs">
+              vector, Protomaps daily build channel (OpenStreetMap data)
+            </div>
           </button>
 
           <button
@@ -44,7 +46,7 @@ export const ExampleChooser = (props: {
             }}
           >
             <div>air.mtn.tw/flowers.pmtiles</div>
-            <div class="text-xs">raster, aerial orthomosaic (CC0)</div>
+            <div class="text-xs">raster, aerial orthomosaic</div>
           </button>
           <button
             class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
@@ -58,7 +60,7 @@ export const ExampleChooser = (props: {
             <div>
               r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles
             </div>
-            <div class="text-xs">vector, Mapzen Tiles (legacy)</div>
+            <div class="text-xs">vector, 2019 Mapzen Tiles (legacy)</div>
           </button>
         </div>
         or drag and drop a local file here
@@ -104,6 +106,7 @@ export function Frame(props: {
   page: string;
 }) {
   const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
+  const [activeDrag, setActiveDrag] = createSignal<boolean>(false);
 
   const setTilesetHandlingErrors = (url: string) => {
     try {
@@ -140,6 +143,7 @@ export function Frame(props: {
 
   const drop: JSX.EventHandler<HTMLDivElement, DragEvent> = (event) => {
     event.preventDefault();
+    setActiveDrag(false);
     if (event.dataTransfer) {
       props.setTileset(tilesetFromFile(event.dataTransfer.files[0]));
     }
@@ -147,6 +151,7 @@ export function Frame(props: {
 
   const dragover: JSX.EventHandler<HTMLDivElement, Event> = (event) => {
     event.preventDefault();
+    setActiveDrag(true);
     return false;
   };
 
@@ -220,7 +225,15 @@ export function Frame(props: {
       <Show when={errorMessage()}>
         <div class="bg-red-900 px-2 py-3">{errorMessage()}</div>
       </Show>
-      <div class="flex-1 overflow-auto">{props.children}</div>
+      <div
+        classList={{
+          "flex-1": true,
+          "overflow-auto": true,
+          "bg-gray-600": activeDrag(),
+        }}
+      >
+        {props.children}
+      </div>
     </div>
   );
 }

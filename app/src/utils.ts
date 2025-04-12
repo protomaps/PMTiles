@@ -1,4 +1,10 @@
+import { schemeSet3 } from "d3-scale-chromatic";
+
 export const GIT_SHA = (import.meta.env.VITE_GIT_SHA || "dev").substr(0, 8);
+
+export function colorForIdx(idx: number) {
+  return schemeSet3[idx % 12];
+}
 
 // Get the hash contents as a map.
 export function parseHash(hash: string): Record<string, string> {

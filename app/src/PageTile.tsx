@@ -6,7 +6,7 @@ import { VectorTile } from "@mapbox/vector-tile";
 import { axisBottom, axisRight } from "d3-axis";
 import { path } from "d3-path";
 import { scaleLinear } from "d3-scale";
-import { type Selection, create } from "d3-selection";
+import { type Selection, select, create } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
 import Protobuf from "pbf";
 import {
@@ -19,7 +19,7 @@ import {
 import { ExampleChooser, Frame } from "./Frame";
 import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
-import { createHash, parseHash, zxyFromHash } from "./utils";
+import { colorForIdx, createHash, parseHash, zxyFromHash } from "./utils";
 
 interface Feature {
   path: string;
@@ -64,6 +64,7 @@ function parseTile(data: ArrayBuffer) {
         type: feature.type,
         id: feature.id,
         properties: feature.properties,
+        layerName: name,
       });
     }
 
@@ -202,20 +203,31 @@ function ZoomableTile(props: {
     if (!tile) return;
 
     if (Array.isArray(tile)) {
-      const layer = view
-        .selectAll("g")
-        .data(tile)
-        .join("g")
-        .attr("stroke", "blue");
+      const layer = view.selectAll("g").data(tile).join("g");
       layer
         .selectAll("path")
         .data((d) => d.features)
         .join("path")
         .attr("d", (f) => f.path)
-        .style("opacity", 1)
-        .attr("fill", "none")
+        .style("opacity", 0.3)
+        .attr("fill", (d) => (d.type === 3 ? "red" : "none"))
+        .attr("stroke", (d) => (d.type === 2 ? "red" : "none"))
         .attr("strokeWidth", 1)
-        .on("mouseover", (_e, d) => {
+        .on("mouseover", function (_e, d) {
+          if (d.type === 2) {
+            select(this).attr("stroke", "white");
+          } else {
+            select(this).attr("fill", "white");
+          }
+        })
+        .on("mouseout", function (_e, d) {
+          if (d.type === 2) {
+            select(this).attr("stroke", "red");
+          } else {
+            select(this).attr("fill", "red");
+          }
+        })
+        .on("mousedown", function (_e, d) {
           console.log(d);
         });
     } else {
@@ -231,14 +243,14 @@ function ZoomableTile(props: {
       <button type="button" onClick={reset}>
         reset
       </button>
-      <div class="absolute right-8 flex">
+      <div class="absolute right-2 flex">
         <LayersPanel
           tileset={props.tileset}
           setActiveLayers={setActiveLayers}
           layerFeatureCounts={layerFeatureCounts(parsedTile())}
         />
       </div>
-      <div ref={containerRef} class="h-full" />
+      <div ref={containerRef} class="h-full cursor-crosshair" />
     </div>
   );
 }

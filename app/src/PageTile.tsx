@@ -92,8 +92,9 @@ function ZoomableTile(props: {
   let zoom: ZoomBehavior<Element, unknown>;
   let view: Selection<SVGSVGElement, undefined, null, undefined>;
 
-  const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
-  console.log(activeLayers);
+  const [layerVisibility, setLayerVisibility] = createSignal<LayerVisibility[]>(
+    [],
+  );
 
   onMount(() => {
     const height = containerRef.clientHeight;
@@ -198,6 +199,11 @@ function ZoomableTile(props: {
     return await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
   });
 
+  onMount(async () => {
+    const vectorLayers = await props.tileset.getVectorLayers();
+    setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
+  });
+
   createEffect(async () => {
     const tile = parsedTile();
     if (!tile) return;
@@ -245,8 +251,8 @@ function ZoomableTile(props: {
       </button>
       <div class="absolute right-2 flex">
         <LayersPanel
-          tileset={props.tileset}
-          setActiveLayers={setActiveLayers}
+          layerVisibility={layerVisibility}
+          setLayerVisibility={setLayerVisibility}
           layerFeatureCounts={layerFeatureCounts(parsedTile())}
         />
       </div>

@@ -25,7 +25,7 @@ import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
 import { FeaturePopup } from "./FeaturePopup";
 import { ExampleChooser, Frame } from "./Frame";
-import { LayersPanel } from "./LayersPanel";
+import { type LayerVisibility, LayersPanel } from "./LayersPanel";
 import {
   type PMTilesTileset,
   type Tileset,
@@ -71,11 +71,12 @@ function MapView(props: {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);
-  const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
   const [showTileBoundaries, setShowTileBoundaries] =
     createSignal<boolean>(false);
   const [inspectFeatures, setInspectFeatures] = createSignal<boolean>(false);
-  console.log(activeLayers);
+  const [layerVisibility, setLayerVisibility] = createSignal<LayerVisibility[]>(
+    [],
+  );
 
   const popup = new Popup({
     closeButton: false,
@@ -189,6 +190,7 @@ function MapView(props: {
           url: props.tileset.getMaplibreSourceUrl(),
         });
         const vectorLayers = await props.tileset.getVectorLayers();
+        setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
         for (const [i, vectorLayer] of vectorLayers.entries()) {
           map.addLayer({
             id: `tileset_fill_${vectorLayer}`,
@@ -274,6 +276,10 @@ function MapView(props: {
     );
   };
 
+  createEffect(() => {
+    console.log("lv", layerVisibility());
+  });
+
   return (
     <div class="flex w-full h-full">
       <div class="flex-1 flex flex-col">
@@ -324,7 +330,8 @@ function MapView(props: {
           <div class="absolute right-2 top-2 ">
             <LayersPanel
               tileset={props.tileset}
-              setActiveLayers={setActiveLayers}
+              layerVisibility={layerVisibility}
+              setLayerVisibility={setLayerVisibility}
             />
           </div>
         </div>

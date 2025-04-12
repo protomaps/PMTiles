@@ -278,6 +278,23 @@ function MapView(props: {
 
   createEffect(() => {
     console.log("lv", layerVisibility());
+
+    for (const { id, visible } of layerVisibility()) {
+      const visibility = visible ? "visible" : "none";
+      map.setLayoutProperty(`tileset_fill_${id}`, "visibility", visibility);
+      map.setLayoutProperty(`tileset_line_${id}`, "visibility", visibility);
+      map.setLayoutProperty(
+        `tileset_circle_outline_${id}`,
+        "visibility",
+        visibility,
+      );
+      map.setLayoutProperty(`tileset_circle_${id}`, "visibility", visibility);
+      map.setLayoutProperty(
+        `tileset_point_label_${id}`,
+        "visibility",
+        visibility,
+      );
+    }
   });
 
   return (

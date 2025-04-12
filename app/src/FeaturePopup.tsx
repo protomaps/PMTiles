@@ -1,7 +1,3 @@
 export const FeaturePopup = (props: {}) => {
-  return (
-    <div>
-      aaa
-    </div>
-  );
+  return <div>aaa</div>;
 };

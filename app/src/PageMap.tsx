@@ -19,7 +19,7 @@ import {
   onMount,
 } from "solid-js";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { default as layers } from "protomaps-themes-base";
+import { layers, namedFlavor } from "@protomaps/basemaps";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
@@ -49,7 +49,7 @@ const PopupContent = (props: {
 }) => {
   return (
     <div>
-      <FeaturePopup/>
+      <FeaturePopup />
       <a
         class="underline text-black"
         target="_blank"
@@ -72,7 +72,8 @@ function MapView(props: {
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);
   const [activeLayers, setActiveLayers] = createSignal<string[] | undefined>();
-  const [showTileBoundaries, setShowTileBoundaries] = createSignal<boolean>(false);
+  const [showTileBoundaries, setShowTileBoundaries] =
+    createSignal<boolean>(false);
   console.log(activeLayers);
 
   const popup = new Popup({
@@ -128,7 +129,7 @@ function MapView(props: {
               "© <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
           },
         },
-        layers: layers("basemap", flavor, "en"),
+        layers: layers("basemap", namedFlavor(flavor), { lang: "en" }),
       },
     });
 
@@ -277,7 +278,10 @@ function MapView(props: {
           </button>
           <span>zoom: {zoom().toFixed(2)}</span>
           <span>
-            <input id="showTileBoundaries" checked={showTileBoundaries()} type="checkbox"
+            <input
+              id="showTileBoundaries"
+              checked={showTileBoundaries()}
+              type="checkbox"
               onChange={() => {
                 setShowTileBoundaries(!showTileBoundaries());
               }}

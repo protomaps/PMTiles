@@ -8,7 +8,7 @@ import {
   setRTLTextPlugin,
 } from "maplibre-gl";
 import { type Entry, tileIdToZxy } from "pmtiles";
-import { default as layers } from "protomaps-themes-base";
+import { layers, namedFlavor } from "@protomaps/basemaps";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import {
@@ -167,7 +167,7 @@ function MapView(props: {
           },
         },
         layers: [
-          ...layers("basemap", flavor, "en"),
+          ...layers("basemap", namedFlavor(flavor), { lang: "en" }),
           {
             id: "archive",
             source: "archive",

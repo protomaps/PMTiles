@@ -293,8 +293,16 @@ function DirectoryTable(props: {
                     </a>
                   </td>
                   <td>{e.length}</td>
-                  <td onClick={() => props.setOpenedLeaf(e.tileId)}>
-                    {e.runLength === 0 ? "leaf" : e.runLength}
+                  <td>
+                    <Show when={e.runLength === 0} fallback={e.runLength}>
+                      <button
+                        type="button"
+                        class="underline cursor-pointer"
+                        onClick={() => props.setOpenedLeaf(e.tileId)}
+                      >
+                        leaf
+                      </button>
+                    </Show>
                   </td>
                 </tr>
               )}

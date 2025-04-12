@@ -3,8 +3,8 @@ import {
   type Setter,
   Show,
   createEffect,
-  createResource,
   createMemo,
+  createResource,
 } from "solid-js";
 import type { Tileset } from "./tileset";
 import { colorForIdx } from "./utils";
@@ -19,7 +19,7 @@ export function LayersPanel(props: {
   setLayerVisibility: Setter<LayerVisibility[]>;
   layerFeatureCounts?: Record<string, number>;
 }) {
-  let checkallRef;
+  let checkallRef: HTMLCheckboxElement;
 
   const onChange = (id: string) => {
     const newLayerVisibility = props

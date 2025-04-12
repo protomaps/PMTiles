@@ -5,6 +5,7 @@ import {
   type Setter,
   Show,
   Switch,
+  createMemo,
   createEffect,
   createSignal,
 } from "solid-js";
@@ -57,11 +58,14 @@ function LinkTab(props: {
   tileset: Accessor<Tileset | undefined>;
   lighter?: boolean;
 }) {
-  let fragment = "";
-  const t = props.tileset();
-  if (t) {
-    fragment = `#url=${t.getStateUrl()}`;
-  }
+  const fragment = createMemo(() => {
+    const t = props.tileset();
+    if (t) {
+      console.log(t.getStateUrl());
+      return `#url=${t.getStateUrl()}`;
+    }
+    return "";
+  });
 
   return (
     <a
@@ -71,7 +75,7 @@ function LinkTab(props: {
         "py-2": true,
         "px-4": true,
       }}
-      href={`/${props.page === "map" ? "" : `${props.page}/`}${fragment}`}
+      href={`/${props.page === "map" ? "" : `${props.page}/`}${fragment()}`}
     >
       {props.page}
     </a>

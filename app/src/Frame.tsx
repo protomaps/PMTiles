@@ -23,7 +23,7 @@ export const ExampleChooser = (props: {
   return (
     <div class="h-full flex items-center justify-center">
       <div>
-        Load a sample .pmtiles:
+        Load an example:
         <div>
           <button
             class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
@@ -32,7 +32,7 @@ export const ExampleChooser = (props: {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
             }}
           >
-            <div>https://demo-bucket.protomaps.com/v4.pmtiles</div>
+            <div>demo-bucket.protomaps.com/v4.pmtiles</div>
             <div class="text-xs">vector, global OpenStreetMap data</div>
           </button>
 
@@ -43,8 +43,22 @@ export const ExampleChooser = (props: {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
             }}
           >
-            <div>https://air.mtn.tw/flowers.pmtiles</div>
+            <div>air.mtn.tw/flowers.pmtiles</div>
             <div class="text-xs">raster, aerial orthomosaic (CC0)</div>
+          </button>
+          <button
+            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            type="button"
+            onClick={() => {
+              loadSample(
+                "https://r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles",
+              );
+            }}
+          >
+            <div>
+              r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles
+            </div>
+            <div class="text-xs">vector, Mapzen Tiles (legacy)</div>
           </button>
         </div>
         or drag and drop a local file here
@@ -70,6 +84,7 @@ function LinkTab(props: {
   return (
     <a
       classList={{
+        "hover:bg-gray-400": true,
         "bg-gray-700": !props.lighter,
         "bg-gray-500": props.lighter,
         "py-2": true,

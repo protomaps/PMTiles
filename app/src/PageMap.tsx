@@ -323,14 +323,7 @@ const JsonView = (props: { tileset: Tileset }) => {
     return await props.tileset.getMetadata();
   });
 
-  return (
-    <div>
-      <div>min lon, min lat, max lon, max lat:</div>
-      <div>center zoom: </div>
-      <div>center lon, center lat:</div>
-      <json-viewer data={data()} />
-    </div>
-  );
+  return <json-viewer data={data()} />;
 };
 
 function PageMap() {

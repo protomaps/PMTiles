@@ -387,12 +387,6 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
                   </tr>
                 </tbody>
               </table>
-              <div>clustered: {h().clustered}</div>
-              <div>total entries: {h().numTileEntries}</div>
-              <div>total contents: {h().numTileContents}</div>
-              <div>internal compression: ?</div>
-              <div>tile compression: ?</div>
-              <div>tile type: ?</div>
             </div>
           )}
         </Show>
@@ -426,17 +420,28 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
           "flex-col": true,
         }}
       >
-        <div>
-          <div>min zoom: ?</div>
-          <div>max zoom: ?</div>
-          <div>
-            min lon, min lat, max lon, max lat: {0}, {0}, {0}, {0}
-          </div>
-          <div>center zoom: {0}</div>
-          <div>
-            center lon, center lat: {0}, {0}
-          </div>
-        </div>
+        <Show when={header()}>
+          {(h) => (
+            <>
+              <div>clustered: {h().clustered ? "true" : "false"}</div>
+              <div>total addressed tiles: {h().numAddressedTiles}</div>
+              <div>total tile entries: {h().numTileEntries}</div>
+              <div>total contents: {h().numTileContents}</div>
+              <div>internal compression: {h().internalCompression}</div>
+              <div>tile compression: {h().tileCompression}</div>
+              <div>tile type: {h().tileType}</div>
+              <div>min zoom: {h().minZoom}</div>
+              <div>max zoom: {h().maxZoom}</div>
+              <div>center zoom: {h().centerZoom}</div>
+              <div>
+                bounds: {h().minLon} {h().minLat} {h().maxLon} {h().maxLat}
+              </div>
+              <div>
+                center: {h().centerLon} {h().centerLat}
+              </div>
+            </>
+          )}
+        </Show>
         <MapView
           entries={leafEntries() || rootEntries()}
           hoveredTile={hoveredTile()}

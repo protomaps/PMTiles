@@ -227,8 +227,33 @@ function DirectoryTable(props: {
   setHoveredTile: Setter<number | undefined>;
   setOpenedLeaf: Setter<number | undefined>;
 }) {
+  const [idx, setIdx] = createSignal<number>(0);
+
   return (
     <div class="flex-1 overflow-hidden">
+      <div class="bg-gray-800 px-4 py-2">
+        <span>
+          entries {idx()}-{idx() + 999} of {props.entries.length}
+        </span>
+        <button
+          class="mx-2"
+          type="button"
+          onClick={() => {
+            setIdx(idx() - 1000);
+          }}
+        >
+          prev
+        </button>
+        <button
+          class="mx-2"
+          type="button"
+          onClick={() => {
+            setIdx(idx() + 1000);
+          }}
+        >
+          next
+        </button>
+      </div>
       <div class="h-full overflow-y-scroll">
         <table class="h-full text-right table-auto border-separate border-spacing-1 w-full pr-4">
           <thead>
@@ -243,7 +268,7 @@ function DirectoryTable(props: {
             </tr>
           </thead>
           <tbody>
-            <For each={props.entries}>
+            <For each={props.entries.slice(idx(), idx() + 1000)}>
               {(e, idx) => (
                 <tr
                   class="hover:bg-indigo-700"
@@ -315,8 +340,6 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
       h,
     );
   });
-
-  // openedLeaf: openedLeaf()?.toString(),
 
   return (
     <div class="flex-1 flex h-full w-full dark:bg-gray-900 dark:text-white font-mono text-sm">

@@ -256,12 +256,14 @@ function ZoomableTile(props: {
       <button type="button" onClick={reset}>
         reset
       </button>
-      <div class="absolute right-2 flex">
-        <LayersPanel
-          layerVisibility={layerVisibility}
-          setLayerVisibility={setLayerVisibility}
-          layerFeatureCounts={layerFeatureCounts(parsedTile())}
-        />
+      <div class="relative">
+        <div class="absolute top-2 right-2">
+          <LayersPanel
+            layerVisibility={layerVisibility}
+            setLayerVisibility={setLayerVisibility}
+            layerFeatureCounts={layerFeatureCounts(parsedTile())}
+          />
+        </div>
       </div>
       <div ref={containerRef} class="h-full cursor-crosshair" />
     </div>

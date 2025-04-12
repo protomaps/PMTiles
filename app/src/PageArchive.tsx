@@ -1,6 +1,7 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import "./index.css";
+import { layers, namedFlavor } from "@protomaps/basemaps";
 import {
   type GeoJSONSource,
   Map as MaplibreMap,
@@ -8,7 +9,6 @@ import {
   setRTLTextPlugin,
 } from "maplibre-gl";
 import { type Entry, tileIdToZxy } from "pmtiles";
-import { layers, namedFlavor } from "@protomaps/basemaps";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import {

@@ -129,7 +129,7 @@ function MapView(props: {
             ],
             maxzoom: 15,
             attribution:
-              "© <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
+              "Background © <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
           },
         },
         layers: layers("basemap", namedFlavor(flavor), { lang: "en" }),
@@ -152,6 +152,12 @@ function MapView(props: {
       setZoom(e.target.getZoom());
     });
     map.on("click", (e) => {
+      console.log(showTileBoundaries(), inspectFeatures());
+
+      if (!showTileBoundaries() && !inspectFeatures()) {
+        return;
+      }
+
       const sp = new SphericalMercator();
       const z = Math.floor(zoom());
       const result = sp.px([e.lngLat.lng, e.lngLat.lat], z);
@@ -300,7 +306,7 @@ function MapView(props: {
                 setShowTileBoundaries(!showTileBoundaries());
               }}
             />
-            <label for="showTileBoundaries">inspect tile boundaries</label>
+            <label for="showTileBoundaries">inspect tiles</label>
           </span>
           <button
             class="px-4 rounded bg-indigo-500"

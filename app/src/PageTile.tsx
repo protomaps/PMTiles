@@ -6,7 +6,7 @@ import { VectorTile } from "@mapbox/vector-tile";
 import { axisBottom, axisRight } from "d3-axis";
 import { path } from "d3-path";
 import { scaleLinear } from "d3-scale";
-import { type Selection, select, create } from "d3-selection";
+import { type Selection, create, select } from "d3-selection";
 import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
 import Protobuf from "pbf";
 import {
@@ -227,7 +227,7 @@ function ZoomableTile(props: {
             select(this).attr("fill", "red");
           }
         })
-        .on("mousedown", function (_e, d) {
+        .on("mousedown", (_e, d) => {
           console.log(d);
         });
     } else {

@@ -22,7 +22,7 @@ import {
 } from "solid-js";
 import { ExampleChooser, Frame } from "./Frame";
 import { PMTilesTileset, type Tileset, tilesetFromString } from "./tileset";
-import { createHash, parseHash } from "./utils";
+import { createHash, parseHash, tileInspectUrl } from "./utils";
 
 function MapView(props: {
   entries: Entry[] | undefined;
@@ -216,7 +216,7 @@ function isContiguous(entries: Entry[], entry: Entry, idx: number) {
 
 function DirectoryTable(props: {
   entries: Entry[];
-  tilesetUrl: string | undefined;
+  stateUrl: string | undefined;
   tileContents?: number;
   addressedTiles?: number;
   totalEntries?: number;
@@ -281,7 +281,10 @@ function DirectoryTable(props: {
                           ? "text-gray-800"
                           : "text-gray-300"
                       }
-                      href={`/tile/#url=${props.tilesetUrl}&zxy=${tileIdToZxy(e.tileId).join("/")}`}
+                      href={tileInspectUrl(
+                        props.stateUrl,
+                        tileIdToZxy(e.tileId),
+                      )}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -404,7 +407,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
 
         <DirectoryTable
           entries={rootEntries() || []}
-          tilesetUrl={props.genericTileset.getStateUrl()}
+          stateUrl={props.genericTileset.getStateUrl()}
           setHoveredTile={setHoveredTile}
           setOpenedLeaf={setOpenedLeaf}
         />
@@ -415,7 +418,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
             <div class="w-full flex flex-1 overflow-hidden">
               <DirectoryTable
                 entries={l()}
-                tilesetUrl={props.genericTileset.getStateUrl()}
+                stateUrl={props.genericTileset.getStateUrl()}
                 setHoveredTile={setHoveredTile}
                 setOpenedLeaf={setOpenedLeaf}
               />

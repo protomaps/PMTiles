@@ -77,7 +77,8 @@ function LinkTab(props: {
   const fragment = createMemo(() => {
     const t = props.tileset();
     if (t) {
-      return `#url=${t.getStateUrl()}`;
+      const stateUrl = t.getStateUrl();
+      if (stateUrl) return `#url=${stateUrl}`;
     }
     return "";
   });

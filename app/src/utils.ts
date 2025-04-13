@@ -38,3 +38,14 @@ export function zxyFromHash(s: string): [number, number, number] | undefined {
   if (split.length !== 3) return undefined;
   return split.map((n) => +n) as [number, number, number];
 }
+
+export function tileInspectUrl(
+  stateUrl: string | undefined,
+  zxy: [number, number, number],
+): string {
+  const hashParams = [`zxy=${zxy[0]}/${zxy[1]}/${zxy[2]}`];
+  if (stateUrl) {
+    hashParams.push(`url=${stateUrl}`);
+  }
+  return `/tile/#${hashParams.join("&")}`;
+}

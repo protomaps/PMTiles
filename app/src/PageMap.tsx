@@ -29,7 +29,7 @@ import { FeatureTable } from "./FeatureTable";
 import { ExampleChooser, Frame } from "./Frame";
 import { type LayerVisibility, LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
-import { colorForIdx, createHash, parseHash } from "./utils";
+import { colorForIdx, createHash, parseHash, tileInspectUrl } from "./utils";
 
 declare module "solid-js" {
   namespace JSX {
@@ -177,12 +177,6 @@ function MapView(props: {
       const tileX = Math.floor(result[0] / 256);
       const tileY = Math.floor(result[1] / 256);
 
-      const hashParams = [`zxy=${z}/${tileX}/${tileY}`];
-      const stateUrl = props.tileset.getStateUrl();
-      if (stateUrl) {
-        hashParams.push(`url=${stateUrl}`);
-      }
-
       if (hiddenRef) {
         hiddenRef.innerHTML = "";
         render(
@@ -193,7 +187,11 @@ function MapView(props: {
                 class="text-xs underline"
                 target="_blank"
                 rel="noreferrer"
-                href={`/tile/#${hashParams.join("&")}`}
+                href={tileInspectUrl(props.tileset.getStateUrl(), [
+                  z,
+                  tileX,
+                  tileY,
+                ])}
               >
                 Tile {z}/{tileX}/{tileY}
               </a>

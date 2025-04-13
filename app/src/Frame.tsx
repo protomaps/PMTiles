@@ -231,7 +231,14 @@ export function Frame(props: {
         </Switch>
       </div>
       <Show when={errorMessage()}>
-        <div class="bg-red-900 px-2 py-3">{errorMessage()}</div>
+        <div class="bg-red-900 px-2 py-3 flex justify-between">
+          <span>{errorMessage()}</span>
+          <span>
+            <button type="button" onClick={() => setErrorMessage(undefined)}>
+              close
+            </button>
+          </span>
+        </div>
       </Show>
       <div
         classList={{

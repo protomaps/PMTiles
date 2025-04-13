@@ -3,6 +3,7 @@ import { render } from "solid-js/web";
 import "./index.css";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 import {
+  AttributionControl,
   type GeoJSONSource,
   Map as MaplibreMap,
   getRTLTextPluginStatus,
@@ -128,6 +129,7 @@ function MapView(props: {
 
     map = new MaplibreMap({
       container: mapContainer,
+      attributionControl: false,
       style: {
         version: 8,
         glyphs:
@@ -193,6 +195,7 @@ function MapView(props: {
         ],
       },
     });
+    map.addControl(new AttributionControl({ compact: false }), "bottom-right");
 
     map.on("style.load", () => {
       map.setProjection({

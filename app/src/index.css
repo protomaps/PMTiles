@@ -16,7 +16,7 @@
 	fill: red;
 }
 
-.inspectFeatures canvas {
+.inspectFeatures:not(.frozen) canvas {
 	cursor: crosshair;
 }
 

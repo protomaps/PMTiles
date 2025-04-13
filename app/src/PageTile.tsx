@@ -7,7 +7,12 @@ import { axisBottom, axisRight } from "d3-axis";
 import { path } from "d3-path";
 import { scaleLinear } from "d3-scale";
 import { type Selection, create, select } from "d3-selection";
-import { type ZoomBehavior, zoom as d3zoom, zoomIdentity } from "d3-zoom";
+import {
+  type ZoomBehavior,
+  type ZoomTransform,
+  zoom as d3zoom,
+  zoomIdentity,
+} from "d3-zoom";
 import Protobuf from "pbf";
 import {
   Show,
@@ -22,6 +27,11 @@ import { type LayerVisibility, LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { colorForIdx, createHash, parseHash, zxyFromHash } from "./utils";
 
+interface Layer {
+  name: string;
+  features: Feature[];
+}
+
 interface Feature {
   path: string;
   type: number;
@@ -31,7 +41,7 @@ interface Feature {
   layerName: string;
 }
 
-function parseTile(data: ArrayBuffer, vectorLayers: string[]) {
+function parseTile(data: ArrayBuffer, vectorLayers: string[]): Layer[] {
   const tile = new VectorTile(new Protobuf(new Uint8Array(data)));
   const layers = [];
   let maxExtent = 0;
@@ -78,9 +88,12 @@ function parseTile(data: ArrayBuffer, vectorLayers: string[]) {
   return layers;
 }
 
-function layerFeatureCounts(parsedTile?: VectorTile): Record<string, number> {
+function layerFeatureCounts(
+  parsedTile?: Layer[] | ArrayBuffer,
+): Record<string, number> {
   const result: Record<string, number> = {};
   if (!parsedTile) return result;
+  if (parsedTile instanceof ArrayBuffer) return result;
   for (const layer of parsedTile) {
     result[layer.name] = layer.features.length;
   }
@@ -147,8 +160,8 @@ function ZoomableTile(props: {
     const gX = svg.append("g").attr("class", "axis axis--x").call(xAxis);
     const gY = svg.append("g").attr("class", "axis axis--y").call(yAxis);
 
-    function zoomed({ transform }: { transform: unknown }) {
-      view.attr("transform", transform);
+    function zoomed({ transform }: { transform: ZoomTransform }) {
+      view.attr("transform", transform.toString());
       gX.call(xAxis.scale(transform.rescaleX(x)));
       gY.call(yAxis.scale(transform.rescaleY(y)));
     }
@@ -242,7 +255,7 @@ function ZoomableTile(props: {
             properties: d.properties,
             type: d.type,
             id: d.id,
-          });
+          } as InspectableFeature);
         })
         .on("mouseout", function (_e, d) {
           if (frozen()) return;

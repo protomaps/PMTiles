@@ -43,27 +43,6 @@ declare module "solid-js" {
   }
 }
 
-const PopupContent = (props: {
-  url?: string;
-  z: number;
-  x: number;
-  y: number;
-}) => {
-  return (
-    <div>
-      <FeatureTable />
-      <a
-        class="underline"
-        target="_blank"
-        rel="noreferrer"
-        href={`/tile/#zxy=${props.z}/${props.x}/${props.y}&url=${encodeURIComponent(props.url)}`}
-      >
-        Inspect tile {props.z}/{props.x}/{props.y}
-      </a>
-    </div>
-  );
-};
-
 function MapView(props: {
   tileset: Tileset;
   showMetadata: boolean;
@@ -85,7 +64,7 @@ function MapView(props: {
   const [frozen, setFrozen] = createSignal<boolean>(false);
 
   const inspectableFeatures = createMemo(() => {
-    hoveredFeatures();
+    return hoveredFeatures();
   });
 
   const popup = new Popup({
@@ -162,7 +141,12 @@ function MapView(props: {
     map.on("zoom", (e) => {
       setZoom(e.target.getZoom());
     });
-    map.on("mousemove", (e) => {
+    map.on("mousemove", async (e) => {
+      if (frozen()) return;
+      if (!showTileBoundaries() && !inspectFeatures()) {
+        return;
+      }
+
       for (const hoveredFeature of hoveredFeatures()) {
         map.setFeatureState(hoveredFeature, { hover: false });
       }
@@ -180,14 +164,6 @@ function MapView(props: {
       }
 
       setHoveredFeatures(features);
-    });
-
-    map.on("click", async (e) => {
-      console.log(showTileBoundaries(), inspectFeatures());
-
-      if (!showTileBoundaries() && !inspectFeatures()) {
-        return;
-      }
 
       const currentZoom = zoom();
       const sp = new SphericalMercator();
@@ -201,12 +177,17 @@ function MapView(props: {
         hiddenRef.innerHTML = "";
         render(
           () => (
-            <PopupContent
-              url={props.tileset.getStateUrl()}
-              z={z}
-              x={tileX}
-              y={tileY}
-            />
+            <div>
+              <FeatureTable features={inspectableFeatures()} />
+              <a
+                class="text-xs underline"
+                target="_blank"
+                rel="noreferrer"
+                href={`/tile/#zxy=${z}/${tileX}/${tileY}&url=${encodeURIComponent(props.tileset.getStateUrl())}`}
+              >
+                Tile {z}/{tileX}/{tileY}
+              </a>
+            </div>
           ),
           hiddenRef,
         );
@@ -215,6 +196,11 @@ function MapView(props: {
         popup.addTo(map);
       }
     });
+
+    map.on("click", (e) => {
+      setFrozen(!frozen());
+    });
+
     map.on("load", async () => {
       if (await props.tileset.isVector()) {
         map.addSource("tileset", {
@@ -340,9 +326,10 @@ function MapView(props: {
           >
             fit to bounds
           </button>
-          <span>zoom: {zoom().toFixed(2)}</span>
-          <span>
+          <span class="text-lg">zoom: {zoom().toFixed(2)}</span>
+          <span class="border rounded px-2 flex items-center">
             <input
+              class="mr-1"
               id="inspectFeatures"
               checked={inspectFeatures()}
               type="checkbox"
@@ -350,10 +337,11 @@ function MapView(props: {
                 setInspectFeatures(!inspectFeatures());
               }}
             />
-            <label for="inspectFeatures">inspect features</label>
+            <label for="inspectFeatures">Inspect features</label>
           </span>
-          <span>
+          <span class="border rounded px-2 flex items-center">
             <input
+              class="mr-1"
               id="showTileBoundaries"
               checked={showTileBoundaries()}
               type="checkbox"
@@ -361,7 +349,7 @@ function MapView(props: {
                 setShowTileBoundaries(!showTileBoundaries());
               }}
             />
-            <label for="showTileBoundaries">inspect tiles</label>
+            <label for="showTileBoundaries">Show tile boundaries</label>
           </span>
           <button
             class="px-4 rounded bg-indigo-500"

@@ -203,6 +203,14 @@ export function Frame(props: {
               load
             </button>
             <a
+              href="https://github.com/protomaps/PMTiles/issues/555"
+              target="_blank"
+              rel="noreferrer"
+              class="text-xs rounded bg-yellow-500 text-black mx-4 px-2"
+            >
+              beta feedback
+            </a>
+            <a
               href="https://github.com/protomaps/PMTiles"
               target="_blank"
               rel="noreferrer"

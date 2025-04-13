@@ -26,7 +26,7 @@ export interface Tileset {
 
   test(): Promise<void>;
 
-  needsAddProtocol(): boolean;
+  archiveForProtocol(): PMTiles | undefined;
 }
 
 export class PMTilesTileset {
@@ -97,8 +97,8 @@ class RemotePMTilesTileset extends PMTilesTileset implements Tileset {
     return `pmtiles://${this.url}`;
   }
 
-  needsAddProtocol() {
-    return false;
+  archiveForProtocol() {
+    return undefined;
   }
 }
 
@@ -119,8 +119,8 @@ class LocalPMTilesTileset extends PMTilesTileset implements Tileset {
     return `pmtiles://${this.name}`;
   }
 
-  needsAddProtocol() {
-    return true;
+  archiveForProtocol() {
+    return this.archive;
   }
 }
 
@@ -131,8 +131,8 @@ class TileJSONTileset implements Tileset {
     this.url = url;
   }
 
-  needsAddProtocol() {
-    return false;
+  archiveForProtocol() {
+    return undefined;
   }
 
   async test() {

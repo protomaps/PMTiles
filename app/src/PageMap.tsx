@@ -28,11 +28,7 @@ import { Protocol } from "pmtiles";
 import { FeatureTable } from "./FeatureTable";
 import { ExampleChooser, Frame } from "./Frame";
 import { type LayerVisibility, LayersPanel } from "./LayersPanel";
-import {
-  type PMTilesTileset,
-  type Tileset,
-  tilesetFromString,
-} from "./tileset";
+import { type Tileset, tilesetFromString } from "./tileset";
 import { colorForIdx, createHash, parseHash } from "./utils";
 
 declare module "solid-js" {
@@ -91,8 +87,9 @@ function MapView(props: {
       return;
     }
 
-    if (props.tileset.needsAddProtocol()) {
-      protocol.add((props.tileset as PMTilesTileset).archive);
+    const archiveForProtocol = props.tileset.archiveForProtocol();
+    if (archiveForProtocol) {
+      protocol.add(archiveForProtocol);
     }
 
     if (getRTLTextPluginStatus() === "unavailable") {
@@ -339,7 +336,6 @@ function MapView(props: {
           >
             fit to bounds
           </button>
-          <span class="text-lg">zoom: {zoom().toFixed(2)}</span>
           <span class="border rounded px-2 flex items-center">
             <input
               class="mr-1"
@@ -377,12 +373,17 @@ function MapView(props: {
         <div class="relative flex-1 h-full">
           <div ref={mapContainer} class="h-full flex-1" />
           <div class="hidden" ref={hiddenRef} />
-          <div class="absolute right-2 top-2 ">
+          <div class="absolute right-2 top-2">
             <LayersPanel
-              tileset={props.tileset}
               layerVisibility={layerVisibility}
               setLayerVisibility={setLayerVisibility}
             />
+          </div>
+          <div class="absolute left-2 bottom-2">
+            <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-2 border border-gray-700 flex flex-col text-center w-16">
+              <div class="text-xs text-gray-400">ZOOM</div>
+              <div class="text-lg">{zoom().toFixed(2)}</div>
+            </div>
           </div>
         </div>
       </div>

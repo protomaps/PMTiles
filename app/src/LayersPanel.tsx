@@ -1,12 +1,11 @@
 import {
+  type Accessor,
   For,
   type Setter,
   Show,
   createEffect,
   createMemo,
-  createResource,
 } from "solid-js";
-import type { Tileset } from "./tileset";
 import { colorForIdx } from "./utils";
 
 export interface LayerVisibility {
@@ -19,25 +18,29 @@ export function LayersPanel(props: {
   setLayerVisibility: Setter<LayerVisibility[]>;
   layerFeatureCounts?: Record<string, number>;
 }) {
-  let checkallRef: HTMLCheckboxElement;
+  let checkallRef: HTMLInputElement | undefined;
 
   const onChange = (id: string) => {
     const newLayerVisibility = props
       .layerVisibility()
-      .map((l) => (l.id === id ? { ...l, visible: !l.visible } : l));
+      .map((l: LayerVisibility) =>
+        l.id === id ? { ...l, visible: !l.visible } : l,
+      );
     props.setLayerVisibility(newLayerVisibility);
   };
 
   const allChecked = createMemo(() => {
     const visibleLayersCount = props
       .layerVisibility()
-      .filter((l) => l.visible).length;
+      .filter((l: LayerVisibility) => l.visible).length;
     return visibleLayersCount === props.layerVisibility().length;
   });
 
   const toggleAll = () => {
     props.setLayerVisibility(
-      props.layerVisibility().map((l) => ({ ...l, visible: !allChecked() })),
+      props
+        .layerVisibility()
+        .map((l: LayerVisibility) => ({ ...l, visible: !allChecked() })),
     );
   };
 
@@ -80,10 +83,10 @@ export function LayersPanel(props: {
                 style={{ "background-color": colorForIdx(i()) }}
               />
               {l.id}
-              <Show when={props.layerFeatureCounts !== undefined}>
-                <span class="ml-1">
-                  ({props.layerFeatureCounts[l.id] || 0})
-                </span>
+              <Show when={props.layerFeatureCounts}>
+                {(layerFeatureCounts) => (
+                  <span class="ml-1">({layerFeatureCounts()[l.id] || 0})</span>
+                )}
               </Show>
             </label>
           </div>

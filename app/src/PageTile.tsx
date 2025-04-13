@@ -18,7 +18,7 @@ import {
 } from "solid-js";
 import { FeatureTable, type InspectableFeature } from "./FeatureTable";
 import { ExampleChooser, Frame } from "./Frame";
-import { LayersPanel } from "./LayersPanel";
+import { type LayerVisibility, LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { colorForIdx, createHash, parseHash, zxyFromHash } from "./utils";
 
@@ -27,6 +27,8 @@ interface Feature {
   type: number;
   id: number | undefined;
   properties: unknown;
+  color: string;
+  layerName: string;
 }
 
 function parseTile(data: ArrayBuffer, vectorLayers: string[]) {
@@ -146,7 +148,7 @@ function ZoomableTile(props: {
     const gX = svg.append("g").attr("class", "axis axis--x").call(xAxis);
     const gY = svg.append("g").attr("class", "axis axis--y").call(yAxis);
 
-    function zoomed({ transform }: { transform: any }) {
+    function zoomed({ transform }: { transform: unknown }) {
       view.attr("transform", transform);
       gX.call(xAxis.scale(transform.rescaleX(x)));
       gY.call(yAxis.scale(transform.rescaleY(y)));
@@ -166,7 +168,7 @@ function ZoomableTile(props: {
       .filter(filter)
       .on("zoom", zoomed);
 
-    Object.assign(svg.call(zoom as any).node() as SVGSVGElement, {});
+    Object.assign(svg.call(zoom).node() as SVGSVGElement, {});
 
     svg.call(
       zoom.transform,
@@ -189,10 +191,7 @@ function ZoomableTile(props: {
   });
 
   const reset = () => {
-    svg
-      .transition()
-      .duration(750)
-      .call(zoom.transform as any, zoomIdentity);
+    svg.transition().duration(750).call(zoom.transform, zoomIdentity);
   };
 
   const [parsedTile] = createResource(async () => {
@@ -254,7 +253,7 @@ function ZoomableTile(props: {
             select(this).attr("fill", d.color);
           }
         })
-        .on("mousedown", (_e, d) => {
+        .on("mousedown", () => {
           setFrozen(!frozen());
         });
     } else {
@@ -275,21 +274,23 @@ function ZoomableTile(props: {
         />
       </div>
       <Show when={inspectableFeature()}>
-        <div class="absolute bottom-2 right-2">
-          <div
-            classList={{
-              "bg-white": true,
-              "dark:bg-gray-900": !frozen(),
-              "dark:bg-gray-800": frozen(),
-              rounded: true,
-              "p-4": true,
-              border: true,
-              "border-gray-700": true,
-            }}
-          >
-            <FeatureTable features={[inspectableFeature()]} />
+        {(f) => (
+          <div class="absolute bottom-2 right-2">
+            <div
+              classList={{
+                "bg-white": true,
+                "dark:bg-gray-900": !frozen(),
+                "dark:bg-gray-800": frozen(),
+                rounded: true,
+                "p-4": true,
+                border: true,
+                "border-gray-700": true,
+              }}
+            >
+              <FeatureTable features={[f()]} />
+            </div>
           </div>
-        </div>
+        )}
       </Show>
       <div ref={containerRef} class="h-full cursor-crosshair" />
     </div>
@@ -330,8 +331,9 @@ function PageTile() {
   createEffect(() => {
     const t = tileset();
     if (t) {
+      const stateUrl = t.getStateUrl();
       location.hash = createHash(location.hash, {
-        url: t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
+        url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
       });
     }
   });

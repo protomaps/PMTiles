@@ -64,7 +64,14 @@ function MapView(props: {
   const [frozen, setFrozen] = createSignal<boolean>(false);
 
   const inspectableFeatures = createMemo(() => {
-    return hoveredFeatures();
+    return hoveredFeatures().map((h) => {
+      return {
+        layerName: h.sourceLayer || "unknown",
+        id: (h.id as number) || 0,
+        properties: h.properties,
+        type: h._vectorTileFeature.type,
+      };
+    });
   });
 
   const popup = new Popup({
@@ -197,7 +204,7 @@ function MapView(props: {
       }
     });
 
-    map.on("click", (e) => {
+    map.on("click", () => {
       setFrozen(!frozen());
     });
 
@@ -300,7 +307,7 @@ function MapView(props: {
   };
 
   createEffect(() => {
-    const setVisibility = (layerName: string, visibility: boolean) => {
+    const setVisibility = (layerName: string, visibility: string) => {
       if (map.getLayer(layerName)) {
         map.setLayoutProperty(layerName, "visibility", visibility);
       }
@@ -402,8 +409,9 @@ function PageMap() {
 
   createEffect(() => {
     const t = tileset();
+    const stateUrl = t?.getStateUrl();
     location.hash = createHash(location.hash, {
-      url: t?.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
+      url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
       showMetadata: showMetadata() ? "true" : undefined,
     });
   });

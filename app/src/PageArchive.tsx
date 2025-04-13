@@ -220,7 +220,7 @@ function isContiguous(entries: Entry[], entry: Entry, idx: number) {
 
 function DirectoryTable(props: {
   entries: Entry[];
-  tilesetUrl: string;
+  tilesetUrl: string | undefined;
   tileContents?: number;
   addressedTiles?: number;
   totalEntries?: number;
@@ -285,7 +285,7 @@ function DirectoryTable(props: {
                           ? "text-gray-800"
                           : "text-gray-300"
                       }
-                      href={`/tile/#url=${props.tilesetUrl}&zxy=${tileIdToZxy(e.tileId).join("/")}`}
+                      href={`/tile/${props.tilesetUrl}&zxy=${tileIdToZxy(e.tileId).join("/")}`}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -468,8 +468,9 @@ function PageArchive() {
   createEffect(() => {
     const t = tileset();
     if (t) {
+      const stateUrl = t.getStateUrl();
       location.hash = createHash(location.hash, {
-        url: t.getStateUrl() ? encodeURIComponent(t.getStateUrl()) : undefined,
+        url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
       });
     }
   });

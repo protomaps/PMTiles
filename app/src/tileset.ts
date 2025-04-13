@@ -24,6 +24,8 @@ export interface Tileset {
   isOverlay(): Promise<boolean>;
   isVector(): Promise<boolean>;
 
+  test(): Promise<void>;
+
   needsAddProtocol(): boolean;
 }
 
@@ -58,6 +60,10 @@ export class PMTilesTileset {
 
   async getHeader() {
     return await this.archive.getHeader();
+  }
+
+  async test() {
+    await this.archive.getHeader();
   }
 
   async getMetadata() {
@@ -127,6 +133,10 @@ class TileJSONTileset implements Tileset {
 
   needsAddProtocol() {
     return false;
+  }
+
+  async test() {
+    await fetch(this.url);
   }
 
   async getBounds() {

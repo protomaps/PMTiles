@@ -106,12 +106,11 @@ function ZoomableTile(props: {
   const [frozen, setFrozen] = createSignal<boolean>(false);
 
   onMount(() => {
-    const height = containerRef.clientHeight;
-    const width = containerRef.clientWidth;
-
     if (!containerRef) {
       return;
     }
+    const height = containerRef.clientHeight;
+    const width = containerRef.clientWidth;
 
     // const width = 800;
     // const height = 300;

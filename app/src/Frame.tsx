@@ -131,7 +131,7 @@ export function Frame(props: {
     const t = props.tileset();
     if (t) {
       try {
-        await t.getHeader();
+        await t.test();
       } catch (e) {
         if (e instanceof Error) {
           setErrorMessage(e.message); // TODO HTTP error codes

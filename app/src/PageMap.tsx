@@ -180,6 +180,12 @@ function MapView(props: {
       const tileX = Math.floor(result[0] / 256);
       const tileY = Math.floor(result[1] / 256);
 
+      const hashParams = [`zxy=${z}/${tileX}/${tileY}`];
+      const stateUrl = props.tileset.getStateUrl();
+      if (stateUrl) {
+        hashParams.push(`url=${stateUrl}`);
+      }
+
       if (hiddenRef) {
         hiddenRef.innerHTML = "";
         render(
@@ -190,7 +196,7 @@ function MapView(props: {
                 class="text-xs underline"
                 target="_blank"
                 rel="noreferrer"
-                href={`/tile/#zxy=${z}/${tileX}/${tileY}&url=${encodeURIComponent(props.tileset.getStateUrl())}`}
+                href={`/tile/#${hashParams.join("&")}`}
               >
                 Tile {z}/{tileX}/{tileY}
               </a>

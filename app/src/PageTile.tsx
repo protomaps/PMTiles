@@ -105,9 +105,9 @@ function ZoomableTile(props: {
   tileset: Tileset;
 }) {
   let containerRef: HTMLDivElement | undefined;
-  let svg: Selection<SVGSVGElement, undefined, null, undefined>;
-  let zoom: ZoomBehavior<Element, unknown>;
-  let view: Selection<SVGSVGElement, undefined, null, undefined>;
+  let svg: Selection<SVGSVGElement, unknown, null, undefined>;
+  let zoom: ZoomBehavior<SVGSVGElement, unknown>;
+  let view: Selection<SVGGElement, unknown, null, undefined>;
 
   const [layerVisibility, setLayerVisibility] = createSignal<LayerVisibility[]>(
     [],
@@ -146,7 +146,14 @@ function ZoomableTile(props: {
       .tickSize(width)
       .tickPadding(8 - width);
 
-    svg = create("svg").attr("width", width).attr("height", height);
+    svg = create("svg")
+      .attr("width", width)
+      .attr("height", height) as Selection<
+      SVGSVGElement,
+      unknown,
+      null,
+      undefined
+    >;
     view = svg.append("g");
     view
       .append("rect")
@@ -171,7 +178,7 @@ function ZoomableTile(props: {
       return (!event.ctrlKey || event.type === "wheel") && !event.button;
     }
 
-    zoom = d3zoom()
+    zoom = d3zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.01, 20])
       .translateExtent([
         [-1000, -1000],
@@ -192,7 +199,7 @@ function ZoomableTile(props: {
 
     const resizeObserver = new ResizeObserver(() => {
       svg.attr("width", containerRef.clientWidth);
-      svg.attr("height", containerRef.contentHeight);
+      svg.attr("height", containerRef.clientHeight);
     });
     resizeObserver.observe(containerRef);
 
@@ -201,10 +208,6 @@ function ZoomableTile(props: {
       containerRef.appendChild(node);
     }
   });
-
-  const reset = () => {
-    svg.transition().duration(750).call(zoom.transform, zoomIdentity);
-  };
 
   const [parsedTile] = createResource(async () => {
     const zxy = props.zxy;
@@ -320,10 +323,7 @@ function TileView(props: { tileset: Tileset }) {
       <Show when={zxy()} fallback={<span>fallback</span>}>
         {(z) => (
           <>
-            <div class="flex-none p-4">
-              {z().join(", ")}
-              <button type="button">reset</button>
-            </div>
+            <div class="flex-none p-4">{z().join(", ")}</div>
             <div class="flex flex-1 w-full h-full overflow-hidden">
               <ZoomableTile zxy={z()} tileset={props.tileset} />
             </div>

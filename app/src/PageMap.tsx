@@ -3,6 +3,7 @@ import { render } from "solid-js/web";
 import "./index.css";
 import {
   AttributionControl,
+  type MapGeoJSONFeature,
   Map as MaplibreMap,
   NavigationControl,
   Popup,
@@ -14,6 +15,7 @@ import {
   type Setter,
   Show,
   createEffect,
+  createMemo,
   createResource,
   createSignal,
   onMount,
@@ -77,6 +79,14 @@ function MapView(props: {
   const [layerVisibility, setLayerVisibility] = createSignal<LayerVisibility[]>(
     [],
   );
+  const [hoveredFeatures, setHoveredFeatures] = createSignal<
+    MapGeoJSONFeature[]
+  >([]);
+  const [frozen, setFrozen] = createSignal<boolean>(false);
+
+  const inspectableFeatures = createMemo(() => {
+    hoveredFeatures();
+  });
 
   const popup = new Popup({
     closeButton: false,
@@ -153,6 +163,10 @@ function MapView(props: {
       setZoom(e.target.getZoom());
     });
     map.on("mousemove", (e) => {
+      for (const hoveredFeature of hoveredFeatures()) {
+        map.setFeatureState(hoveredFeature, { hover: false });
+      }
+
       const { x, y } = e.point;
       const r = 2; // radius around the point
       let features = map.queryRenderedFeatures([
@@ -160,10 +174,14 @@ function MapView(props: {
         [x + r, y + r],
       ]);
       features = features.filter((feature) => feature.source === "tileset");
+
       for (const feature of features) {
         map.setFeatureState(feature, { hover: true });
       }
+
+      setHoveredFeatures(features);
     });
+
     map.on("click", async (e) => {
       console.log(showTileBoundaries(), inspectFeatures());
 
@@ -213,7 +231,12 @@ function MapView(props: {
             "source-layer": vectorLayer,
             paint: {
               "fill-color": colorForIdx(i),
-              "fill-opacity": 0.1,
+              "fill-opacity": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                0.25,
+                0.1,
+              ],
             },
             filter: ["==", ["geometry-type"], "Polygon"],
           });
@@ -224,20 +247,14 @@ function MapView(props: {
             "source-layer": vectorLayer,
             paint: {
               "line-color": colorForIdx(i),
-              "line-width": 0.5,
+              "line-width": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                2,
+                0.5,
+              ],
             },
             filter: ["==", ["geometry-type"], "LineString"],
-          });
-          map.addLayer({
-            id: `tileset_circle_outline_${vectorLayer}`,
-            type: "circle",
-            source: "tileset",
-            "source-layer": vectorLayer,
-            paint: {
-              "circle-color": colorForIdx(i),
-              "circle-radius": 3,
-            },
-            filter: ["==", ["geometry-type"], "Point"],
           });
           map.addLayer({
             id: `tileset_circle_${vectorLayer}`,
@@ -246,7 +263,12 @@ function MapView(props: {
             "source-layer": vectorLayer,
             paint: {
               "circle-color": colorForIdx(i),
-              "circle-radius": 2,
+              "circle-radius": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                5,
+                3,
+              ],
             },
             filter: ["==", ["geometry-type"], "Point"],
           });
@@ -302,7 +324,6 @@ function MapView(props: {
       const visibility = visible ? "visible" : "none";
       setVisibility(`tileset_fill_${id}`, visibility);
       setVisibility(`tileset_line_${id}`, visibility);
-      setVisibility(`tileset_circle_outline_${id}`, visibility);
       setVisibility(`tileset_circle_${id}`, visibility);
       setVisibility(`tileset_point_label_${id}`, visibility);
     }

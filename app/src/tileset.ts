@@ -18,6 +18,7 @@ export interface Tileset {
   getStateUrl(): string | undefined;
   getMaplibreSourceUrl(): string;
   getBounds(): Promise<[number, number, number, number]>;
+  getMaxZoom(): Promise<number>;
 
   getVectorLayers(): Promise<string[]>;
   isOverlay(): Promise<boolean>;
@@ -43,6 +44,11 @@ export class PMTilesTileset {
   async getBounds(): Promise<[number, number, number, number]> {
     const h = await this.getHeader();
     return [h.minLon, h.minLat, h.maxLon, h.maxLat];
+  }
+
+  async getMaxZoom(): Promise<number> {
+    const h = await this.getHeader();
+    return h.maxZoom;
   }
 
   async isVector() {
@@ -127,6 +133,12 @@ class TileJSONTileset implements Tileset {
     const resp = await fetch(this.url);
     const j = await resp.json();
     return j.bounds as [number, number, number, number];
+  }
+
+  async getMaxZoom() {
+    const resp = await fetch(this.url);
+    const j = await resp.json();
+    return j.maxzoom;
   }
 
   getMaplibreSourceUrl() {

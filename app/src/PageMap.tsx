@@ -23,7 +23,7 @@ import { layers, namedFlavor } from "@protomaps/basemaps";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
-import { FeaturePopup } from "./FeaturePopup";
+import { FeatureTable } from "./FeatureTable";
 import { ExampleChooser, Frame } from "./Frame";
 import { type LayerVisibility, LayersPanel } from "./LayersPanel";
 import {
@@ -49,7 +49,7 @@ const PopupContent = (props: {
 }) => {
   return (
     <div>
-      <FeaturePopup />
+      <FeatureTable />
       <a
         class="underline"
         target="_blank"
@@ -152,15 +152,29 @@ function MapView(props: {
     map.on("zoom", (e) => {
       setZoom(e.target.getZoom());
     });
-    map.on("click", (e) => {
+    map.on("mousemove", (e) => {
+      const { x, y } = e.point;
+      const r = 2; // radius around the point
+      let features = map.queryRenderedFeatures([
+        [x - r, y - r],
+        [x + r, y + r],
+      ]);
+      features = features.filter((feature) => feature.source === "tileset");
+      for (const feature of features) {
+        map.setFeatureState(feature, { hover: true });
+      }
+    });
+    map.on("click", async (e) => {
       console.log(showTileBoundaries(), inspectFeatures());
 
       if (!showTileBoundaries() && !inspectFeatures()) {
         return;
       }
 
+      const currentZoom = zoom();
       const sp = new SphericalMercator();
-      const z = Math.floor(zoom());
+      const maxZoom = await props.tileset.getMaxZoom();
+      const z = Math.min(maxZoom, Math.floor(currentZoom));
       const result = sp.px([e.lngLat.lng, e.lngLat.lat], z);
       const tileX = Math.floor(result[0] / 256);
       const tileY = Math.floor(result[1] / 256);
@@ -210,6 +224,7 @@ function MapView(props: {
             "source-layer": vectorLayer,
             paint: {
               "line-color": colorForIdx(i),
+              "line-width": 0.5,
             },
             filter: ["==", ["geometry-type"], "LineString"],
           });
@@ -277,30 +292,26 @@ function MapView(props: {
   };
 
   createEffect(() => {
-    console.log("lv", layerVisibility());
+    const setVisibility = (layerName: string, visibility: boolean) => {
+      if (map.getLayer(layerName)) {
+        map.setLayoutProperty(layerName, "visibility", visibility);
+      }
+    };
 
     for (const { id, visible } of layerVisibility()) {
       const visibility = visible ? "visible" : "none";
-      map.setLayoutProperty(`tileset_fill_${id}`, "visibility", visibility);
-      map.setLayoutProperty(`tileset_line_${id}`, "visibility", visibility);
-      map.setLayoutProperty(
-        `tileset_circle_outline_${id}`,
-        "visibility",
-        visibility,
-      );
-      map.setLayoutProperty(`tileset_circle_${id}`, "visibility", visibility);
-      map.setLayoutProperty(
-        `tileset_point_label_${id}`,
-        "visibility",
-        visibility,
-      );
+      setVisibility(`tileset_fill_${id}`, visibility);
+      setVisibility(`tileset_line_${id}`, visibility);
+      setVisibility(`tileset_circle_outline_${id}`, visibility);
+      setVisibility(`tileset_circle_${id}`, visibility);
+      setVisibility(`tileset_point_label_${id}`, visibility);
     }
   });
 
   return (
     <div class="flex w-full h-full">
       <div class="flex-1 flex flex-col">
-        <div class="flex-0 p-4 flex justify-between">
+        <div class="flex-none p-4 flex justify-between">
           <button
             class="px-4 bg-indigo-500 rounded"
             type="button"

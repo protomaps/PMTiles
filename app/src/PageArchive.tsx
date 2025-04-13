@@ -363,7 +363,7 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
       >
         <Show when={header()}>
           {(h) => (
-            <div class="flex-0">
+            <div class="flex-none">
               <table class="text-right table-auto border-separate border-spacing-1 p-4">
                 <thead>
                   <tr>

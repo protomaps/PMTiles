@@ -16,6 +16,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
+import { FeatureTable, type InspectableFeature } from "./FeatureTable";
 import { ExampleChooser, Frame } from "./Frame";
 import { LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
@@ -96,6 +97,11 @@ function ZoomableTile(props: {
   const [layerVisibility, setLayerVisibility] = createSignal<LayerVisibility[]>(
     [],
   );
+
+  const [inspectableFeature, setInspectableFeature] = createSignal<
+    InspectableFeature | undefined
+  >();
+  const [frozen, setFrozen] = createSignal<boolean>(false);
 
   onMount(() => {
     const height = containerRef.clientHeight;
@@ -227,13 +233,21 @@ function ZoomableTile(props: {
         .attr("stroke", (d) => (d.type === 2 ? d.color : "none"))
         .attr("strokeWidth", 1)
         .on("mouseover", function (_e, d) {
+          if (frozen()) return;
           if (d.type === 2) {
             select(this).attr("stroke", "white");
           } else {
             select(this).attr("fill", "white");
           }
+          setInspectableFeature({
+            layerName: d.layerName,
+            properties: d.properties,
+            type: d.type,
+            id: d.id,
+          });
         })
         .on("mouseout", function (_e, d) {
+          if (frozen()) return;
           if (d.type === 2) {
             select(this).attr("stroke", d.color);
           } else {
@@ -241,7 +255,7 @@ function ZoomableTile(props: {
           }
         })
         .on("mousedown", (_e, d) => {
-          console.log(d);
+          setFrozen(!frozen());
         });
     } else {
       const blob = new Blob([tile], { type: "image/webp" });
@@ -252,19 +266,31 @@ function ZoomableTile(props: {
   });
 
   return (
-    <div class="h-full w-full">
-      <button type="button" onClick={reset}>
-        reset
-      </button>
-      <div class="relative">
-        <div class="absolute top-2 right-2">
-          <LayersPanel
-            layerVisibility={layerVisibility}
-            setLayerVisibility={setLayerVisibility}
-            layerFeatureCounts={layerFeatureCounts(parsedTile())}
-          />
-        </div>
+    <div class="h-full w-full relative">
+      <div class="absolute top-2 right-2">
+        <LayersPanel
+          layerVisibility={layerVisibility}
+          setLayerVisibility={setLayerVisibility}
+          layerFeatureCounts={layerFeatureCounts(parsedTile())}
+        />
       </div>
+      <Show when={inspectableFeature()}>
+        <div class="absolute bottom-2 right-2">
+          <div
+            classList={{
+              "bg-white": true,
+              "dark:bg-gray-900": !frozen(),
+              "dark:bg-gray-800": frozen(),
+              rounded: true,
+              "p-4": true,
+              border: true,
+              "border-gray-700": true,
+            }}
+          >
+            <FeatureTable features={[inspectableFeature()]} />
+          </div>
+        </div>
+      </Show>
       <div ref={containerRef} class="h-full cursor-crosshair" />
     </div>
   );
@@ -281,8 +307,11 @@ function TileView(props: { tileset: Tileset }) {
       <Show when={zxy()} fallback={<span>fallback</span>}>
         {(z) => (
           <>
-            <div class="flex-0 p-4">{z().join(", ")}</div>
-            <div class="flex w-full h-full">
+            <div class="flex-none p-4">
+              {z().join(", ")}
+              <button type="button">reset</button>
+            </div>
+            <div class="flex flex-1 w-full h-full overflow-hidden">
               <ZoomableTile zxy={z()} tileset={props.tileset} />
             </div>
           </>

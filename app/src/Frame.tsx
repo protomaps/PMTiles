@@ -77,7 +77,6 @@ function LinkTab(props: {
   const fragment = createMemo(() => {
     const t = props.tileset();
     if (t) {
-      console.log(t.getStateUrl());
       return `#url=${t.getStateUrl()}`;
     }
     return "";
@@ -168,7 +167,7 @@ export function Frame(props: {
       ondragover={dragover}
       ondrop={drop}
     >
-      <div class="flex-0 flex items-center">
+      <div class="flex-none flex items-center">
         <div class="flex items-center flex-grow flex-1">
           <Switch>
             <Match when={props.page === "archive"}>

@@ -16,6 +16,20 @@
 	fill: red;
 }
 
+.inspectFeatures canvas {
+	cursor: crosshair;
+}
+
+.maplibregl-popup .maplibregl-popup-content {
+	pointer-events: none;
+}
+
+.frozen {
+	.maplibregl-popup .maplibregl-popup-content {
+		pointer-events: auto;
+	}
+}
+
 @media (prefers-color-scheme: dark) {
 	.maplibregl-ctrl.maplibregl-ctrl-group {
 		filter: invert(1);

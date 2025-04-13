@@ -369,7 +369,15 @@ function MapView(props: {
           </button>
         </div>
         <div class="relative flex-1 h-full">
-          <div ref={mapContainer} class="h-full flex-1" />
+          <div
+            ref={mapContainer}
+            classList={{
+              "h-full": true,
+              "flex-1": true,
+              inspectFeatures: inspectFeatures(),
+              frozen: frozen(),
+            }}
+          />
           <div class="hidden" ref={hiddenRef} />
           <div class="absolute right-2 top-2">
             <LayersPanel

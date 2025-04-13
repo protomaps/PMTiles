@@ -21,11 +21,7 @@ import {
   onMount,
 } from "solid-js";
 import { ExampleChooser, Frame } from "./Frame";
-import {
-  type PMTilesTileset,
-  type Tileset,
-  tilesetFromString,
-} from "./tileset";
+import { PMTilesTileset, type Tileset, tilesetFromString } from "./tileset";
 import { createHash, parseHash } from "./utils";
 
 function MapView(props: {
@@ -285,7 +281,7 @@ function DirectoryTable(props: {
                           ? "text-gray-800"
                           : "text-gray-300"
                       }
-                      href={`/tile/${props.tilesetUrl}&zxy=${tileIdToZxy(e.tileId).join("/")}`}
+                      href={`/tile/#url=${props.tilesetUrl}&zxy=${tileIdToZxy(e.tileId).join("/")}`}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -314,14 +310,21 @@ function DirectoryTable(props: {
   );
 }
 
-function ArchiveView(props: { tileset: PMTilesTileset }) {
-  const [header] = createResource(props.tileset, async (t) => {
+function ArchiveView(props: { genericTileset: Tileset }) {
+  const tileset = () => {
+    if (props.genericTileset instanceof PMTilesTileset) {
+      return props.genericTileset as PMTilesTileset;
+    }
+    throw "This isn't a PMTiles tileset";
+  };
+
+  const [header] = createResource(tileset(), async (t) => {
     return await t.archive.getHeader();
   });
 
   const [rootEntries] = createResource(header, async (h) => {
-    return await props.tileset.archive.cache.getDirectory(
-      props.tileset.archive.source,
+    return await tileset().archive.cache.getDirectory(
+      tileset().archive.source,
       h.rootDirectoryOffset,
       h.rootDirectoryLength,
       h,
@@ -341,8 +344,8 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
     const found = root.find((e) => e.tileId === o);
     if (!found) return;
 
-    return await props.tileset.archive.cache.getDirectory(
-      props.tileset.archive.source,
+    return await tileset().archive.cache.getDirectory(
+      tileset().archive.source,
       h.leafDirectoryOffset + found.offset,
       found.length,
       h,
@@ -401,7 +404,7 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
 
         <DirectoryTable
           entries={rootEntries() || []}
-          tilesetUrl={props.tileset.getStateUrl()}
+          tilesetUrl={props.genericTileset.getStateUrl()}
           setHoveredTile={setHoveredTile}
           setOpenedLeaf={setOpenedLeaf}
         />
@@ -412,7 +415,7 @@ function ArchiveView(props: { tileset: PMTilesTileset }) {
             <div class="w-full flex flex-1 overflow-hidden">
               <DirectoryTable
                 entries={l()}
-                tilesetUrl={props.tileset.getStateUrl()}
+                tilesetUrl={props.genericTileset.getStateUrl()}
                 setHoveredTile={setHoveredTile}
                 setOpenedLeaf={setOpenedLeaf}
               />
@@ -481,7 +484,7 @@ function PageArchive() {
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}
       >
-        {(t) => <ArchiveView tileset={t()} />}
+        {(t) => <ArchiveView genericTileset={t()} />}
       </Show>
     </Frame>
   );

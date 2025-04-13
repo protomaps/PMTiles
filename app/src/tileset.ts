@@ -32,8 +32,6 @@ export interface Tileset {
 export class PMTilesTileset {
   archive: PMTiles;
 
-  getStateUrl(): string | undefined;
-
   constructor(p: PMTiles) {
     this.archive = p;
   }

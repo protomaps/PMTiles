@@ -20,13 +20,22 @@ export const ExampleChooser = (props: {
     props.setTileset(tilesetFromString(url));
   };
 
+  const onChangeFileInput = (
+    event: Event & { currentTarget: HTMLInputElement },
+  ) => {
+    const file = event.currentTarget.files?.[0];
+    if (file) {
+      props.setTileset(tilesetFromFile(file));
+    }
+  };
+
   return (
     <div class="h-full flex items-center justify-center p-4">
       <div>
-        Load an example:
-        <div>
+        <div class="mb-2">Load an example:</div>
+        <div class="border border-gray-500 divide-y divide-gray-500">
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
             type="button"
             onClick={() => {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
@@ -39,7 +48,7 @@ export const ExampleChooser = (props: {
           </button>
 
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
             type="button"
             onClick={() => {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
@@ -49,7 +58,7 @@ export const ExampleChooser = (props: {
             <div class="text-xs text-gray-400">raster, aerial orthomosaic</div>
           </button>
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
             type="button"
             onClick={() => {
               loadSample(
@@ -64,8 +73,13 @@ export const ExampleChooser = (props: {
               vector, 2019 Mapzen Tiles (legacy)
             </div>
           </button>
+          <input
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
+            type="file"
+            onChange={onChangeFileInput}
+          />
         </div>
-        or drag and drop a local file here
+        <div>Or or drag and drop a local file here</div>
       </div>
     </div>
   );

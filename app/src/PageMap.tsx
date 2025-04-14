@@ -324,9 +324,9 @@ function MapView(props: {
   });
 
   return (
-    <div class="flex w-full h-full">
+    <div class="flex flex-col md:flex-row w-full h-full">
       <div class="flex-1 flex flex-col">
-        <div class="flex-none p-4 flex justify-between">
+        <div class="flex-none p-4 flex justify-between text-xs md:text-base">
           <button
             class="px-4 bg-indigo-500 rounded"
             type="button"
@@ -394,7 +394,7 @@ function MapView(props: {
         </div>
       </div>
       <Show when={props.showMetadata}>
-        <div class="w-1/2 p-4">
+        <div class="md:w-1/2 p-4">
           <JsonView tileset={props.tileset} />
         </div>
       </Show>

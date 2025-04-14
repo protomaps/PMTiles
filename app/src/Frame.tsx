@@ -173,7 +173,7 @@ export function Frame(props: {
       ondragover={dragover}
       ondrop={drop}
     >
-      <div class="flex-none flex items-center">
+      <div class="flex-none flex items-center px-4 md:px-0 pt-4 md:pt-0">
         <div class="flex items-center flex-grow flex-1">
           <Switch>
             <Match when={props.page === "archive"}>
@@ -188,7 +188,7 @@ export function Frame(props: {
           <form class="flex flex-1 items-center" onSubmit={loadTileset}>
             <span class="relative flex flex-1 items-center">
               <input
-                class="border mx-2 px-2 flex-1"
+                class="border px-2 flex-1"
                 type="text"
                 name="url"
                 placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}

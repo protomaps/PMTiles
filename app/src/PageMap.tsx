@@ -379,7 +379,7 @@ function MapView(props: {
             }}
           />
           <div class="hidden" ref={hiddenRef} />
-          <div class="absolute right-2 top-2">
+          <div class="absolute right-2 top-2 z-0">
             <LayersPanel
               layerVisibility={layerVisibility}
               setLayerVisibility={setLayerVisibility}
@@ -394,7 +394,7 @@ function MapView(props: {
         </div>
       </div>
       <Show when={props.showMetadata}>
-        <div class="md:w-1/2 p-4">
+        <div class="md:w-1/2 z-[999] bg-white dark:bg-gray-900 p-4">
           <JsonView tileset={props.tileset} />
         </div>
       </Show>

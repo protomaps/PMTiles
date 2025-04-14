@@ -206,7 +206,7 @@ export function Frame(props: {
               href="https://github.com/protomaps/PMTiles/issues/555"
               target="_blank"
               rel="noreferrer"
-              class="text-xs rounded bg-yellow-500 text-black mx-4 px-2"
+              class="hidden md:inline text-xs rounded bg-yellow-500 text-black mx-4 px-2"
             >
               beta feedback
             </a>
@@ -214,7 +214,7 @@ export function Frame(props: {
               href="https://github.com/protomaps/PMTiles"
               target="_blank"
               rel="noreferrer"
-              class="text-xs mx-4"
+              class="hidden md:inline text-xs mx-4"
             >
               @{GIT_SHA}
             </a>

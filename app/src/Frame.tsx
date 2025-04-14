@@ -26,30 +26,30 @@ export const ExampleChooser = (props: {
         Load an example:
         <div>
           <button
-            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full border border-gray-500"
             type="button"
             onClick={() => {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
             }}
           >
             <div>demo-bucket.protomaps.com/v4.pmtiles</div>
-            <div class="text-xs">
+            <div class="text-xs text-gray-400">
               vector, Protomaps daily build channel (OpenStreetMap data)
             </div>
           </button>
 
           <button
-            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full border border-gray-500"
             type="button"
             onClick={() => {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
             }}
           >
             <div>air.mtn.tw/flowers.pmtiles</div>
-            <div class="text-xs">raster, aerial orthomosaic</div>
+            <div class="text-xs text-gray-400">raster, aerial orthomosaic</div>
           </button>
           <button
-            class="block p-2 flex justify-start flex-col hover:bg-indigo-500 w-full border border-gray-500"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full border border-gray-500"
             type="button"
             onClick={() => {
               loadSample(
@@ -60,7 +60,7 @@ export const ExampleChooser = (props: {
             <div>
               r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles
             </div>
-            <div class="text-xs">vector, 2019 Mapzen Tiles (legacy)</div>
+            <div class="text-xs text-gray-400">vector, 2019 Mapzen Tiles (legacy)</div>
           </button>
         </div>
         or drag and drop a local file here

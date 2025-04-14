@@ -186,9 +186,9 @@ export function Frame(props: {
           </Switch>
           <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
           <form class="flex flex-1 items-center" onSubmit={loadTileset}>
-            <span class="relative flex flex-1 items-center">
+            <span class="relative flex flex-1 items-center border border-gray-600">
               <input
-                class="border px-2 flex-1"
+                class="px-2 flex-1"
                 type="text"
                 name="url"
                 placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}
@@ -197,7 +197,7 @@ export function Frame(props: {
               <Show when={props.tileset()}>
                 <button
                   type="button"
-                  class="absolute right-4 bg-indigo-800 rounded text-sm px-2 hover:bg-indigo-600 cursor-pointer"
+                  class="bg-indigo-800 mr-2 rounded text-sm px-2 hover:bg-indigo-600 cursor-pointer"
                   onClick={() => props.setTileset(undefined)}
                 >
                   clear

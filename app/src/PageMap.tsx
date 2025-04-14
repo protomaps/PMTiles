@@ -333,7 +333,7 @@ function MapView(props: {
           >
             fit to bounds
           </button>
-          <span class="border rounded px-2 flex items-center">
+          <span class="border border-gray-600 rounded px-2 flex items-center">
             <input
               class="mr-1"
               id="inspectFeatures"
@@ -345,7 +345,7 @@ function MapView(props: {
             />
             <label for="inspectFeatures">Inspect features</label>
           </span>
-          <span class="border rounded px-2 flex items-center">
+          <span class="border border-gray-600 rounded px-2 flex items-center">
             <input
               class="mr-1"
               id="showTileBoundaries"
@@ -355,7 +355,7 @@ function MapView(props: {
                 setShowTileBoundaries(!showTileBoundaries());
               }}
             />
-            <label for="showTileBoundaries">Show tile boundaries</label>
+            <label for="showTileBoundaries">Show tile bounds</label>
           </span>
           <button
             class="px-4 rounded bg-indigo-500"
@@ -364,7 +364,7 @@ function MapView(props: {
             }}
             type="button"
           >
-            toggle metadata
+            view metadata
           </button>
         </div>
         <div class="relative flex-1 h-full">

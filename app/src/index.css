@@ -28,9 +28,10 @@
 	}
 	details.maplibregl-ctrl.maplibregl-ctrl-attrib {
 		background-color: black;
+		color: #999;
 	}
 	details.maplibregl-ctrl.maplibregl-ctrl-attrib a {
-		color: white;
+		color: #999;
 	}
 
 	div.maplibregl-popup-content {

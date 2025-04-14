@@ -482,7 +482,7 @@ function PageArchive() {
   });
 
   return (
-    <Frame tileset={tileset} setTileset={setTileset} page="archive">
+    <Frame tileset={tileset} setTileset={setTileset} page="archive" pmtilesOnly>
       <Show
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}

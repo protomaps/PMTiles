@@ -108,6 +108,7 @@ export function Frame(props: {
   setTileset: Setter<Tileset | undefined>;
   children: JSX.Element;
   page: string;
+  pmtilesOnly?: boolean;
 }) {
   const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
   const [activeDrag, setActiveDrag] = createSignal<boolean>(false);
@@ -190,7 +191,7 @@ export function Frame(props: {
                 class="border mx-2 px-2 flex-1"
                 type="text"
                 name="url"
-                placeholder="TileJSON or .pmtiles"
+                placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}
                 value={props.tileset()?.getStateUrl() || ""}
               />
               <Show when={props.tileset()}>

@@ -476,12 +476,10 @@ function PageArchive() {
 
   createEffect(() => {
     const t = tileset();
-    if (t) {
-      const stateUrl = t.getStateUrl();
-      location.hash = createHash(location.hash, {
-        url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
-      });
-    }
+    const stateUrl = t?.getStateUrl();
+    location.hash = createHash(location.hash, {
+      url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
+    });
   });
 
   return (

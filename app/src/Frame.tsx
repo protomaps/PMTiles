@@ -60,7 +60,9 @@ export const ExampleChooser = (props: {
             <div>
               r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles
             </div>
-            <div class="text-xs text-gray-400">vector, 2019 Mapzen Tiles (legacy)</div>
+            <div class="text-xs text-gray-400">
+              vector, 2019 Mapzen Tiles (legacy)
+            </div>
           </button>
         </div>
         or drag and drop a local file here

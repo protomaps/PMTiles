@@ -213,7 +213,7 @@ function ZoomableTile(props: {
     const tileset = props.tileset;
     if (await tileset.isVector()) {
       const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
-      if (!data) return; // TODO show error
+      if (!data) return;
       const vectorLayers = await props.tileset.getVectorLayers();
       return parseTile(data, vectorLayers);
     }

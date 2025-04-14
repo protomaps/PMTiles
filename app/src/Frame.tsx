@@ -154,7 +154,7 @@ export function Frame(props: {
         await t.test();
       } catch (e) {
         if (e instanceof Error) {
-          setErrorMessage(e.message); // TODO HTTP error codes
+          setErrorMessage(e.message);
         }
       }
     }

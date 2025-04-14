@@ -57,7 +57,7 @@ export function LayersPanel(props: {
   });
 
   return (
-    <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-4 border border-gray-700">
+    <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-2 md:p-4 border border-gray-700">
       <input
         type="checkbox"
         id="checkall"

@@ -197,14 +197,17 @@ export function Frame(props: {
               <Show when={props.tileset()}>
                 <button
                   type="button"
-                  class="absolute right-4 bg-indigo-800 rounded text-sm px-2"
+                  class="absolute right-4 bg-indigo-800 rounded text-sm px-2 hover:bg-indigo-600 cursor-pointer"
                   onClick={() => props.setTileset(undefined)}
                 >
                   clear
                 </button>
               </Show>
             </span>
-            <button class="px-4 ml-2 bg-indigo-500 rounded" type="submit">
+            <button
+              class="px-4 ml-2 bg-indigo-500 rounded hover:bg-indigo-300 cursor-pointer"
+              type="submit"
+            >
               load
             </button>
             <a

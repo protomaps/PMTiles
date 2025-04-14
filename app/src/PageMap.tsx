@@ -325,7 +325,7 @@ function MapView(props: {
   return (
     <div class="flex flex-col md:flex-row w-full h-full">
       <div class="flex-1 flex flex-col">
-        <div class="flex-none p-4 flex justify-between text-xs md:text-base space-x-4">
+        <div class="flex-none p-4 flex justify-between text-xs md:text-base space-x-2">
           <button
             class="px-4 bg-indigo-500 rounded"
             type="button"

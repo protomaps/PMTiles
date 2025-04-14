@@ -20,7 +20,6 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";

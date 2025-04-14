@@ -10,7 +10,6 @@ import {
   setRTLTextPlugin,
 } from "maplibre-gl";
 import { type Entry, tileIdToZxy } from "pmtiles";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import {
   For,

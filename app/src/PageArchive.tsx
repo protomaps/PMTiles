@@ -1,6 +1,6 @@
 /* @refresh reload */
-import { render } from "solid-js/web";
 import "./index.css";
+import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 import {
   AttributionControl,
@@ -10,7 +10,6 @@ import {
   setRTLTextPlugin,
 } from "maplibre-gl";
 import { type Entry, tileIdToZxy } from "pmtiles";
-import { SphericalMercator } from "@mapbox/sphericalmercator";
 import {
   For,
   type Setter,
@@ -20,6 +19,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
+import { render } from "solid-js/web";
 import { ExampleChooser, Frame } from "./Frame";
 import { PMTilesTileset, type Tileset, tilesetFromString } from "./tileset";
 import { createHash, parseHash, tileInspectUrl } from "./utils";

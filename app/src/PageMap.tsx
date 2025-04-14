@@ -1,6 +1,6 @@
 /* @refresh reload */
-import { render } from "solid-js/web";
 import "./index.css";
+import { layers, namedFlavor } from "@protomaps/basemaps";
 import {
   AttributionControl,
   type MapGeoJSONFeature,
@@ -20,7 +20,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import { layers, namedFlavor } from "@protomaps/basemaps";
+import { render } from "solid-js/web";
 import "@alenaksu/json-viewer";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { Protocol } from "pmtiles";
@@ -410,7 +410,23 @@ const JsonView = (props: { tileset: Tileset }) => {
 };
 
 function PageMap() {
-  const hash = parseHash(location.hash);
+  let hash = parseHash(location.hash);
+
+  // the previous version of the PMTiles viewer
+  // used query params ?url= instead of #url=
+  // this makes it backward compatible so old-style links still work.
+  const href = new URL(window.location.href);
+  const queryParamUrl = href.searchParams.get("url");
+  if (queryParamUrl) {
+    href.searchParams.delete("url");
+    history.pushState(null, "", href.toString());
+    location.hash = createHash(location.hash, {
+      url: queryParamUrl,
+      map: hash.map,
+    });
+    hash = parseHash(location.hash);
+  }
+
   const mapHashPassed = hash.map !== undefined;
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,

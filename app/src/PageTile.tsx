@@ -1,7 +1,5 @@
 /* @refresh reload */
-import { render } from "solid-js/web";
 import "./index.css";
-
 import { VectorTile } from "@mapbox/vector-tile";
 import { axisBottom, axisRight } from "d3-axis";
 import { path } from "d3-path";
@@ -21,6 +19,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
+import { render } from "solid-js/web";
 import { FeatureTable, type InspectableFeature } from "./FeatureTable";
 import { ExampleChooser, Frame } from "./Frame";
 import { type LayerVisibility, LayersPanel } from "./LayersPanel";

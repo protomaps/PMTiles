@@ -5,6 +5,7 @@ import {
   Show,
   createEffect,
   createMemo,
+  createSignal,
 } from "solid-js";
 import { colorForIdx } from "./utils";
 
@@ -19,6 +20,7 @@ export function LayersPanel(props: {
   layerFeatureCounts?: Record<string, number>;
 }) {
   let checkallRef: HTMLInputElement | undefined;
+  const [expanded, setExpanded] = createSignal<boolean>(true);
 
   const onChange = (id: string) => {
     const newLayerVisibility = props
@@ -57,41 +59,61 @@ export function LayersPanel(props: {
   });
 
   return (
-    <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-2 md:p-4 border border-gray-700">
-      <input
-        type="checkbox"
-        id="checkall"
-        ref={checkallRef}
-        checked={allChecked()}
-        onChange={toggleAll}
-      />
-      <label class="ml-2 text-sm" for="checkall">
-        All Layers
-      </label>
-      <For each={props.layerVisibility()}>
-        {(l, i) => (
-          <div class="ml-2">
-            <input
-              type="checkbox"
-              id={`check_${l.id}`}
-              checked={l.visible}
-              onChange={() => onChange(l.id)}
-            />
-            <label class="ml-2 text-sm" for={`check_${l.id}`}>
-              <span
-                class="inline-block mr-2 w-[10px] h-[10px]"
-                style={{ "background-color": colorForIdx(i()) }}
-              />
-              {l.id}
-              <Show when={props.layerFeatureCounts}>
-                {(layerFeatureCounts) => (
-                  <span class="ml-1">({layerFeatureCounts()[l.id] || 0})</span>
-                )}
-              </Show>
-            </label>
-          </div>
-        )}
-      </For>
+    <div class="bg-white dark:bg-gray-900 dark:text-white rounded border border-gray-700 flex flex-col">
+      <button
+        type="button"
+        classList={{
+          "bg-gray-800": true,
+          "rounded-t": expanded(),
+          rounded: !expanded(),
+          "hover:bg-gray-600": true,
+          "cursor-pointer": true,
+          "min-w-8": true,
+        }}
+        onClick={() => setExpanded(!expanded())}
+      >
+        {expanded() ? "-" : "+"}
+      </button>
+      <Show when={expanded()}>
+        <div class="px-2 md:px-4 pb-2 md:pb-4">
+          <input
+            type="checkbox"
+            id="checkall"
+            ref={checkallRef}
+            checked={allChecked()}
+            onChange={toggleAll}
+          />
+          <label class="ml-2 text-sm" for="checkall">
+            All Layers
+          </label>
+          <For each={props.layerVisibility()}>
+            {(l, i) => (
+              <div class="ml-2">
+                <input
+                  type="checkbox"
+                  id={`check_${l.id}`}
+                  checked={l.visible}
+                  onChange={() => onChange(l.id)}
+                />
+                <label class="ml-2 text-sm" for={`check_${l.id}`}>
+                  <span
+                    class="inline-block mr-2 w-[10px] h-[10px]"
+                    style={{ "background-color": colorForIdx(i()) }}
+                  />
+                  {l.id}
+                  <Show when={props.layerFeatureCounts}>
+                    {(layerFeatureCounts) => (
+                      <span class="ml-1">
+                        ({layerFeatureCounts()[l.id] || 0})
+                      </span>
+                    )}
+                  </Show>
+                </label>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
     </div>
   );
 }

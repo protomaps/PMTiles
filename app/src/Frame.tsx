@@ -21,7 +21,7 @@ export const ExampleChooser = (props: {
   };
 
   return (
-    <div class="h-full flex items-center justify-center">
+    <div class="h-full flex items-center justify-center p-4">
       <div>
         Load an example:
         <div>

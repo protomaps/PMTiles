@@ -7,14 +7,6 @@
 	stroke-opacity: 0.3;
 	shape-rendering: crispEdges;
 }
-.view {
-	fill: none;
-	stroke: #000;
-}
-
-.rect {
-	fill: red;
-}
 
 .inspectFeatures:not(.frozen) canvas {
 	cursor: crosshair;

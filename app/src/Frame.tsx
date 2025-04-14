@@ -32,7 +32,7 @@ export const ExampleChooser = (props: {
   return (
     <div class="h-full flex items-center justify-center p-4">
       <div>
-        <div class="mb-2">Load an example:</div>
+        <div class="mb-2">Load a file:</div>
         <div class="border border-gray-500 divide-y divide-gray-500">
           <button
             class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
@@ -43,7 +43,7 @@ export const ExampleChooser = (props: {
           >
             <div>demo-bucket.protomaps.com/v4.pmtiles</div>
             <div class="text-xs text-gray-400">
-              vector, Protomaps daily build channel (OpenStreetMap data)
+              vector basemap, Protomaps daily build channel (OpenStreetMap data)
             </div>
           </button>
 
@@ -55,7 +55,9 @@ export const ExampleChooser = (props: {
             }}
           >
             <div>air.mtn.tw/flowers.pmtiles</div>
-            <div class="text-xs text-gray-400">raster, aerial orthomosaic</div>
+            <div class="text-xs text-gray-400">
+              raster overlay, aerial orthomosaic
+            </div>
           </button>
           <button
             class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
@@ -70,7 +72,7 @@ export const ExampleChooser = (props: {
               r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles
             </div>
             <div class="text-xs text-gray-400">
-              vector, 2019 Mapzen Tiles (legacy)
+              vector basemap, 2019 Mapzen Tiles (legacy)
             </div>
           </button>
           <input
@@ -79,7 +81,7 @@ export const ExampleChooser = (props: {
             onChange={onChangeFileInput}
           />
         </div>
-        <div>Or or drag and drop a local file here</div>
+        <div class="mt-2">Or drag and drop a local file</div>
       </div>
     </div>
   );

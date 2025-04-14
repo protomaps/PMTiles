@@ -9,12 +9,7 @@ import {
   getRTLTextPluginStatus,
   setRTLTextPlugin,
 } from "maplibre-gl";
-import {
-  Compression,
-  type Entry,
-  tileIdToZxy,
-  tileTypeExt,
-} from "pmtiles";
+import { Compression, type Entry, tileIdToZxy, tileTypeExt } from "pmtiles";
 import {
   For,
   type Setter,
@@ -457,7 +452,10 @@ function ArchiveView(props: { genericTileset: Tileset }) {
               <div>total addressed tiles: {h().numAddressedTiles}</div>
               <div>total tile entries: {h().numTileEntries}</div>
               <div>total contents: {h().numTileContents}</div>
-              <div>internal compression: {compressionToString(h().internalCompression)}</div>
+              <div>
+                internal compression:{" "}
+                {compressionToString(h().internalCompression)}
+              </div>
               <div>
                 tile compression: {compressionToString(h().tileCompression)}
               </div>

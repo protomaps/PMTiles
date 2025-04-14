@@ -91,6 +91,8 @@ function LinkTab(props: {
         "bg-gray-500": props.lighter,
         "py-2": true,
         "px-4": true,
+        "hidden": true,
+        "md:inline": true
       }}
       href={`/${props.page === "map" ? "" : `${props.page}/`}${fragment()}`}
     >

@@ -103,8 +103,6 @@ function MapView(props: {
       flavor = "black";
     }
 
-    // const isOverlay = await props.tileset.isOverlay();
-
     map = new MaplibreMap({
       hash: "map",
       container: mapContainer,
@@ -125,7 +123,7 @@ function MapView(props: {
               "Background © <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
           },
         },
-        layers: layers("basemap", namedFlavor(flavor), { lang: "en" }),
+        layers: [],
       },
     });
 
@@ -209,6 +207,14 @@ function MapView(props: {
     });
 
     map.on("load", async () => {
+      if (await props.tileset.isOverlay()) {
+        for (const l of layers("basemap", namedFlavor(flavor), {
+          lang: "en",
+        })) {
+          map.addLayer(l);
+        }
+      }
+
       if (await props.tileset.isVector()) {
         map.addSource("tileset", {
           type: "vector",

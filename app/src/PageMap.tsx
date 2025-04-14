@@ -131,6 +131,17 @@ function MapView(props: {
       map.showTileBoundaries = showTileBoundaries();
     });
 
+    createEffect(() => {
+      if (inspectFeatures()) {
+        setFrozen(false);
+      } else {
+        for (const hoveredFeature of hoveredFeatures()) {
+          map.setFeatureState(hoveredFeature, { hover: false });
+        }
+        popup.remove();
+      }
+    });
+
     map.addControl(new NavigationControl({}), "top-left");
     map.addControl(new AttributionControl({ compact: false }), "bottom-right");
 
@@ -181,7 +192,7 @@ function MapView(props: {
             <div>
               <FeatureTable features={inspectableFeatures()} />
               <a
-                class="text-xs underline"
+                class="block text-xs w-full bg-gray-800 hover:bg-gray-600 mt-2 text-center"
                 target="_blank"
                 rel="noreferrer"
                 href={tileInspectUrl(props.tileset.getStateUrl(), [
@@ -333,7 +344,7 @@ function MapView(props: {
       <div class="flex-1 flex flex-col">
         <div class="flex-none p-4 flex justify-between text-xs md:text-base space-x-2">
           <button
-            class="px-4 bg-indigo-500 rounded"
+            class="px-4 bg-indigo-500 rounded cursor-pointer hover:bg-indigo-400"
             type="button"
             onClick={fitToBounds}
           >
@@ -364,7 +375,7 @@ function MapView(props: {
             <label for="showTileBoundaries">Show tile bounds</label>
           </span>
           <button
-            class="px-4 rounded bg-indigo-500"
+            class="px-4 rounded bg-indigo-500 hover:bg-indigo-400 cursor-pointer"
             onClick={() => {
               props.setShowMetadata(!props.showMetadata);
             }}

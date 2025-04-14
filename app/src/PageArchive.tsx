@@ -9,7 +9,12 @@ import {
   getRTLTextPluginStatus,
   setRTLTextPlugin,
 } from "maplibre-gl";
-import { type Entry, tileIdToZxy } from "pmtiles";
+import {
+  Compression,
+  type Entry,
+  tileIdToZxy,
+  tileTypeExt,
+} from "pmtiles";
 import {
   For,
   type Setter,
@@ -23,6 +28,15 @@ import { render } from "solid-js/web";
 import { ExampleChooser, Frame } from "./Frame";
 import { PMTilesTileset, type Tileset, tilesetFromString } from "./tileset";
 import { createHash, parseHash, tileInspectUrl } from "./utils";
+
+const compressionToString = (t: Compression) => {
+  if (t === Compression.Unknown) return "unknown";
+  if (t === Compression.None) return "none";
+  if (t === Compression.Gzip) return "gzip";
+  if (t === Compression.Brotli) return "brotli";
+  if (t === Compression.Zstd) return "zstd";
+  return "out of spec";
+};
 
 function MapView(props: {
   entries: Entry[] | undefined;
@@ -438,14 +452,16 @@ function ArchiveView(props: { genericTileset: Tileset }) {
       >
         <Show when={header()}>
           {(h) => (
-            <>
+            <div class="p-2">
               <div>clustered: {h().clustered ? "true" : "false"}</div>
               <div>total addressed tiles: {h().numAddressedTiles}</div>
               <div>total tile entries: {h().numTileEntries}</div>
               <div>total contents: {h().numTileContents}</div>
-              <div>internal compression: {h().internalCompression}</div>
-              <div>tile compression: {h().tileCompression}</div>
-              <div>tile type: {h().tileType}</div>
+              <div>internal compression: {compressionToString(h().internalCompression)}</div>
+              <div>
+                tile compression: {compressionToString(h().tileCompression)}
+              </div>
+              <div>tile type: {tileTypeExt(h().tileType)}</div>
               <div>min zoom: {h().minZoom}</div>
               <div>max zoom: {h().maxZoom}</div>
               <div>center zoom: {h().centerZoom}</div>
@@ -455,7 +471,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
               <div>
                 center: {h().centerLon} {h().centerLat}
               </div>
-            </>
+            </div>
           )}
         </Show>
         <MapView

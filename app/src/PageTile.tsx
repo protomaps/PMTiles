@@ -57,7 +57,7 @@ function parseTile(data: ArrayBuffer, vectorLayers: string[]): Layer[] {
       if (feature.type === 1) {
         for (const ring of geom) {
           for (const pt of ring) {
-            p.rect(pt.x - 4, pt.y - 4, 8, 8);
+            p.rect(pt.x - 15, pt.y - 15, 30, 30);
           }
         }
       } else {
@@ -242,9 +242,9 @@ function ZoomableTile(props: {
         .join("path")
         .attr("d", (f) => f.path)
         .style("opacity", 0.3)
-        .attr("fill", (d) => (d.type === 3 ? d.color : "none"))
+        .attr("fill", (d) => (d.type === 3 || d.type === 1 ? d.color : "none"))
         .attr("stroke", (d) => (d.type === 2 ? d.color : "none"))
-        .attr("strokeWidth", 1)
+        .attr("stroke-width", 10)
         .on("mouseover", function (_e, d) {
           if (frozen()) return;
           if (d.type === 2) {

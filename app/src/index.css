@@ -38,11 +38,23 @@
 		background-color: black;
 	}
 
-	div.maplibregl-popup-anchor-bottom div.maplibregl-popup-tip {
+	div.maplibregl-popup-anchor-right div.maplibregl-popup-tip {
+		border-left-color: black;
+	}
+
+	div.maplibregl-popup-anchor-left div.maplibregl-popup-tip {
+		border-right-color: black;
+	}
+
+	div.maplibregl-popup-anchor-bottom div.maplibregl-popup-tip,
+	div.maplibregl-popup-anchor-bottom-right div.maplibregl-popup-tip,
+	div.maplibregl-popup-anchor-bottom-left div.maplibregl-popup-tip {
 		border-top-color: black;
 	}
 
-	div.maplibregl-popup-anchor-top div.maplibregl-popup-tip {
+	div.maplibregl-popup-anchor-top div.maplibregl-popup-tip,
+	div.maplibregl-popup-anchor-top-right div.maplibregl-popup-tip,
+	div.maplibregl-popup-anchor-top-left div.maplibregl-popup-tip {
 		border-bottom-color: black;
 	}
 }

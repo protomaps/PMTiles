@@ -59,11 +59,11 @@ export function LayersPanel(props: {
   });
 
   return (
-    <div class="bg-white dark:bg-gray-900 dark:text-white rounded border border-gray-700 flex flex-col">
+    <div class="bg-white dark:bg-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 flex flex-col">
       <button
         type="button"
         classList={{
-          "bg-gray-800": true,
+          "dark:bg-gray-800": true,
           "rounded-t": expanded(),
           rounded: !expanded(),
           "hover:bg-gray-600": true,

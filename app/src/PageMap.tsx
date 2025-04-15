@@ -1,4 +1,5 @@
 /* @refresh reload */
+import "maplibre-gl/dist/maplibre-gl.css";
 import "./index.css";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 import {
@@ -309,6 +310,7 @@ function MapView(props: {
           type: "raster",
         });
       }
+      map.resize();
     });
   });
 

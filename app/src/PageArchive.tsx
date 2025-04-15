@@ -1,4 +1,5 @@
 /* @refresh reload */
+import "maplibre-gl/dist/maplibre-gl.css";
 import "./index.css";
 import { SphericalMercator } from "@mapbox/sphericalmercator";
 import { layers, namedFlavor } from "@protomaps/basemaps";
@@ -211,6 +212,7 @@ function MapView(props: {
       map.setProjection({
         type: "globe",
       });
+      map.resize();
     });
   });
 

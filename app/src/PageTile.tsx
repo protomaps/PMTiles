@@ -319,7 +319,7 @@ function TileView(props: { tileset: Tileset }) {
 
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
-      <Show when={zxy()} fallback={<span>fallback</span>}>
+      <Show when={zxy()}>
         {(z) => (
           <>
             <div class="flex-none p-4">{z().join(", ")}</div>

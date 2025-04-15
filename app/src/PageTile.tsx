@@ -221,8 +221,10 @@ function ZoomableTile(props: {
   });
 
   onMount(async () => {
-    const vectorLayers = await props.tileset.getVectorLayers();
-    setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
+    if (await props.tileset.isVector()) {
+      const vectorLayers = await props.tileset.getVectorLayers();
+      setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
+    }
   });
 
   createEffect(async () => {

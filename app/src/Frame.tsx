@@ -41,7 +41,7 @@ export const ExampleChooser = (props: {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
             }}
           >
-            <div>demo-bucket.protomaps.com/v4.pmtiles</div>
+            <div>v4.pmtiles</div>
             <div class="text-xs text-gray-400">
               vector basemap, Protomaps daily build channel (OpenStreetMap data)
             </div>
@@ -54,7 +54,7 @@ export const ExampleChooser = (props: {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
             }}
           >
-            <div>air.mtn.tw/flowers.pmtiles</div>
+            <div>flowers.pmtiles</div>
             <div class="text-xs text-gray-400">
               raster overlay, aerial orthomosaic
             </div>
@@ -68,9 +68,7 @@ export const ExampleChooser = (props: {
               );
             }}
           >
-            <div>
-              r2-public.protomaps.com/protomaps-sample-datasets/tilezen.pmtiles
-            </div>
+            <div>tilezen.pmtiles</div>
             <div class="text-xs text-gray-400">
               vector basemap, 2019 Mapzen Tiles (legacy)
             </div>

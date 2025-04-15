@@ -22,7 +22,7 @@ import {
 import { render } from "solid-js/web";
 import { ExampleChooser, Frame } from "./Frame";
 import { PMTilesTileset, type Tileset, tilesetFromString } from "./tileset";
-import { createHash, parseHash, tileInspectUrl } from "./utils";
+import { createHash, formatBytes, parseHash, tileInspectUrl } from "./utils";
 
 const compressionToString = (t: Compression) => {
   if (t === Compression.Unknown) return "unknown";
@@ -179,8 +179,9 @@ function MapView(props: {
             source: "archive",
             type: "line",
             paint: {
-              "line-color": "yellow",
-              "line-opacity": 0.5,
+              "line-color": "#3131DC",
+              "line-opacity": 0.8,
+              "line-width": 2,
             },
           },
           {
@@ -188,7 +189,8 @@ function MapView(props: {
             source: "runs",
             type: "line",
             paint: {
-              "line-color": "yellow",
+              "line-color": "#ffffff",
+              "line-opacity": 0.3,
             },
           },
           {
@@ -391,24 +393,24 @@ function ArchiveView(props: { genericTileset: Tileset }) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Root</td>
+                    <td>Root Dir</td>
                     <td>{h().rootDirectoryOffset}</td>
-                    <td>{h().rootDirectoryLength}</td>
+                    <td>{formatBytes(h().rootDirectoryLength)}</td>
                   </tr>
                   <tr>
                     <td>Metadata</td>
                     <td>{h().jsonMetadataOffset}</td>
-                    <td>{h().jsonMetadataLength}</td>
+                    <td>{formatBytes(h().jsonMetadataLength)}</td>
                   </tr>
                   <tr>
-                    <td>Leaves</td>
+                    <td>Leaf Dirs</td>
                     <td>{h().leafDirectoryOffset}</td>
-                    <td>{h().leafDirectoryLength}</td>
+                    <td>{formatBytes(h().leafDirectoryLength || 0)}</td>
                   </tr>
                   <tr>
                     <td>Tile Data</td>
                     <td>{h().tileDataOffset}</td>
-                    <td>{h().tileDataLength}</td>
+                    <td>{formatBytes(h().tileDataLength || 0)}</td>
                   </tr>
                 </tbody>
               </table>

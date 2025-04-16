@@ -1,10 +1,8 @@
 import {
   type Accessor,
   type JSX,
-  Match,
   type Setter,
   Show,
-  Switch,
   createEffect,
   createMemo,
   createSignal,
@@ -88,7 +86,7 @@ export const ExampleChooser = (props: {
 function LinkTab(props: {
   page: string;
   tileset: Accessor<Tileset | undefined>;
-  lighter?: boolean;
+  selected: boolean;
 }) {
   const fragment = createMemo(() => {
     const t = props.tileset();
@@ -103,12 +101,12 @@ function LinkTab(props: {
     <a
       classList={{
         "hover:bg-gray-400": true,
-        "bg-gray-700": !props.lighter,
-        "bg-gray-500": props.lighter,
+        "bg-gray-900": props.selected,
+        "bg-gray-700": !props.selected,
         "py-2": true,
         "px-4": true,
-        hidden: true,
-        "md:inline": true,
+        underline: !props.selected,
+        "text-gray-300": !props.selected,
       }}
       href={`/${props.page === "map" ? "" : `${props.page}/`}${fragment()}`}
     >
@@ -187,17 +185,8 @@ export function Frame(props: {
       ondragover={dragover}
       ondrop={drop}
     >
-      <div class="flex-none flex items-center px-4 md:px-0 pt-4 md:pt-0">
+      <div class="flex-none flex items-center px-4 md:px-0 pt-4 md:pt-0 flex-col md:flex-row">
         <div class="flex items-center flex-grow flex-1">
-          <Switch>
-            <Match when={props.page === "archive"}>
-              <LinkTab page="map" tileset={props.tileset} />
-            </Match>
-            <Match when={props.page === "tile"}>
-              <LinkTab page="map" tileset={props.tileset} lighter={true} />
-              <LinkTab page="archive" tileset={props.tileset} />
-            </Match>
-          </Switch>
           <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
           <form class="flex flex-1 items-center" onSubmit={loadTileset}>
             <span class="relative flex flex-1 items-center border border-gray-600">
@@ -242,15 +231,23 @@ export function Frame(props: {
             </a>
           </form>
         </div>
-        <Switch>
-          <Match when={props.page === "map"}>
-            <LinkTab page="archive" tileset={props.tileset} />
-            <LinkTab page="tile" tileset={props.tileset} lighter={true} />
-          </Match>
-          <Match when={props.page === "archive"}>
-            <LinkTab page="tile" tileset={props.tileset} />
-          </Match>
-        </Switch>
+        <div class="flex">
+          <LinkTab
+            page="map"
+            selected={props.page === "map"}
+            tileset={props.tileset}
+          />
+          <LinkTab
+            page="archive"
+            selected={props.page === "archive"}
+            tileset={props.tileset}
+          />
+          <LinkTab
+            page="tile"
+            selected={props.page === "tile"}
+            tileset={props.tileset}
+          />
+        </div>
       </div>
       <Show when={errorMessage()}>
         <div class="bg-red-900 px-2 py-3 flex justify-between">

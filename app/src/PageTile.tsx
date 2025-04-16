@@ -329,114 +329,127 @@ function TileView(props: { tileset: Tileset }) {
     if (z === 0) setZxy([current[0], current[1] + x, current[2] + y]);
     if (z === 1)
       setZxy([current[0] + 1, current[1] * 2 + x, current[2] * 2 + y]);
-    if (z === -1) setZxy([current[0] - 1, current[1] / 2, current[2] / 2]);
+    if (z === -1)
+      setZxy([
+        current[0] - 1,
+        Math.floor(current[1] / 2),
+        Math.floor(current[2] / 2),
+      ]);
   };
 
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
-      <div class="p-2 space-x-2 flex">
-        z<input class="border" />x<input class="border" />y
-        <input class="border" />
-        <span class="relative">
-          <button
-            type="button"
-            class="rounded bg-gray-600 px-4"
-            onClick={() => setSiblingsOpen(!siblingsOpen())}
-          >
-            siblings
-          </button>
-          <Show when={siblingsOpen()}>
-            <div class="absolute top-8 left-0 z-[999] w-full flex justify-center">
-              <div class="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
-                <button
-                  type="button"
-                  onClick={() => navigate(0, -1, -1)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, 0, -1)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, 1, -1)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, -1, 0)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <div />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, 1, 0)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, -1, -1)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, 0, 1)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(0, 1, 1)}
-                  class="border border-white hover:bg-gray-500 cursor-pointer"
-                />
+      <div class="p-2 space-x-2 flex flex-col md:flex-row">
+        <div class="flex flex-row text-gray-300 space-x-4">
+          <label for="z">Z</label>
+          <input id="z" class="border border-gray-500" value={zxy()?.[0]} />
+          <label for="x">X</label>
+          <input id="x" class="border border-gray-500" value={zxy()?.[1]} />
+          <label for="y">Y</label>
+          <input id="y" class="border border-gray-500" value={zxy()?.[2]} />
+        </div>
+        <div class="flex flex-row justify-between space-x-4">
+          <span class="relative">
+            <button
+              type="button"
+              class="rounded bg-gray-600 px-4"
+              onClick={() => setSiblingsOpen(!siblingsOpen())}
+            >
+              siblings
+            </button>
+            <Show when={siblingsOpen()}>
+              <div class="absolute top-8 left-0 z-[999] w-full flex justify-center">
+                <div class="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, -1, -1)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, 0, -1)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, 1, -1)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, -1, 0)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <div />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, 1, 0)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, -1, -1)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, 0, 1)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(0, 1, 1)}
+                    class="border border-white hover:bg-gray-500 cursor-pointer"
+                  />
+                </div>
               </div>
-            </div>
-          </Show>
-        </span>
-        <span class="relative">
-          <button
-            type="button"
-            class="rounded bg-gray-600 px-4"
-            onClick={() => setChildrenOpen(!childrenOpen())}
-          >
-            children
-          </button>
-          <Show when={childrenOpen()}>
-            <div class="w-full absolute top-8 left-0 flex justify-center">
-              <div class="grid grid-cols-2 grid-rows-2 gap-1 w-16 h-16 z-[999]">
-                <button
-                  type="button"
-                  onClick={() => navigate(1, 0, 0)}
-                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(1, 1, 0)}
-                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(1, 0, 1)}
-                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                />
-                <button
-                  type="button"
-                  onClick={() => navigate(1, 1, 1)}
-                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                />
+            </Show>
+          </span>
+          <span class="relative">
+            <button
+              type="button"
+              class="rounded bg-gray-600 px-4"
+              onClick={() => setChildrenOpen(!childrenOpen())}
+            >
+              children
+            </button>
+            <Show when={childrenOpen()}>
+              <div class="w-full absolute top-8 left-0 flex justify-center">
+                <div class="grid grid-cols-2 grid-rows-2 gap-1 w-16 h-16 z-[999]">
+                  <button
+                    type="button"
+                    onClick={() => navigate(1, 0, 0)}
+                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(1, 1, 0)}
+                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(1, 0, 1)}
+                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigate(1, 1, 1)}
+                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                  />
+                </div>
               </div>
-            </div>
-          </Show>
-        </span>
-        <span class="relative">
-          <button
-            type="button"
-            class="rounded bg-gray-600 px-4"
-            onClick={() => navigate(-1, 0, 0)}
-          >
-            parent
-          </button>
-        </span>
+            </Show>
+          </span>
+          <span class="relative">
+            <button
+              type="button"
+              class="rounded bg-gray-600 px-4"
+              onClick={() => navigate(-1, 0, 0)}
+            >
+              parent
+            </button>
+          </span>
+        </div>
       </div>
       <Show when={zxy()}>
         {(z) => (

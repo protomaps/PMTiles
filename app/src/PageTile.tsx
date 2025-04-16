@@ -13,6 +13,7 @@ import {
 } from "d3-zoom";
 import Protobuf from "pbf";
 import {
+  type Accessor,
   Show,
   createEffect,
   createResource,
@@ -100,7 +101,7 @@ function layerFeatureCounts(
 }
 
 function ZoomableTile(props: {
-  zxy: [number, number, number];
+  zxy: Accessor<[number, number, number]>;
   tileset: Tileset;
 }) {
   let containerRef: HTMLDivElement | undefined;
@@ -208,8 +209,7 @@ function ZoomableTile(props: {
     }
   });
 
-  const [parsedTile] = createResource(async () => {
-    const zxy = props.zxy;
+  const [parsedTile] = createResource(props.zxy, async (zxy) => {
     const tileset = props.tileset;
     if (await tileset.isVector()) {
       const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
@@ -228,6 +228,7 @@ function ZoomableTile(props: {
   });
 
   createEffect(async () => {
+    view.selectAll("*").remove();
     const tile = parsedTile();
     if (!tile) return;
 
@@ -315,20 +316,133 @@ function ZoomableTile(props: {
 
 function TileView(props: { tileset: Tileset }) {
   const hash = parseHash(location.hash);
-  const [zxy] = createSignal<[number, number, number] | undefined>(
+  const [zxy, setZxy] = createSignal<[number, number, number] | undefined>(
     hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
   );
 
+  const [siblingsOpen, setSiblingsOpen] = createSignal<boolean>(false);
+  const [childrenOpen, setChildrenOpen] = createSignal<boolean>(false);
+
+  const navigate = (z: number, x: number, y: number) => {
+    const current = zxy();
+    if (!current) return;
+    if (z === 0) setZxy([current[0], current[1] + x, current[2] + y]);
+    if (z === 1)
+      setZxy([current[0] + 1, current[1] * 2 + x, current[2] * 2 + y]);
+    if (z === -1) setZxy([current[0] - 1, current[1] / 2, current[2] / 2]);
+  };
+
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
+      <div class="p-2 space-x-2 flex">
+        z<input class="border" />x<input class="border" />y
+        <input class="border" />
+        <span class="relative">
+          <button
+            type="button"
+            class="rounded bg-gray-600 px-4"
+            onClick={() => setSiblingsOpen(!siblingsOpen())}
+          >
+            siblings
+          </button>
+          <Show when={siblingsOpen()}>
+            <div class="absolute top-8 left-0 z-[999] w-full flex justify-center">
+              <div class="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
+                <button
+                  type="button"
+                  onClick={() => navigate(0, -1, -1)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, 0, -1)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, 1, -1)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, -1, 0)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <div />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, 1, 0)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, -1, -1)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, 0, 1)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(0, 1, 1)}
+                  class="border border-white hover:bg-gray-500 cursor-pointer"
+                />
+              </div>
+            </div>
+          </Show>
+        </span>
+        <span class="relative">
+          <button
+            type="button"
+            class="rounded bg-gray-600 px-4"
+            onClick={() => setChildrenOpen(!childrenOpen())}
+          >
+            children
+          </button>
+          <Show when={childrenOpen()}>
+            <div class="w-full absolute top-8 left-0 flex justify-center">
+              <div class="grid grid-cols-2 grid-rows-2 gap-1 w-16 h-16 z-[999]">
+                <button
+                  type="button"
+                  onClick={() => navigate(1, 0, 0)}
+                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(1, 1, 0)}
+                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(1, 0, 1)}
+                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => navigate(1, 1, 1)}
+                  class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
+                />
+              </div>
+            </div>
+          </Show>
+        </span>
+        <span class="relative">
+          <button
+            type="button"
+            class="rounded bg-gray-600 px-4"
+            onClick={() => navigate(-1, 0, 0)}
+          >
+            parent
+          </button>
+        </span>
+      </div>
       <Show when={zxy()}>
         {(z) => (
-          <>
-            <div class="flex-none p-4">{z().join(", ")}</div>
-            <div class="flex flex-1 w-full h-full overflow-hidden">
-              <ZoomableTile zxy={z()} tileset={props.tileset} />
-            </div>
-          </>
+          <div class="flex flex-1 w-full h-full overflow-hidden">
+            <ZoomableTile zxy={z} tileset={props.tileset} />
+          </div>
         )}
       </Show>
     </div>

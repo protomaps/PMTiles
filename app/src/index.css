@@ -3,6 +3,11 @@
 .axis .domain {
 	display: none;
 }
+
+.axis {
+	color: #666;
+}
+
 .axis line {
 	stroke-opacity: 0.3;
 	shape-rendering: crispEdges;

@@ -156,7 +156,7 @@ function MapView(props: {
     });
     map.on("mousemove", async (e) => {
       if (frozen()) return;
-      if (!showTileBoundaries() && !inspectFeatures()) {
+      if (!inspectFeatures()) {
         return;
       }
 

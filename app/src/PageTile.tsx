@@ -14,6 +14,8 @@ import {
 import Protobuf from "pbf";
 import {
   type Accessor,
+  type JSX,
+  type Setter,
   Show,
   createEffect,
   createResource,
@@ -247,7 +249,7 @@ function ZoomableTile(props: {
         .style("opacity", 0.3)
         .attr("fill", (d) => (d.type === 3 || d.type === 1 ? d.color : "none"))
         .attr("stroke", (d) => (d.type === 2 ? d.color : "none"))
-        .attr("stroke-width", 10)
+        .attr("stroke-width", 6)
         .on("mouseover", function (_e, d) {
           if (frozen()) return;
           if (d.type === 2) {
@@ -299,7 +301,7 @@ function ZoomableTile(props: {
                 "dark:bg-gray-900": !frozen(),
                 "dark:bg-gray-800": frozen(),
                 rounded: true,
-                "p-4": true,
+                "p-2": true,
                 border: true,
                 "border-gray-700": true,
               }}
@@ -314,40 +316,68 @@ function ZoomableTile(props: {
   );
 }
 
-function TileView(props: { tileset: Tileset }) {
-  const hash = parseHash(location.hash);
-  const [zxy, setZxy] = createSignal<[number, number, number] | undefined>(
-    hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
-  );
-
+function TileView(props: {
+  tileset: Tileset;
+  zxy: Accessor<[number, number, number] | undefined>;
+  setZxy: Setter<[number, number, number] | undefined>;
+}) {
   const [siblingsOpen, setSiblingsOpen] = createSignal<boolean>(false);
   const [childrenOpen, setChildrenOpen] = createSignal<boolean>(false);
 
   const navigate = (z: number, x: number, y: number) => {
-    const current = zxy();
+    const current = props.zxy();
     if (!current) return;
-    if (z === 0) setZxy([current[0], current[1] + x, current[2] + y]);
+    if (z === 0) props.setZxy([current[0], current[1] + x, current[2] + y]);
     if (z === 1)
-      setZxy([current[0] + 1, current[1] * 2 + x, current[2] * 2 + y]);
+      props.setZxy([current[0] + 1, current[1] * 2 + x, current[2] * 2 + y]);
     if (z === -1)
-      setZxy([
+      props.setZxy([
         current[0] - 1,
         Math.floor(current[1] / 2),
         Math.floor(current[2] / 2),
       ]);
   };
 
+  const loadZxy: JSX.EventHandler<HTMLFormElement, Event> = (e) => {
+    const form = e.currentTarget;
+
+    const z = form.elements.namedItem("z") as HTMLInputElement;
+    const x = form.elements.namedItem("x") as HTMLInputElement;
+    const y = form.elements.namedItem("y") as HTMLInputElement;
+    console.log(z, x, y);
+
+    props.setZxy([+z.value, +x.value, +y.value]);
+  };
+
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
       <div class="p-2 space-x-2 flex flex-col md:flex-row">
-        <div class="flex flex-row text-gray-300 space-x-4">
+        <form class="flex flex-row text-gray-300 space-x-4" onSubmit={loadZxy}>
           <label for="z">Z</label>
-          <input id="z" class="border border-gray-500" value={zxy()?.[0]} />
+          <input
+            id="z"
+            class="border border-gray-500"
+            value={props.zxy()?.[0]}
+          />
           <label for="x">X</label>
-          <input id="x" class="border border-gray-500" value={zxy()?.[1]} />
+          <input
+            id="x"
+            class="border border-gray-500"
+            value={props.zxy()?.[1]}
+          />
           <label for="y">Y</label>
-          <input id="y" class="border border-gray-500" value={zxy()?.[2]} />
-        </div>
+          <input
+            id="y"
+            class="border border-gray-500"
+            value={props.zxy()?.[2]}
+          />
+          <button
+            type="submit"
+            class="bg-indigo-500 rounded px-4 pointer-cursor"
+          >
+            load
+          </button>
+        </form>
         <div class="flex flex-row justify-between space-x-4">
           <span class="relative">
             <button
@@ -451,7 +481,7 @@ function TileView(props: { tileset: Tileset }) {
           </span>
         </div>
       </div>
-      <Show when={zxy()}>
+      <Show when={props.zxy()}>
         {(z) => (
           <div class="flex flex-1 w-full h-full overflow-hidden">
             <ZoomableTile zxy={z} tileset={props.tileset} />
@@ -467,12 +497,17 @@ function PageTile() {
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
+  const [zxy, setZxy] = createSignal<[number, number, number] | undefined>(
+    hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
+  );
 
   createEffect(() => {
     const t = tileset();
+    const zxyVal = zxy();
     const stateUrl = t?.getStateUrl();
     location.hash = createHash(location.hash, {
       url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
+      zxy: zxyVal ? zxyVal.join("/") : undefined,
     });
   });
 
@@ -482,7 +517,7 @@ function PageTile() {
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}
       >
-        {(t) => <TileView tileset={t()} />}
+        {(t) => <TileView tileset={t()} zxy={zxy} setZxy={setZxy} />}
       </Show>
     </Frame>
   );

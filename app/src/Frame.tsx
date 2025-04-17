@@ -30,10 +30,10 @@ export const ExampleChooser = (props: {
   return (
     <div class="h-full flex items-center justify-center p-4">
       <div>
-        <div class="mb-2">Load a file:</div>
+        <div class="mb-2 text-gray-400">Load an example:</div>
         <div class="border border-gray-500 divide-y divide-gray-500">
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
             type="button"
             onClick={() => {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
@@ -46,7 +46,7 @@ export const ExampleChooser = (props: {
           </button>
 
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
             type="button"
             onClick={() => {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
@@ -58,7 +58,7 @@ export const ExampleChooser = (props: {
             </div>
           </button>
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full"
+            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
             type="button"
             onClick={() => {
               loadSample(
@@ -71,13 +71,13 @@ export const ExampleChooser = (props: {
               vector basemap, 2019 Mapzen Tiles (legacy)
             </div>
           </button>
-          <input
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
-            type="file"
-            onChange={onChangeFileInput}
-          />
         </div>
-        <div class="mt-2">Or drag and drop a local file</div>
+        <input
+          class="text-left mt-4 px-4 py-2 hover:bg-indigo-500 cursor-pointer bg-indigo-800 rounded w-full"
+          type="file"
+          onChange={onChangeFileInput}
+        />
+        <div class="mt-2 text-gray-400">Drag and drop a local file here</div>
       </div>
     </div>
   );

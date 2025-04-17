@@ -324,21 +324,41 @@ function TileView(props: {
   const [siblingsOpen, setSiblingsOpen] = createSignal<boolean>(false);
   const [childrenOpen, setChildrenOpen] = createSignal<boolean>(false);
 
-  const navigate = (z: number, x: number, y: number) => {
+  const targetTile = (
+    z: number,
+    x: number,
+    y: number,
+  ): [number, number, number] | undefined => {
     const current = props.zxy();
     if (!current) return;
-    if (z === 0) props.setZxy([current[0], current[1] + x, current[2] + y]);
+    if (z === 0) return [current[0], current[1] + x, current[2] + y];
     if (z === 1)
-      props.setZxy([current[0] + 1, current[1] * 2 + x, current[2] * 2 + y]);
+      return [current[0] + 1, current[1] * 2 + x, current[2] * 2 + y];
     if (z === -1)
-      props.setZxy([
+      return [
         current[0] - 1,
         Math.floor(current[1] / 2),
         Math.floor(current[2] / 2),
-      ]);
+      ];
+  };
+
+  const navigate = (z: number, x: number, y: number) => {
+    const t = targetTile(z, x, y);
+    if (t) props.setZxy(t);
+  };
+
+  const canNavigate = (z: number, x: number, y: number) => {
+    const t = targetTile(z, x, y);
+    if (t) {
+      if (t[0] < 0 || t[1] < 0 || t[2] < 0) return false;
+      const max = 2 ** t[0] - 1;
+      return t[1] <= max && t[2] <= max;
+    }
+    return false;
   };
 
   const loadZxy: JSX.EventHandler<HTMLFormElement, Event> = (e) => {
+    e.preventDefault();
     const form = e.currentTarget;
 
     const z = form.elements.namedItem("z") as HTMLInputElement;
@@ -348,31 +368,57 @@ function TileView(props: {
     props.setZxy([+z.value, +x.value, +y.value]);
   };
 
+  const NavTile = (props: { navTo: [number, number, number] }) => {
+    return (
+      <button
+        type="button"
+        onClick={() => navigate(...props.navTo)}
+        classList={{
+          border: canNavigate(...props.navTo),
+          "hover:bg-gray-500": canNavigate(...props.navTo),
+          "cursor-pointer": canNavigate(...props.navTo),
+        }}
+        disabled={!canNavigate(...props.navTo)}
+      />
+    );
+  };
+
+  const cleanValue = (
+    zxy: [number, number, number] | undefined,
+    idx: number,
+  ) => {
+    if (!zxy) return "";
+    return zxy[idx];
+  };
+
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
-      <div class="p-2 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row justify-between">
-        <form class="flex flex-row text-gray-300 justify-between md:space-x-4" onSubmit={loadZxy}>
+      <div class="p-2 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row justify-start">
+        <form
+          class="flex flex-row text-gray-300 justify-between md:space-x-4"
+          onSubmit={loadZxy}
+        >
           <label for="z">Z</label>
           <input
             id="z"
-            class="border border-gray-500 w-24"
-            value={props.zxy()?.[0]}
+            class="border border-gray-500 w-20"
+            value={cleanValue(props.zxy(), 0)}
           />
           <label for="x">X</label>
           <input
             id="x"
-            class="border border-gray-500 w-24"
-            value={props.zxy()?.[1]}
+            class="border border-gray-500 w-20"
+            value={cleanValue(props.zxy(), 1)}
           />
           <label for="y">Y</label>
           <input
             id="y"
-            class="border border-gray-500 w-24"
-            value={props.zxy()?.[2]}
+            class="border border-gray-500 w-20"
+            value={cleanValue(props.zxy(), 2)}
           />
           <button
             type="submit"
-            class="bg-indigo-500 rounded px-4 pointer-cursor"
+            class="bg-indigo-500 rounded px-4 md:mr-8 pointer-cursor"
           >
             load
           </button>
@@ -389,47 +435,15 @@ function TileView(props: {
             <Show when={siblingsOpen()}>
               <div class="absolute top-8 left-0 z-[999] w-full flex justify-center">
                 <div class="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, -1, -1)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, 0, -1)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, 1, -1)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, -1, 0)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
+                  <NavTile navTo={[0, -1, -1]} />
+                  <NavTile navTo={[0, 0, -1]} />
+                  <NavTile navTo={[0, 1, -1]} />
+                  <NavTile navTo={[0, -1, 0]} />
                   <div />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, 1, 0)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, -1, -1)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, 0, 1)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(0, 1, 1)}
-                    class="border border-white hover:bg-gray-500 cursor-pointer"
-                  />
+                  <NavTile navTo={[0, 1, 0]} />
+                  <NavTile navTo={[0, -1, 1]} />
+                  <NavTile navTo={[0, 0, 1]} />
+                  <NavTile navTo={[0, 1, 1]} />
                 </div>
               </div>
             </Show>
@@ -445,26 +459,10 @@ function TileView(props: {
             <Show when={childrenOpen()}>
               <div class="w-full absolute top-8 left-0 flex justify-center">
                 <div class="grid grid-cols-2 grid-rows-2 gap-1 w-16 h-16 z-[999]">
-                  <button
-                    type="button"
-                    onClick={() => navigate(1, 0, 0)}
-                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(1, 1, 0)}
-                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(1, 0, 1)}
-                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate(1, 1, 1)}
-                    class="border border-white flex items-center justify-center hover:bg-gray-500 cursor-pointer"
-                  />
+                  <NavTile navTo={[1, 0, 0]} />
+                  <NavTile navTo={[1, 1, 0]} />
+                  <NavTile navTo={[1, 0, 1]} />
+                  <NavTile navTo={[1, 1, 1]} />
                 </div>
               </div>
             </Show>
@@ -472,8 +470,13 @@ function TileView(props: {
           <span class="relative">
             <button
               type="button"
-              class="rounded bg-gray-600 px-4"
+              classList={{
+                rounded: true,
+                "bg-gray-600": canNavigate(-1, 0, 0),
+                "px-4": true,
+              }}
               onClick={() => navigate(-1, 0, 0)}
+              disabled={!canNavigate(-1, 0, 0)}
             >
               parent
             </button>
@@ -497,7 +500,7 @@ function PageTile() {
     hash.url ? tilesetFromString(decodeURIComponent(hash.url)) : undefined,
   );
   const [zxy, setZxy] = createSignal<[number, number, number] | undefined>(
-    hash.zxy ? zxyFromHash(hash.zxy) : [0, 0, 0],
+    hash.zxy ? zxyFromHash(hash.zxy) : undefined,
   );
 
   createEffect(() => {

@@ -344,31 +344,30 @@ function TileView(props: {
     const z = form.elements.namedItem("z") as HTMLInputElement;
     const x = form.elements.namedItem("x") as HTMLInputElement;
     const y = form.elements.namedItem("y") as HTMLInputElement;
-    console.log(z, x, y);
 
     props.setZxy([+z.value, +x.value, +y.value]);
   };
 
   return (
     <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
-      <div class="p-2 space-x-2 flex flex-col md:flex-row">
-        <form class="flex flex-row text-gray-300 space-x-4" onSubmit={loadZxy}>
+      <div class="p-2 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row justify-between">
+        <form class="flex flex-row text-gray-300 justify-between md:space-x-4" onSubmit={loadZxy}>
           <label for="z">Z</label>
           <input
             id="z"
-            class="border border-gray-500"
+            class="border border-gray-500 w-24"
             value={props.zxy()?.[0]}
           />
           <label for="x">X</label>
           <input
             id="x"
-            class="border border-gray-500"
+            class="border border-gray-500 w-24"
             value={props.zxy()?.[1]}
           />
           <label for="y">Y</label>
           <input
             id="y"
-            class="border border-gray-500"
+            class="border border-gray-500 w-24"
             value={props.zxy()?.[2]}
           />
           <button

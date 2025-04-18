@@ -333,6 +333,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
     if (props.genericTileset instanceof PMTilesTileset) {
       return props.genericTileset as PMTilesTileset;
     }
+    alert("This isn't a PMTiles archive!");
     throw "This isn't a PMTiles tileset";
   };
 

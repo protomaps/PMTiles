@@ -57,6 +57,7 @@ function MapView(props: {
   const [hoveredFeatures, setHoveredFeatures] = createSignal<
     MapGeoJSONFeature[]
   >([]);
+  const [basemap, setBasemap] = createSignal<boolean>(false);
   const [frozen, setFrozen] = createSignal<boolean>(false);
 
   const inspectableFeatures = createMemo(() => {
@@ -80,6 +81,17 @@ function MapView(props: {
   addProtocol("pmtiles", protocol.tile);
 
   let map: MaplibreMap;
+
+  createEffect(() => {
+    const visibility = basemap() ? "visible" : "none";
+    if (map) {
+      for (const layer of map.getStyle().layers) {
+        if ("source" in layer && layer.source === "basemap") {
+          map.setLayoutProperty(layer.id, "visibility", visibility);
+        }
+      }
+    }
+  });
 
   onMount(async () => {
     if (!mapContainer) {
@@ -124,7 +136,7 @@ function MapView(props: {
               "Background © <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
           },
         },
-        layers: [],
+        layers: layers("basemap", namedFlavor(flavor), { lang: "en" }),
       },
     });
 
@@ -220,11 +232,7 @@ function MapView(props: {
 
     map.on("load", async () => {
       if (await props.tileset.isOverlay()) {
-        for (const l of layers("basemap", namedFlavor(flavor), {
-          lang: "en",
-        })) {
-          map.addLayer(l);
-        }
+        setBasemap(true);
       }
 
       if (await props.tileset.isVector()) {
@@ -401,6 +409,9 @@ function MapView(props: {
             <LayersPanel
               layerVisibility={layerVisibility}
               setLayerVisibility={setLayerVisibility}
+              basemapOption
+              basemap={basemap}
+              setBasemap={setBasemap}
             />
           </div>
           <div class="absolute left-2 bottom-2">

@@ -18,6 +18,10 @@ export function LayersPanel(props: {
   layerVisibility: Accessor<LayerVisibility[]>;
   setLayerVisibility: Setter<LayerVisibility[]>;
   layerFeatureCounts?: Record<string, number>;
+
+  basemapOption?: boolean;
+  basemap?: Accessor<boolean>;
+  setBasemap?: Setter<boolean>;
 }) {
   let checkallRef: HTMLInputElement | undefined;
   const [expanded, setExpanded] = createSignal<boolean>(true);
@@ -59,7 +63,7 @@ export function LayersPanel(props: {
   });
 
   return (
-    <div class="bg-white dark:bg-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 flex flex-col">
+    <div class="bg-white dark:bg-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 flex flex-col overflow-y-scroll max-h-100">
       <button
         type="button"
         classList={{
@@ -76,16 +80,31 @@ export function LayersPanel(props: {
       </button>
       <Show when={expanded()}>
         <div class="px-2 md:px-4 pb-2 md:pb-4">
-          <input
-            type="checkbox"
-            id="checkall"
-            ref={checkallRef}
-            checked={allChecked()}
-            onChange={toggleAll}
-          />
-          <label class="ml-2 text-sm" for="checkall">
-            All Layers
-          </label>
+          <Show when={props.basemapOption}>
+            <div>
+              <input
+                type="checkbox"
+                id="background"
+                checked={props.basemap?.()}
+                onChange={() => props.setBasemap?.(!props.basemap?.())}
+              />
+              <label class="ml-2 text-sm" for="background">
+                Background
+              </label>
+            </div>
+          </Show>
+          <div>
+            <input
+              type="checkbox"
+              id="checkall"
+              ref={checkallRef}
+              checked={allChecked()}
+              onChange={toggleAll}
+            />
+            <label class="ml-2 text-sm" for="checkall">
+              All Layers
+            </label>
+          </div>
           <For each={props.layerVisibility()}>
             {(l, i) => (
               <div class="ml-2">

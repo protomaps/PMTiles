@@ -136,7 +136,15 @@ function MapView(props: {
               "Background © <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
           },
         },
-        layers: layers("basemap", namedFlavor(flavor), { lang: "en" }),
+        layers: layers("basemap", namedFlavor(flavor), { lang: "en" }).map(
+          (l) => {
+            if (!("layout" in l)) {
+              l.layout = {};
+            }
+            if (l.layout) l.layout.visibility = "none";
+            return l;
+          },
+        ),
       },
     });
 

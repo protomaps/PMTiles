@@ -286,9 +286,9 @@ function DirectoryTable(props: {
           <thead>
             <tr>
               <th>tileID</th>
-              <th class="text-indigo-700">z</th>
-              <th class="text-indigo-700">x</th>
-              <th class="text-indigo-700">y</th>
+              <th>z</th>
+              <th>x</th>
+              <th>y</th>
               <th>offset</th>
               <th>length</th>
               <th>runlength</th>
@@ -302,16 +302,15 @@ function DirectoryTable(props: {
                   onMouseMove={() => props.setHoveredTile(e.tileId)}
                 >
                   <td>{e.tileId}</td>
-                  <td class="text-indigo-700">{tileIdToZxy(e.tileId)[0]}</td>
-                  <td class="text-indigo-700">{tileIdToZxy(e.tileId)[1]}</td>
-                  <td class="text-indigo-700">{tileIdToZxy(e.tileId)[2]}</td>
+                  <td>{tileIdToZxy(e.tileId)[0]}</td>
+                  <td>{tileIdToZxy(e.tileId)[1]}</td>
+                  <td>{tileIdToZxy(e.tileId)[2]}</td>
                   <td>
                     <a
-                      class={
-                        isContiguous(props.entries, e, idx())
-                          ? "text-gray-800"
-                          : "text-gray-300"
-                      }
+                      classList={{
+                        "text-gray-500": isContiguous(props.entries, e, idx()),
+                        underline: true,
+                      }}
                       href={tileInspectUrl(
                         props.stateUrl,
                         tileIdToZxy(e.tileId),

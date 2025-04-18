@@ -100,13 +100,11 @@ function LinkTab(props: {
   return (
     <a
       classList={{
-        "hover:bg-gray-400": true,
-        "bg-gray-900": props.selected,
-        "bg-gray-700": !props.selected,
+        "hover:bg-gray-300": true,
+        "font-bold": props.selected,
         "py-2": true,
         "px-4": true,
         underline: !props.selected,
-        "text-gray-300": !props.selected,
       }}
       href={`/${props.page === "map" ? "" : `${props.page}/`}${fragment()}`}
     >

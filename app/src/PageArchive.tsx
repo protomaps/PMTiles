@@ -240,27 +240,43 @@ function DirectoryTable(props: {
 }) {
   const [idx, setIdx] = createSignal<number>(0);
 
+  const canNavigate = (targetIdx: number) => {
+    return targetIdx >= 0 && targetIdx < props.entries.length;
+  };
+
   return (
     <div class="flex-1 overflow-hidden">
-      <div class="bg-gray-200 dark:bg-gray-800 px-4 py-2">
-        <span>
+      <div class="bg-gray-200 dark:bg-gray-800 px-4 py-2 flex">
+        <span class="flex-1">
           entries {idx()}-{idx() + 999} of {props.entries.length}
         </span>
         <button
-          class="mx-2"
+          classList={{
+            "mx-2": true,
+            underline: true,
+            "dark:text-gray-500": !canNavigate(idx() - 1000),
+            "cursor-pointer": true,
+          }}
           type="button"
           onClick={() => {
             setIdx(idx() - 1000);
           }}
+          disabled={!canNavigate(idx() - 1000)}
         >
           prev
         </button>
         <button
-          class="mx-2"
+          classList={{
+            "mx-2": true,
+            underline: true,
+            "dark:text-gray-500": !canNavigate(idx() + 1000),
+            "cursor-pointer": true,
+          }}
           type="button"
           onClick={() => {
             setIdx(idx() + 1000);
           }}
+          disabled={!canNavigate(idx() + 1000)}
         >
           next
         </button>
@@ -372,7 +388,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
   });
 
   return (
-    <div class="flex-1 flex h-full w-full dark:bg-gray-900 dark:text-white font-mono text-sm">
+    <div class="flex-1 flex h-full w-full dark:bg-gray-900 dark:text-white font-mono text-xs md:text-sm">
       <div
         classList={{
           "w-1/3": leafEntries() !== undefined,

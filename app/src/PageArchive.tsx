@@ -246,7 +246,7 @@ function DirectoryTable(props: {
 
   return (
     <div class="flex-1 overflow-hidden">
-      <div class="bg-gray-200 dark:bg-gray-800 px-4 py-2 flex">
+      <div class="bg-gray-200 dark:bg-gray-800 md:px-4 md:py-2 flex">
         <span class="flex-1">
           entries {idx()}-{idx() + 999} of {props.entries.length}
         </span>

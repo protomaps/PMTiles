@@ -432,9 +432,11 @@ function MapView(props: {
             />
           </div>
           <div class="absolute left-2 bottom-2">
-            <div class="bg-white dark:bg-gray-900 dark:text-white rounded p-2 border border-gray-300 dark:border-gray-700 flex flex-col text-center w-16">
-              <div class="text-xs text-gray-400">ZOOM</div>
-              <div class="text-lg">{zoom().toFixed(2)}</div>
+            <div class="dark:text-white flex items-center rounded border border-gray-300 dark:border-gray-700">
+              <span class="bg-gray-500 px-1 rounded-l">Z</span>
+              <span class="px-2 text-base rounded-r-md dark:bg-gray-900 rounded-r">
+                {zoom().toFixed(2)}
+              </span>
             </div>
           </div>
         </div>

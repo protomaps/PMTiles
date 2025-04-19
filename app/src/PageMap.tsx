@@ -292,15 +292,19 @@ function MapView(props: {
             "source-layer": vectorLayer,
             paint: {
               "circle-color": colorForIdx(i),
-              "circle-radius": [
+              "circle-radius": 3,
+              "circle-stroke-color": "white",
+              "circle-stroke-width": [
                 "case",
                 ["boolean", ["feature-state", "hover"], false],
-                5,
                 3,
+                0,
               ],
             },
             filter: ["==", ["geometry-type"], "Point"],
           });
+        }
+        for (const [i, vectorLayer] of vectorLayers.entries()) {
           map.addLayer({
             id: `tileset_point_label_${vectorLayer}`,
             type: "symbol",
@@ -310,9 +314,12 @@ function MapView(props: {
               "text-field": ["get", "name"],
               "text-font": ["Noto Sans Regular"],
               "text-size": 10,
+              "text-offset": [0, -1],
             },
             paint: {
               "text-color": colorForIdx(i),
+              "text-halo-color": "black",
+              "text-halo-width": 2,
             },
             filter: ["==", ["geometry-type"], "Point"],
           });

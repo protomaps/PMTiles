@@ -13,6 +13,7 @@ import {
   setRTLTextPlugin,
 } from "maplibre-gl";
 import {
+  type Accessor,
   type Setter,
   Show,
   createEffect,
@@ -41,16 +42,17 @@ declare module "solid-js" {
 
 function MapView(props: {
   tileset: Tileset;
-  showMetadata: boolean;
+  showMetadata: Accessor<boolean>;
   setShowMetadata: Setter<boolean>;
+  showTileBoundaries: Accessor<boolean>;
+  setShowTileBoundaries: Setter<boolean>;
+  inspectFeatures: Accessor<boolean>;
+  setInspectFeatures: Setter<boolean>;
   mapHashPassed: boolean;
 }) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
   const [zoom, setZoom] = createSignal<number>(0);
-  const [showTileBoundaries, setShowTileBoundaries] =
-    createSignal<boolean>(false);
-  const [inspectFeatures, setInspectFeatures] = createSignal<boolean>(false);
   const [layerVisibility, setLayerVisibility] = createSignal<LayerVisibility[]>(
     [],
   );
@@ -149,11 +151,11 @@ function MapView(props: {
     });
 
     createEffect(() => {
-      map.showTileBoundaries = showTileBoundaries();
+      map.showTileBoundaries = props.showTileBoundaries();
     });
 
     createEffect(() => {
-      if (inspectFeatures()) {
+      if (props.inspectFeatures()) {
         setFrozen(false);
       } else {
         for (const hoveredFeature of hoveredFeatures()) {
@@ -176,7 +178,7 @@ function MapView(props: {
     });
     map.on("mousemove", async (e) => {
       if (frozen()) return;
-      if (!inspectFeatures()) {
+      if (!props.inspectFeatures()) {
         return;
       }
 
@@ -372,10 +374,10 @@ function MapView(props: {
             <input
               class="mr-1"
               id="inspectFeatures"
-              checked={inspectFeatures()}
+              checked={props.inspectFeatures()}
               type="checkbox"
               onChange={() => {
-                setInspectFeatures(!inspectFeatures());
+                props.setInspectFeatures(!props.inspectFeatures());
               }}
             />
             <label for="inspectFeatures">Inspect features</label>
@@ -384,10 +386,10 @@ function MapView(props: {
             <input
               class="mr-1"
               id="showTileBoundaries"
-              checked={showTileBoundaries()}
+              checked={props.showTileBoundaries()}
               type="checkbox"
               onChange={() => {
-                setShowTileBoundaries(!showTileBoundaries());
+                props.setShowTileBoundaries(!props.showTileBoundaries());
               }}
             />
             <label for="showTileBoundaries">Show tile bounds</label>
@@ -395,7 +397,7 @@ function MapView(props: {
           <button
             class="px-4 rounded bg-indigo-500 hover:bg-indigo-400 cursor-pointer"
             onClick={() => {
-              props.setShowMetadata(!props.showMetadata);
+              props.setShowMetadata(!props.showMetadata());
             }}
             type="button"
           >
@@ -408,7 +410,7 @@ function MapView(props: {
             classList={{
               "h-full": true,
               "flex-1": true,
-              inspectFeatures: inspectFeatures(),
+              inspectFeatures: props.inspectFeatures(),
               frozen: frozen(),
             }}
           />
@@ -430,7 +432,7 @@ function MapView(props: {
           </div>
         </div>
       </div>
-      <Show when={props.showMetadata}>
+      <Show when={props.showMetadata()}>
         <div class="md:w-1/2 z-[999] bg-white dark:bg-gray-900 p-4">
           <JsonView tileset={props.tileset} />
         </div>
@@ -472,6 +474,12 @@ function PageMap() {
   const [showMetadata, setShowMetadata] = createSignal<boolean>(
     hash.showMetadata === "true" || false,
   );
+  const [showTileBoundaries, setShowTileBoundaries] = createSignal<boolean>(
+    hash.showTileBoundaries === "true",
+  );
+  const [inspectFeatures, setInspectFeatures] = createSignal<boolean>(
+    hash.inspectFeatures === "true",
+  );
 
   createEffect(() => {
     const t = tileset();
@@ -479,6 +487,8 @@ function PageMap() {
     location.hash = createHash(location.hash, {
       url: stateUrl ? encodeURIComponent(stateUrl) : undefined,
       showMetadata: showMetadata() ? "true" : undefined,
+      showTileBoundaries: showTileBoundaries() ? "true" : undefined,
+      inspectFeatures: inspectFeatures() ? "true" : undefined,
     });
   });
 
@@ -491,8 +501,12 @@ function PageMap() {
         {(t) => (
           <MapView
             tileset={t()}
-            showMetadata={showMetadata()}
+            showMetadata={showMetadata}
             setShowMetadata={setShowMetadata}
+            showTileBoundaries={showTileBoundaries}
+            setShowTileBoundaries={setShowTileBoundaries}
+            inspectFeatures={inspectFeatures}
+            setInspectFeatures={setInspectFeatures}
             mapHashPassed={mapHashPassed}
           />
         )}

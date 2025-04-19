@@ -321,7 +321,7 @@ function TileView(props: {
   zxy: Accessor<[number, number, number] | undefined>;
   setZxy: Setter<[number, number, number] | undefined>;
 }) {
-  const [siblingsOpen, setSiblingsOpen] = createSignal<boolean>(false);
+  const [neighborsOpen, setNeighborsOpen] = createSignal<boolean>(false);
   const [childrenOpen, setChildrenOpen] = createSignal<boolean>(false);
 
   const targetTile = (
@@ -427,12 +427,12 @@ function TileView(props: {
           <span class="relative">
             <button
               type="button"
-              class="rounded bg-gray-600 px-4"
-              onClick={() => setSiblingsOpen(!siblingsOpen())}
+              class="rounded bg-gray-600 px-4 cursor-pointer"
+              onClick={() => setNeighborsOpen(!neighborsOpen())}
             >
-              siblings
+              neighbors
             </button>
-            <Show when={siblingsOpen()}>
+            <Show when={neighborsOpen()}>
               <div class="absolute top-8 left-0 z-[999] w-full flex justify-center">
                 <div class="grid grid-cols-3 grid-rows-3 gap-1 w-16 h-16">
                   <NavTile navTo={[0, -1, -1]} />
@@ -451,7 +451,7 @@ function TileView(props: {
           <span class="relative">
             <button
               type="button"
-              class="rounded bg-gray-600 px-4"
+              class="rounded bg-gray-600 px-4 cursor-pointer"
               onClick={() => setChildrenOpen(!childrenOpen())}
             >
               children
@@ -483,7 +483,10 @@ function TileView(props: {
           </span>
         </div>
       </div>
-      <Show when={props.zxy()}>
+      <Show
+        when={props.zxy()}
+        fallback={<div class="p-4">Enter a tile z/x/y</div>}
+      >
         {(z) => (
           <div class="flex flex-1 w-full h-full overflow-hidden">
             <ZoomableTile zxy={z} tileset={props.tileset} />

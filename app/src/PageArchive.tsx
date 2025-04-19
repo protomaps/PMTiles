@@ -253,7 +253,7 @@ function DirectoryTable(props: {
         <button
           classList={{
             "mx-2": true,
-            underline: true,
+            underline: canNavigate(idx() - 1000),
             "dark:text-gray-500": !canNavigate(idx() - 1000),
             "cursor-pointer": true,
           }}
@@ -268,7 +268,7 @@ function DirectoryTable(props: {
         <button
           classList={{
             "mx-2": true,
-            underline: true,
+            underline: canNavigate(idx() + 1000),
             "dark:text-gray-500": !canNavigate(idx() + 1000),
             "cursor-pointer": true,
           }}
@@ -306,31 +306,42 @@ function DirectoryTable(props: {
                   <td>{tileIdToZxy(e.tileId)[1]}</td>
                   <td>{tileIdToZxy(e.tileId)[2]}</td>
                   <td>
-                    <a
-                      classList={{
-                        "text-gray-500": isContiguous(props.entries, e, idx()),
-                        underline: true,
-                      }}
-                      href={tileInspectUrl(
-                        props.stateUrl,
-                        tileIdToZxy(e.tileId),
-                      )}
-                      target="_blank"
-                      rel="noreferrer"
+                    <Show
+                      when={e.runLength === 0}
+                      fallback={
+                        <a
+                          classList={{
+                            "text-gray-500": isContiguous(
+                              props.entries,
+                              e,
+                              idx(),
+                            ),
+                            underline: true,
+                          }}
+                          href={tileInspectUrl(
+                            props.stateUrl,
+                            tileIdToZxy(e.tileId),
+                          )}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {e.offset}
+                        </a>
+                      }
                     >
-                      {e.offset}
-                    </a>
-                  </td>
-                  <td>{e.length}</td>
-                  <td>
-                    <Show when={e.runLength === 0} fallback={e.runLength}>
                       <button
                         type="button"
                         class="underline cursor-pointer"
                         onClick={() => props.setOpenedLeaf(e.tileId)}
                       >
-                        leaf
+                        {e.offset}
                       </button>
+                    </Show>
+                  </td>
+                  <td>{e.length}</td>
+                  <td>
+                    <Show when={e.runLength === 0} fallback={e.runLength}>
+                      0 (leaf)
                     </Show>
                   </td>
                 </tr>

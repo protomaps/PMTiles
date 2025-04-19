@@ -20,7 +20,7 @@ jobs:
           node-version: 18.x
       - run: cd js && npm ci && npm run build
       - run: echo "VITE_GIT_SHA=$(git rev-parse --short HEAD)" >> app/.env
-      - run: cd app && npm ci && ./node_modules/.bin/tsc && npm run prettier-check && ./node_modules/.bin/vite build
+      - run: cd app && npm ci && npm run check && npm run build
       - run: cd serverless/aws && npm ci && npx tsc && npm run biome-check && npm run build-zip && cp dist/lambda_function.zip ../../app/dist && npm run build-cloudformation-stack && cp dist/cloudformation-stack.yaml ../../app/dist
       - run: cd serverless/cloudflare && cp wrangler.toml.example wrangler.toml && npm ci && npx tsc && npm run biome-check && npm run build && cp dist/index.js ../../app/dist
       - run: cd spec/v3 && cp *.pmtiles ../../app/dist

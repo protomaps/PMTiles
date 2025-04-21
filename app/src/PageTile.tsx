@@ -297,13 +297,11 @@ function ZoomableTile(props: {
           <div class="absolute bottom-2 right-2">
             <div
               classList={{
-                "bg-white": true,
-                "dark:bg-gray-900": !frozen(),
-                "dark:bg-gray-800": frozen(),
+                "app-bg": true,
+                "app-well": frozen(),
                 rounded: true,
                 "p-2": true,
-                border: true,
-                "border-gray-700": true,
+                "app-border": true,
               }}
             >
               <FeatureTable features={[f()]} />
@@ -375,7 +373,7 @@ function TileView(props: {
         onClick={() => navigate(...props.navTo)}
         classList={{
           border: canNavigate(...props.navTo),
-          "hover:bg-gray-500": canNavigate(...props.navTo),
+          "hover:bg-purple": canNavigate(...props.navTo),
           "cursor-pointer": canNavigate(...props.navTo),
         }}
         disabled={!canNavigate(...props.navTo)}
@@ -392,33 +390,36 @@ function TileView(props: {
   };
 
   return (
-    <div class="flex flex-col h-full w-full dark:bg-gray-900 dark:text-white">
+    <div class="flex flex-col h-full w-full">
       <div class="p-2 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row justify-start">
         <form
-          class="flex flex-row text-gray-300 justify-between md:space-x-4"
+          class="flex flex-row justify-between md:space-x-4"
           onSubmit={loadZxy}
         >
           <label for="z">Z</label>
           <input
             id="z"
-            class="border border-gray-500 w-20"
+            type="number"
+            class="app-border w-20"
             value={cleanValue(props.zxy(), 0)}
           />
           <label for="x">X</label>
           <input
             id="x"
-            class="border border-gray-500 w-20"
+            type="number"
+            class="app-border w-20"
             value={cleanValue(props.zxy(), 1)}
           />
           <label for="y">Y</label>
           <input
             id="y"
-            class="border border-gray-500 w-20"
+            type="number"
+            class="app-border w-20"
             value={cleanValue(props.zxy(), 2)}
           />
           <button
             type="submit"
-            class="bg-indigo-500 rounded px-4 md:mr-8 pointer-cursor"
+            class="btn-primary rounded px-4 md:mr-8 pointer-cursor"
           >
             load
           </button>
@@ -427,7 +428,7 @@ function TileView(props: {
           <span class="relative">
             <button
               type="button"
-              class="rounded bg-gray-600 px-4 cursor-pointer"
+              class="rounded btn-secondary px-4 cursor-pointer"
               onClick={() => setNeighborsOpen(!neighborsOpen())}
             >
               neighbors
@@ -451,7 +452,7 @@ function TileView(props: {
           <span class="relative">
             <button
               type="button"
-              class="rounded bg-gray-600 px-4 cursor-pointer"
+              class="rounded btn-secondary px-4 cursor-pointer"
               onClick={() => setChildrenOpen(!childrenOpen())}
             >
               children
@@ -472,7 +473,7 @@ function TileView(props: {
               type="button"
               classList={{
                 rounded: true,
-                "bg-gray-600": canNavigate(-1, 0, 0),
+                "btn-secondary": canNavigate(-1, 0, 0),
                 "px-4": true,
               }}
               onClick={() => navigate(-1, 0, 0)}

@@ -63,14 +63,13 @@ export function LayersPanel(props: {
   });
 
   return (
-    <div class="bg-white dark:bg-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 flex flex-col overflow-y-scroll max-h-100">
+    <div class="app-bg rounded app-border flex flex-col overflow-y-scroll max-h-100">
       <button
         type="button"
         classList={{
-          "dark:bg-gray-800": true,
+          "app-well": true,
           "rounded-t": expanded(),
           rounded: !expanded(),
-          "hover:bg-gray-600": true,
           "cursor-pointer": true,
           "min-w-8": true,
         }}

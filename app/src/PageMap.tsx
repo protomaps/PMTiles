@@ -215,7 +215,7 @@ function MapView(props: {
             <div>
               <FeatureTable features={inspectableFeatures()} />
               <a
-                class="block text-xs w-full bg-gray-800 hover:bg-gray-600 mt-2 text-center"
+                class="block text-xs btn-primary mt-2 text-center"
                 target="_blank"
                 rel="noreferrer"
                 href={tileInspectUrl(props.tileset.getStateUrl(), [
@@ -318,7 +318,7 @@ function MapView(props: {
             },
             paint: {
               "text-color": colorForIdx(i),
-              "text-halo-color": "black",
+              "text-halo-color": flavor,
               "text-halo-width": 2,
             },
             filter: ["==", ["geometry-type"], "Point"],
@@ -371,13 +371,13 @@ function MapView(props: {
       <div class="flex-1 flex flex-col">
         <div class="flex-none p-4 flex justify-between text-xs md:text-base space-x-2">
           <button
-            class="px-4 bg-indigo-500 rounded cursor-pointer hover:bg-indigo-400"
+            class="px-4 btn-primary cursor-pointer"
             type="button"
             onClick={fitToBounds}
           >
             fit to bounds
           </button>
-          <span class="border border-gray-600 rounded px-2 flex items-center">
+          <span class="app-border rounded px-2 flex items-center">
             <input
               class="mr-1"
               id="inspectFeatures"
@@ -389,7 +389,7 @@ function MapView(props: {
             />
             <label for="inspectFeatures">Inspect features</label>
           </span>
-          <span class="border border-gray-600 rounded px-2 flex items-center">
+          <span class="app-border rounded px-2 flex items-center">
             <input
               class="mr-1"
               id="showTileBoundaries"
@@ -402,7 +402,7 @@ function MapView(props: {
             <label for="showTileBoundaries">Show tile bounds</label>
           </span>
           <button
-            class="px-4 rounded bg-indigo-500 hover:bg-indigo-400 cursor-pointer"
+            class="px-4 py-1 btn-secondary cursor-pointer"
             onClick={() => {
               props.setShowMetadata(!props.showMetadata());
             }}
@@ -432,9 +432,9 @@ function MapView(props: {
             />
           </div>
           <div class="absolute left-2 bottom-2">
-            <div class="dark:text-white flex items-center rounded border border-gray-300 dark:border-gray-700">
-              <span class="bg-gray-500 px-1 rounded-l">Z</span>
-              <span class="px-2 text-base rounded-r-md dark:bg-gray-900 rounded-r">
+            <div class="flex items-center rounded border app-bg app-border">
+              <span class="app-well px-1 rounded-l">Z</span>
+              <span class="px-2 text-base rounded-r-md rounded-r">
                 {zoom().toFixed(2)}
               </span>
             </div>
@@ -442,7 +442,7 @@ function MapView(props: {
         </div>
       </div>
       <Show when={props.showMetadata()}>
-        <div class="md:w-1/2 z-[999] bg-white dark:bg-gray-900 p-4">
+        <div class="md:w-1/2 z-[999] p-4">
           <JsonView tileset={props.tileset} />
         </div>
       </Show>

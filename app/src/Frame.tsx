@@ -30,35 +30,35 @@ export const ExampleChooser = (props: {
   return (
     <div class="h-full flex items-center justify-center p-4">
       <div>
-        <div class="mb-2 text-gray-400">Load an example:</div>
-        <div class="border border-gray-500 divide-y divide-gray-500">
+        <div class="mb-2 app-text-light">Load an example:</div>
+        <div class="app-border divide-y">
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
+            class="block p-2 flex text-left flex-col hover:bg-slate dark:hover:bg-purple w-full cursor-pointer"
             type="button"
             onClick={() => {
               loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
             }}
           >
             <div>v4.pmtiles</div>
-            <div class="text-xs text-gray-400">
+            <div class="text-xs app-text-light">
               vector basemap, Protomaps daily build channel (OpenStreetMap data)
             </div>
           </button>
 
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
+            class="block p-2 flex text-left flex-col hover:bg-slate dark:hover:bg-purple w-full cursor-pointer"
             type="button"
             onClick={() => {
               loadSample("https://air.mtn.tw/flowers.pmtiles");
             }}
           >
             <div>flowers.pmtiles</div>
-            <div class="text-xs text-gray-400">
+            <div class="text-xs app-text-light">
               raster overlay, aerial orthomosaic
             </div>
           </button>
           <button
-            class="block p-2 flex text-left flex-col hover:bg-indigo-500 w-full cursor-pointer"
+            class="block p-2 flex text-left flex-col hover:bg-slate dark:hover:bg-purple app-bg-hover w-full cursor-pointer"
             type="button"
             onClick={() => {
               loadSample(
@@ -67,17 +67,17 @@ export const ExampleChooser = (props: {
             }}
           >
             <div>tilezen.pmtiles</div>
-            <div class="text-xs text-gray-400">
+            <div class="text-xs app-text-light">
               vector basemap, 2019 Mapzen Tiles (legacy)
             </div>
           </button>
         </div>
         <input
-          class="text-left mt-4 px-4 py-2 hover:bg-indigo-500 cursor-pointer bg-indigo-800 rounded w-full"
+          class="text-left mt-4 px-4 py-2 btn-primary cursor-pointer rounded w-full"
           type="file"
           onChange={onChangeFileInput}
         />
-        <div class="mt-2 text-gray-400">Drag and drop a local file here</div>
+        <div class="mt-2 app-text-light">Drag and drop a local file here</div>
       </div>
     </div>
   );
@@ -100,7 +100,6 @@ function LinkTab(props: {
   return (
     <a
       classList={{
-        "hover:bg-gray-300": true,
         "font-bold": props.selected,
         "py-2": true,
         "px-4": true,
@@ -179,7 +178,7 @@ export function Frame(props: {
 
   return (
     <div
-      class="flex flex-col h-dvh w-full dark:bg-gray-900 dark:text-white"
+      class="flex flex-col h-dvh w-full app-bg"
       ondragover={dragover}
       ondrop={drop}
     >
@@ -187,7 +186,7 @@ export function Frame(props: {
         <div class="flex items-center flex-grow flex-1">
           <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
           <form class="flex flex-1 items-center" onSubmit={loadTileset}>
-            <span class="relative flex flex-1 items-center border border-gray-600">
+            <span class="relative flex flex-1 items-center app-border">
               <input
                 class="px-2 flex-1"
                 type="text"
@@ -198,27 +197,16 @@ export function Frame(props: {
               <Show when={props.tileset()}>
                 <button
                   type="button"
-                  class="bg-indigo-800 mr-2 rounded text-sm px-2 hover:bg-indigo-600 cursor-pointer"
+                  class="mr-2 text-sm px-2 btn-secondary cursor-pointer"
                   onClick={() => props.setTileset(undefined)}
                 >
                   clear
                 </button>
               </Show>
             </span>
-            <button
-              class="px-4 ml-2 bg-indigo-500 rounded hover:bg-indigo-300 cursor-pointer"
-              type="submit"
-            >
+            <button class="px-4 ml-2 btn-primary cursor-pointer" type="submit">
               load
             </button>
-            <a
-              href="https://github.com/protomaps/PMTiles/issues/555"
-              target="_blank"
-              rel="noreferrer"
-              class="hidden md:inline text-xs rounded bg-yellow-500 text-black mx-4 px-2"
-            >
-              beta feedback
-            </a>
             <a
               href="https://github.com/protomaps/PMTiles"
               target="_blank"

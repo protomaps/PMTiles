@@ -223,12 +223,6 @@ function MapView(props: {
   );
 }
 
-function isContiguous(entries: Entry[], entry: Entry, idx: number) {
-  if (idx === 0) return true;
-  const prev = entries[idx - 1];
-  return entry.offset > prev.offset;
-}
-
 function DirectoryTable(props: {
   entries: Entry[];
   stateUrl: string | undefined;
@@ -246,7 +240,7 @@ function DirectoryTable(props: {
 
   return (
     <div class="flex-1 overflow-hidden">
-      <div class="bg-gray-200 dark:bg-gray-800 md:px-4 md:py-2 flex">
+      <div class="app-well md:px-4 md:py-2 flex">
         <span class="flex-1">
           entries {idx()}-{idx() + 999} of {props.entries.length}
         </span>
@@ -254,7 +248,7 @@ function DirectoryTable(props: {
           classList={{
             "mx-2": true,
             underline: canNavigate(idx() - 1000),
-            "dark:text-gray-500": !canNavigate(idx() - 1000),
+            "app-text-light": !canNavigate(idx() - 1000),
             "cursor-pointer": true,
           }}
           type="button"
@@ -269,7 +263,7 @@ function DirectoryTable(props: {
           classList={{
             "mx-2": true,
             underline: canNavigate(idx() + 1000),
-            "dark:text-gray-500": !canNavigate(idx() + 1000),
+            "app-text-light": !canNavigate(idx() + 1000),
             "cursor-pointer": true,
           }}
           type="button"
@@ -296,26 +290,21 @@ function DirectoryTable(props: {
           </thead>
           <tbody>
             <For each={props.entries.slice(idx(), idx() + 1000)}>
-              {(e, idx) => (
+              {(e) => (
                 <tr
-                  class="hover:bg-indigo-700"
+                  class="hover:bg-purple"
                   onMouseMove={() => props.setHoveredTile(e.tileId)}
                 >
                   <td>{e.tileId}</td>
-                  <td>{tileIdToZxy(e.tileId)[0]}</td>
-                  <td>{tileIdToZxy(e.tileId)[1]}</td>
-                  <td>{tileIdToZxy(e.tileId)[2]}</td>
+                  <td class="app-text-light">{tileIdToZxy(e.tileId)[0]}</td>
+                  <td class="app-text-light">{tileIdToZxy(e.tileId)[1]}</td>
+                  <td class="app-text-light">{tileIdToZxy(e.tileId)[2]}</td>
                   <td>
                     <Show
                       when={e.runLength === 0}
                       fallback={
                         <a
                           classList={{
-                            "text-gray-500": isContiguous(
-                              props.entries,
-                              e,
-                              idx(),
-                            ),
                             underline: true,
                           }}
                           href={tileInspectUrl(
@@ -398,7 +387,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
   });
 
   return (
-    <div class="flex-1 flex h-full w-full dark:bg-gray-900 dark:text-white font-mono text-xs md:text-sm">
+    <div class="flex-1 flex h-full w-full font-mono text-xs md:text-sm">
       <div
         classList={{
           "w-1/3": leafEntries() !== undefined,

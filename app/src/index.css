@@ -4,6 +4,54 @@
 	display: none;
 }
 
+@theme {
+	--color-purple: #3131dc;
+	--color-slate: #e7e7f9;
+}
+
+@layer components {
+	.app-bg {
+		@apply bg-gray-100 border-gray-400 divide-gray-400;
+	}
+	.app-border {
+		@apply border border-gray-300 divide-gray-300;
+	}
+	.app-divide {
+		@apply divide-gray-300;
+	}
+	.app-text-light {
+		@apply text-gray-500;
+	}
+	.app-well {
+		@apply bg-gray-200 hover:bg-gray-300;
+	}
+
+	.btn-primary {
+		@apply rounded bg-purple text-white shadow-sm hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple;
+	}
+	.btn-secondary {
+		@apply rounded bg-gray-700 text-white shadow-sm hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.app-bg {
+			@apply bg-gray-900 text-white;
+		}
+		.app-border {
+			@apply border border-gray-600 divide-gray-600;
+		}
+		.app-divide {
+			@apply divide-gray-600;
+		}
+		.app-text-light {
+			@apply text-gray-400;
+		}
+		.app-well {
+			@apply bg-gray-700 hover:bg-gray-600;
+		}
+	}
+}
+
 .axis {
 	color: #666;
 }

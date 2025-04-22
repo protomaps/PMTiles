@@ -18,6 +18,7 @@ import {
   type Setter,
   Show,
   createEffect,
+  createMemo,
   createResource,
   createSignal,
   onMount,
@@ -104,7 +105,7 @@ function layerFeatureCounts(
 
 function ZoomableTile(props: {
   zxy: Accessor<[number, number, number]>;
-  tileset: Tileset;
+  tileset: Accessor<Tileset>;
 }) {
   let containerRef: HTMLDivElement | undefined;
   let svg: Selection<SVGSVGElement, unknown, null, undefined>;
@@ -211,20 +212,27 @@ function ZoomableTile(props: {
     }
   });
 
-  const [parsedTile] = createResource(props.zxy, async (zxy) => {
-    const tileset = props.tileset;
+  const inputs = createMemo(() => ({
+    zxy: props.zxy(),
+    tileset: props.tileset(),
+  }));
+
+  const [parsedTile] = createResource(inputs, async (i) => {
+    const tileset = i.tileset;
+    const zxy = i.zxy;
     if (await tileset.isVector()) {
       const data = await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
       if (!data) return;
-      const vectorLayers = await props.tileset.getVectorLayers();
+      const vectorLayers = await props.tileset().getVectorLayers();
       return parseTile(data, vectorLayers);
     }
     return await tileset.getZxy(zxy[0], zxy[1], zxy[2]);
   });
 
-  onMount(async () => {
-    if (await props.tileset.isVector()) {
-      const vectorLayers = await props.tileset.getVectorLayers();
+  createEffect(async () => {
+    const tileset = props.tileset();
+    if (await tileset.isVector()) {
+      const vectorLayers = await tileset.getVectorLayers();
       setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
     }
   });
@@ -315,7 +323,7 @@ function ZoomableTile(props: {
 }
 
 function TileView(props: {
-  tileset: Tileset;
+  tileset: Accessor<Tileset>;
   zxy: Accessor<[number, number, number] | undefined>;
   setZxy: Setter<[number, number, number] | undefined>;
 }) {
@@ -523,7 +531,7 @@ function PageTile() {
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}
       >
-        {(t) => <TileView tileset={t()} zxy={zxy} setZxy={setZxy} />}
+        {(t) => <TileView tileset={t} zxy={zxy} setZxy={setZxy} />}
       </Show>
     </Frame>
   );

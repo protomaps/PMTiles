@@ -400,7 +400,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
       >
         <Show when={header()}>
           {(h) => (
-            <div class="flex-none">
+            <div class="flex-none overflow-x-scroll">
               <table class="text-right table-auto border-separate border-spacing-1 p-4">
                 <thead>
                   <tr>

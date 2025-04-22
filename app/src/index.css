@@ -4,6 +4,11 @@
 	display: none;
 }
 
+json-viewer {
+	overflow-x: scroll;
+	padding: 4px;
+}
+
 @theme {
 	--color-purple: #3131dc;
 	--color-slate: #e7e7f9;

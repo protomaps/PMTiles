@@ -95,6 +95,10 @@ function MapView(props: {
     }
   });
 
+  const roundZoom = () => {
+    map.zoomTo(Math.round(map.getZoom()));
+  };
+
   onMount(async () => {
     if (!mapContainer) {
       console.error("Could not mount map element");
@@ -203,7 +207,7 @@ function MapView(props: {
       const currentZoom = zoom();
       const sp = new SphericalMercator();
       const maxZoom = await props.tileset.getMaxZoom();
-      const z = Math.min(maxZoom, Math.floor(currentZoom));
+      const z = Math.max(0, Math.min(maxZoom, Math.floor(currentZoom)));
       const result = sp.px([e.lngLat.lng, e.lngLat.lat], z);
       const tileX = Math.floor(result[0] / 256);
       const tileY = Math.floor(result[1] / 256);
@@ -432,17 +436,21 @@ function MapView(props: {
             />
           </div>
           <div class="absolute left-2 bottom-2">
-            <div class="flex items-center rounded border app-bg app-border">
+            <button
+              type="button"
+              class="flex items-center rounded border app-bg app-border cursor-pointer"
+              onClick={roundZoom}
+            >
               <span class="app-well px-1 rounded-l">Z</span>
               <span class="px-2 text-base rounded-r-md rounded-r">
                 {zoom().toFixed(2)}
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
       <Show when={props.showMetadata()}>
-        <div class="md:w-1/2 z-[999] p-4">
+        <div class="md:w-1/2 z-[999] app-bg">
           <JsonView tileset={props.tileset} />
         </div>
       </Show>

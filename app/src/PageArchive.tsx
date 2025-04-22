@@ -12,10 +12,12 @@ import {
 } from "maplibre-gl";
 import { Compression, type Entry, tileIdToZxy, tileTypeExt } from "pmtiles";
 import {
+  type Accessor,
   For,
   type Setter,
   Show,
   createEffect,
+  createMemo,
   createResource,
   createSignal,
   onMount,
@@ -343,16 +345,18 @@ function DirectoryTable(props: {
   );
 }
 
-function ArchiveView(props: { genericTileset: Tileset }) {
-  const tileset = () => {
-    if (props.genericTileset instanceof PMTilesTileset) {
-      return props.genericTileset as PMTilesTileset;
+function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
+  const tileset = createMemo(() => {
+    console.log("memo!");
+    const g = props.genericTileset();
+    if (g instanceof PMTilesTileset) {
+      return g as PMTilesTileset;
     }
     alert("This isn't a PMTiles archive!");
     throw "This isn't a PMTiles tileset";
-  };
+  });
 
-  const [header] = createResource(tileset(), async (t) => {
+  const [header] = createResource(tileset, async (t) => {
     return await t.archive.getHeader();
   });
 
@@ -438,7 +442,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
 
         <DirectoryTable
           entries={rootEntries() || []}
-          stateUrl={props.genericTileset.getStateUrl()}
+          stateUrl={props.genericTileset().getStateUrl()}
           setHoveredTile={setHoveredTile}
           setOpenedLeaf={setOpenedLeaf}
         />
@@ -449,7 +453,7 @@ function ArchiveView(props: { genericTileset: Tileset }) {
             <div class="w-full flex flex-1 overflow-hidden">
               <DirectoryTable
                 entries={l()}
-                stateUrl={props.genericTileset.getStateUrl()}
+                stateUrl={props.genericTileset().getStateUrl()}
                 setHoveredTile={setHoveredTile}
                 setOpenedLeaf={setOpenedLeaf}
               />
@@ -521,7 +525,7 @@ function PageArchive() {
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}
       >
-        {(t) => <ArchiveView genericTileset={t()} />}
+        {(t) => <ArchiveView genericTileset={t} />}
       </Show>
     </Frame>
   );

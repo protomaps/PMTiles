@@ -41,7 +41,7 @@ declare module "solid-js" {
 }
 
 function MapView(props: {
-  tileset: Tileset;
+  tileset: Accessor<Tileset>;
   showMetadata: Accessor<boolean>;
   setShowMetadata: Setter<boolean>;
   showTileBoundaries: Accessor<boolean>;
@@ -83,6 +83,164 @@ function MapView(props: {
   addProtocol("pmtiles", protocol.tile);
 
   let map: MaplibreMap;
+  let initialLoad = true;
+
+  const roundZoom = () => {
+    map.zoomTo(Math.round(map.getZoom()));
+  };
+
+  const fitToBounds = async () => {
+    const bounds = await props.tileset().getBounds();
+    map.fitBounds(
+      [
+        [bounds[0], bounds[1]],
+        [bounds[2], bounds[3]],
+      ],
+      { animate: false },
+    );
+  };
+
+  const removeTileset = () => {
+    for (const layer of map.getStyle().layers) {
+      if ("source" in layer && layer.source === "tileset") {
+        map.removeLayer(layer.id);
+      }
+    }
+    map.removeSource("tileset");
+  };
+
+  const addTileset = async (tileset: Tileset) => {
+    const archiveForProtocol = tileset.archiveForProtocol();
+    if (archiveForProtocol) {
+      protocol.add(archiveForProtocol);
+    }
+    let flavor = "white";
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+      flavor = "black";
+    }
+    if (await tileset.isOverlay()) {
+      setBasemap(true);
+    }
+
+    if (await tileset.isVector()) {
+      map.addSource("tileset", {
+        type: "vector",
+        url: tileset.getMaplibreSourceUrl(),
+      });
+      const vectorLayers = await tileset.getVectorLayers();
+      setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
+      for (const [i, vectorLayer] of vectorLayers.entries()) {
+        map.addLayer({
+          id: `tileset_fill_${vectorLayer}`,
+          type: "fill",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "fill-color": colorForIdx(i),
+            "fill-opacity": [
+              "case",
+              ["boolean", ["feature-state", "hover"], false],
+              0.25,
+              0.1,
+            ],
+          },
+          filter: ["==", ["geometry-type"], "Polygon"],
+        });
+        map.addLayer({
+          id: `tileset_line_${vectorLayer}`,
+          type: "line",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "line-color": colorForIdx(i),
+            "line-width": [
+              "case",
+              ["boolean", ["feature-state", "hover"], false],
+              2,
+              0.5,
+            ],
+          },
+          filter: ["==", ["geometry-type"], "LineString"],
+        });
+        map.addLayer({
+          id: `tileset_circle_${vectorLayer}`,
+          type: "circle",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          paint: {
+            "circle-color": colorForIdx(i),
+            "circle-radius": 3,
+            "circle-stroke-color": "white",
+            "circle-stroke-width": [
+              "case",
+              ["boolean", ["feature-state", "hover"], false],
+              3,
+              0,
+            ],
+          },
+          filter: ["==", ["geometry-type"], "Point"],
+        });
+      }
+      for (const [i, vectorLayer] of vectorLayers.entries()) {
+        map.addLayer({
+          id: `tileset_line_label_${vectorLayer}`,
+          type: "symbol",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Noto Sans Regular"],
+            "text-size": 10,
+            "symbol-placement": "line",
+          },
+          paint: {
+            "text-color": colorForIdx(i),
+            "text-halo-color": flavor,
+            "text-halo-width": 2,
+          },
+          filter: ["==", ["geometry-type"], "LineString"],
+        });
+        map.addLayer({
+          id: `tileset_point_label_${vectorLayer}`,
+          type: "symbol",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Noto Sans Regular"],
+            "text-size": 10,
+            "text-offset": [0, -1],
+          },
+          paint: {
+            "text-color": colorForIdx(i),
+            "text-halo-color": flavor,
+            "text-halo-width": 2,
+          },
+          filter: ["==", ["geometry-type"], "Point"],
+        });
+      }
+    } else {
+      map.addSource("tileset", {
+        type: "raster",
+        url: tileset.getMaplibreSourceUrl(),
+      });
+      map.addLayer({
+        source: "tileset",
+        id: "tileset_raster",
+        type: "raster",
+      });
+    }
+  };
+
+  createEffect(() => {
+    const tileset = props.tileset();
+    if (initialLoad) {
+      initialLoad = false;
+      return;
+    }
+    removeTileset();
+    addTileset(tileset);
+  });
 
   createEffect(() => {
     const visibility = basemap() ? "visible" : "none";
@@ -95,19 +253,44 @@ function MapView(props: {
     }
   });
 
-  const roundZoom = () => {
-    map.zoomTo(Math.round(map.getZoom()));
-  };
+  createEffect(() => {
+    const show = props.showTileBoundaries();
+    if (map) {
+      map.showTileBoundaries = show;
+    }
+  });
+
+  createEffect(() => {
+    if (props.inspectFeatures()) {
+      setFrozen(false);
+    } else {
+      for (const hoveredFeature of hoveredFeatures()) {
+        map.setFeatureState(hoveredFeature, { hover: false });
+      }
+      popup.remove();
+    }
+  });
+
+  createEffect(() => {
+    const setVisibility = (layerName: string, visibility: string) => {
+      if (map.getLayer(layerName)) {
+        map.setLayoutProperty(layerName, "visibility", visibility);
+      }
+    };
+
+    for (const { id, visible } of layerVisibility()) {
+      const visibility = visible ? "visible" : "none";
+      setVisibility(`tileset_fill_${id}`, visibility);
+      setVisibility(`tileset_line_${id}`, visibility);
+      setVisibility(`tileset_circle_${id}`, visibility);
+      setVisibility(`tileset_point_label_${id}`, visibility);
+    }
+  });
 
   onMount(async () => {
     if (!mapContainer) {
       console.error("Could not mount map element");
       return;
-    }
-
-    const archiveForProtocol = props.tileset.archiveForProtocol();
-    if (archiveForProtocol) {
-      protocol.add(archiveForProtocol);
     }
 
     if (getRTLTextPluginStatus() === "unavailable") {
@@ -154,21 +337,6 @@ function MapView(props: {
       },
     });
 
-    createEffect(() => {
-      map.showTileBoundaries = props.showTileBoundaries();
-    });
-
-    createEffect(() => {
-      if (props.inspectFeatures()) {
-        setFrozen(false);
-      } else {
-        for (const hoveredFeature of hoveredFeatures()) {
-          map.setFeatureState(hoveredFeature, { hover: false });
-        }
-        popup.remove();
-      }
-    });
-
     map.addControl(new NavigationControl({}), "top-left");
     map.addControl(new AttributionControl({ compact: false }), "bottom-right");
 
@@ -206,7 +374,7 @@ function MapView(props: {
 
       const currentZoom = zoom();
       const sp = new SphericalMercator();
-      const maxZoom = await props.tileset.getMaxZoom();
+      const maxZoom = await props.tileset().getMaxZoom();
       const z = Math.max(0, Math.min(maxZoom, Math.floor(currentZoom)));
       const result = sp.px([e.lngLat.lng, e.lngLat.lat], z);
       const tileX = Math.floor(result[0] / 256);
@@ -222,7 +390,7 @@ function MapView(props: {
                 class="block text-xs btn-primary mt-2 text-center"
                 target="_blank"
                 rel="noreferrer"
-                href={tileInspectUrl(props.tileset.getStateUrl(), [
+                href={tileInspectUrl(props.tileset().getStateUrl(), [
                   z,
                   tileX,
                   tileY,
@@ -245,129 +413,9 @@ function MapView(props: {
     });
 
     map.on("load", async () => {
-      if (await props.tileset.isOverlay()) {
-        setBasemap(true);
-      }
-
-      if (await props.tileset.isVector()) {
-        map.addSource("tileset", {
-          type: "vector",
-          url: props.tileset.getMaplibreSourceUrl(),
-        });
-        const vectorLayers = await props.tileset.getVectorLayers();
-        setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));
-        for (const [i, vectorLayer] of vectorLayers.entries()) {
-          map.addLayer({
-            id: `tileset_fill_${vectorLayer}`,
-            type: "fill",
-            source: "tileset",
-            "source-layer": vectorLayer,
-            paint: {
-              "fill-color": colorForIdx(i),
-              "fill-opacity": [
-                "case",
-                ["boolean", ["feature-state", "hover"], false],
-                0.25,
-                0.1,
-              ],
-            },
-            filter: ["==", ["geometry-type"], "Polygon"],
-          });
-          map.addLayer({
-            id: `tileset_line_${vectorLayer}`,
-            type: "line",
-            source: "tileset",
-            "source-layer": vectorLayer,
-            paint: {
-              "line-color": colorForIdx(i),
-              "line-width": [
-                "case",
-                ["boolean", ["feature-state", "hover"], false],
-                2,
-                0.5,
-              ],
-            },
-            filter: ["==", ["geometry-type"], "LineString"],
-          });
-          map.addLayer({
-            id: `tileset_circle_${vectorLayer}`,
-            type: "circle",
-            source: "tileset",
-            "source-layer": vectorLayer,
-            paint: {
-              "circle-color": colorForIdx(i),
-              "circle-radius": 3,
-              "circle-stroke-color": "white",
-              "circle-stroke-width": [
-                "case",
-                ["boolean", ["feature-state", "hover"], false],
-                3,
-                0,
-              ],
-            },
-            filter: ["==", ["geometry-type"], "Point"],
-          });
-        }
-        for (const [i, vectorLayer] of vectorLayers.entries()) {
-          map.addLayer({
-            id: `tileset_point_label_${vectorLayer}`,
-            type: "symbol",
-            source: "tileset",
-            "source-layer": vectorLayer,
-            layout: {
-              "text-field": ["get", "name"],
-              "text-font": ["Noto Sans Regular"],
-              "text-size": 10,
-              "text-offset": [0, -1],
-            },
-            paint: {
-              "text-color": colorForIdx(i),
-              "text-halo-color": flavor,
-              "text-halo-width": 2,
-            },
-            filter: ["==", ["geometry-type"], "Point"],
-          });
-        }
-      } else {
-        map.addSource("tileset", {
-          type: "raster",
-          url: props.tileset.getMaplibreSourceUrl(),
-        });
-        map.addLayer({
-          source: "tileset",
-          id: "tileset_raster",
-          type: "raster",
-        });
-      }
+      await addTileset(props.tileset());
       map.resize();
     });
-  });
-
-  const fitToBounds = async () => {
-    const bounds = await props.tileset.getBounds();
-    map.fitBounds(
-      [
-        [bounds[0], bounds[1]],
-        [bounds[2], bounds[3]],
-      ],
-      { animate: false },
-    );
-  };
-
-  createEffect(() => {
-    const setVisibility = (layerName: string, visibility: string) => {
-      if (map.getLayer(layerName)) {
-        map.setLayoutProperty(layerName, "visibility", visibility);
-      }
-    };
-
-    for (const { id, visible } of layerVisibility()) {
-      const visibility = visible ? "visible" : "none";
-      setVisibility(`tileset_fill_${id}`, visibility);
-      setVisibility(`tileset_line_${id}`, visibility);
-      setVisibility(`tileset_circle_${id}`, visibility);
-      setVisibility(`tileset_point_label_${id}`, visibility);
-    }
   });
 
   return (
@@ -458,9 +506,9 @@ function MapView(props: {
   );
 }
 
-const JsonView = (props: { tileset: Tileset }) => {
+const JsonView = (props: { tileset: Accessor<Tileset> }) => {
   const [data] = createResource(async () => {
-    return await props.tileset.getMetadata();
+    return await props.tileset().getMetadata();
   });
 
   return <json-viewer data={data()} />;
@@ -517,7 +565,7 @@ function PageMap() {
       >
         {(t) => (
           <MapView
-            tileset={t()}
+            tileset={t}
             showMetadata={showMetadata}
             setShowMetadata={setShowMetadata}
             showTileBoundaries={showTileBoundaries}

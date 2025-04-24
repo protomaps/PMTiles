@@ -128,9 +128,6 @@ function ZoomableTile(props: {
     const height = containerRef.clientHeight;
     const width = containerRef.clientWidth;
 
-    // const width = 800;
-    // const height = 300;
-
     const x = scaleLinear()
       .domain([-1000, 4096 + 1000])
       .range([-1000, 4096 + 1000]);
@@ -158,15 +155,6 @@ function ZoomableTile(props: {
       undefined
     >;
     view = svg.append("g");
-    view
-      .append("rect")
-      .attr("width", 4096)
-      .attr("height", 4096)
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("fill", "none")
-      .attr("strokeWidth", "1")
-      .attr("stroke", "blue");
     const gX = svg.append("g").attr("class", "axis axis--x").call(xAxis);
     const gY = svg.append("g").attr("class", "axis axis--y").call(yAxis);
 
@@ -239,6 +227,16 @@ function ZoomableTile(props: {
 
   createEffect(async () => {
     view.selectAll("*").remove();
+    view
+      .append("rect")
+      .attr("width", 4096)
+      .attr("height", 4096)
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("fill", "none")
+      .attr("class", "tile-border")
+      .attr("strokeWidth", "1");
+
     const tile = parsedTile();
     if (!tile) return;
 

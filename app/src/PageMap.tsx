@@ -66,7 +66,7 @@ function MapView(props: {
     return hoveredFeatures().map((h) => {
       return {
         layerName: h.sourceLayer || "unknown",
-        id: (h.id as number) || 0,
+        id: h.id ? (h.id as number) : undefined,
         properties: h.properties,
         type: h._vectorTileFeature.type,
       };
@@ -169,7 +169,8 @@ function MapView(props: {
           "source-layer": vectorLayer,
           paint: {
             "circle-color": colorForIdx(i),
-            "circle-radius": 3,
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 2, 12, 4],
+            "circle-opacity": 0.5,
             "circle-stroke-color": "white",
             "circle-stroke-width": [
               "case",
@@ -355,6 +356,7 @@ function MapView(props: {
       }
 
       for (const hoveredFeature of hoveredFeatures()) {
+        if (hoveredFeature.id === undefined) continue;
         map.setFeatureState(hoveredFeature, { hover: false });
       }
 
@@ -367,6 +369,7 @@ function MapView(props: {
       features = features.filter((feature) => feature.source === "tileset");
 
       for (const feature of features) {
+        if (feature.id === undefined) continue;
         map.setFeatureState(feature, { hover: true });
       }
 
@@ -387,7 +390,7 @@ function MapView(props: {
             <div>
               <FeatureTable features={inspectableFeatures()} />
               <a
-                class="block text-xs btn-primary mt-2 text-center"
+                class="block text-xs btn-primary mt-2 text-center px-2"
                 target="_blank"
                 rel="noreferrer"
                 href={tileInspectUrl(props.tileset().getStateUrl(), [
@@ -398,6 +401,9 @@ function MapView(props: {
               >
                 Tile {z}/{tileX}/{tileY}
               </a>
+              <div class="text-xs text-center mt-2 font-mono">
+                {e.lngLat.lng.toFixed(4)},{e.lngLat.lat.toFixed(4)}
+              </div>
             </div>
           ),
           hiddenRef,

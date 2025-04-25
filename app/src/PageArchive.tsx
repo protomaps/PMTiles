@@ -347,7 +347,6 @@ function DirectoryTable(props: {
 
 function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
   const tileset = createMemo(() => {
-    console.log("memo!");
     const g = props.genericTileset();
     if (g instanceof PMTilesTileset) {
       return g as PMTilesTileset;

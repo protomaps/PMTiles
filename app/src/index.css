@@ -9,6 +9,10 @@ json-viewer {
 	padding: 4px;
 }
 
+.tile-border {
+	stroke: black;
+}
+
 @theme {
 	--color-purple: #3131dc;
 	--color-slate: #e7e7f9;
@@ -81,6 +85,10 @@ json-viewer {
 }
 
 @media (prefers-color-scheme: dark) {
+	.tile-border {
+		stroke: white;
+	}
+
 	.maplibregl-ctrl.maplibregl-ctrl-group {
 		filter: invert(1);
 	}

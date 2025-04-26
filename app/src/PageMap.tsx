@@ -284,6 +284,7 @@ function MapView(props: {
       setVisibility(`tileset_fill_${id}`, visibility);
       setVisibility(`tileset_line_${id}`, visibility);
       setVisibility(`tileset_circle_${id}`, visibility);
+      setVisibility(`tileset_line_label_${id}`, visibility);
       setVisibility(`tileset_point_label_${id}`, visibility);
     }
   });

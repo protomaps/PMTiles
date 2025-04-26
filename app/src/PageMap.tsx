@@ -219,6 +219,30 @@ function MapView(props: {
           },
           filter: ["==", ["geometry-type"], "Point"],
         });
+        map.addLayer({
+          id: `tileset_polygon_label_${vectorLayer}`,
+          type: "symbol",
+          source: "tileset",
+          "source-layer": vectorLayer,
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Noto Sans Regular"],
+            "text-max-angle": 85,
+            "text-offset": [0, 1],
+            "text-anchor": "bottom",
+            "text-rotation-alignment": "map",
+            "text-keep-upright": true,
+            "text-size": 10,
+            "symbol-placement": "line",
+            "symbol-spacing": 250,
+          },
+          paint: {
+            "text-color": colorForIdx(i),
+            "text-halo-color": flavor,
+            "text-halo-width": 2,
+          },
+          filter: ["==", ["geometry-type"], "Polygon"],
+        });
       }
     } else {
       map.addSource("tileset", {
@@ -286,6 +310,7 @@ function MapView(props: {
       setVisibility(`tileset_circle_${id}`, visibility);
       setVisibility(`tileset_line_label_${id}`, visibility);
       setVisibility(`tileset_point_label_${id}`, visibility);
+      setVisibility(`tileset_polygon_label_${id}`, visibility);
     }
   });
 

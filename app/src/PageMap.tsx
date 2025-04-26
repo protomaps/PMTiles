@@ -292,6 +292,7 @@ function MapView(props: {
       setFrozen(false);
     } else {
       for (const hoveredFeature of hoveredFeatures()) {
+        if (hoveredFeature.id === undefined) continue;
         map.setFeatureState(hoveredFeature, { hover: false });
       }
       popup.remove();

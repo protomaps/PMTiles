@@ -106,7 +106,9 @@ function MapView(props: {
         map.removeLayer(layer.id);
       }
     }
-    map.removeSource("tileset");
+    if ("tileset" in map.getStyle().sources) {
+      map.removeSource("tileset");
+    }
   };
 
   const addTileset = async (tileset: Tileset) => {
@@ -290,6 +292,7 @@ function MapView(props: {
       setFrozen(false);
     } else {
       for (const hoveredFeature of hoveredFeatures()) {
+        if (hoveredFeature.id === undefined) continue;
         map.setFeatureState(hoveredFeature, { hover: false });
       }
       popup.remove();

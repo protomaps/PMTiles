@@ -27,6 +27,8 @@ import { ExampleChooser, Frame } from "./Frame";
 import { PMTilesTileset, type Tileset, tilesetFromString } from "./tileset";
 import { createHash, formatBytes, parseHash, tileInspectUrl } from "./utils";
 
+const NONE = Number.MAX_VALUE;
+
 const compressionToString = (t: Compression) => {
   if (t === Compression.Unknown) return "unknown";
   if (t === Compression.None) return "none";
@@ -228,11 +230,9 @@ function MapView(props: {
 function DirectoryTable(props: {
   entries: Entry[];
   stateUrl: string | undefined;
-  tileContents?: number;
-  addressedTiles?: number;
-  totalEntries?: number;
   setHoveredTile: Setter<number | undefined>;
-  setOpenedLeaf: Setter<number | undefined>;
+  setOpenedLeaf: Setter<number>;
+  isLeaf?: boolean;
 }) {
   const [idx, setIdx] = createSignal<number>(0);
 
@@ -246,6 +246,15 @@ function DirectoryTable(props: {
         <span class="flex-1">
           entries {idx()}-{idx() + 999} of {props.entries.length}
         </span>
+        <Show when={props.isLeaf}>
+          <button
+            class="mx-2 underline cursor-pointer"
+            type="button"
+            onClick={() => props.setOpenedLeaf(NONE)}
+          >
+            close
+          </button>
+        </Show>
         <button
           classList={{
             "mx-2": true,
@@ -368,10 +377,11 @@ function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
     );
   });
 
-  const [openedLeaf, setOpenedLeaf] = createSignal<number | undefined>();
+  const [openedLeaf, setOpenedLeaf] = createSignal<number>(NONE);
   const [hoveredTile, setHoveredTile] = createSignal<number | undefined>();
 
   const [leafEntries] = createResource(openedLeaf, async (o) => {
+    if (o === NONE) return;
     const h = header();
     const root = rootEntries();
 
@@ -404,9 +414,9 @@ function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
         <Show when={header()}>
           {(h) => (
             <div class="flex-none overflow-x-scroll">
-              <table class="text-right table-auto border-separate border-spacing-1 p-4">
+              <table class="text-right table-auto border-separate border-spacing-2 p-4 w-full text-xs">
                 <thead>
-                  <tr>
+                  <tr class="app-text-light">
                     <th>Layout (bytes)</th>
                     <th>offset</th>
                     <th>length</th>
@@ -414,22 +424,22 @@ function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Root Dir</td>
+                    <td class="app-text-light">Root Dir</td>
                     <td>{h().rootDirectoryOffset}</td>
                     <td>{formatBytes(h().rootDirectoryLength)}</td>
                   </tr>
                   <tr>
-                    <td>Metadata</td>
+                    <td class="app-text-light">Metadata</td>
                     <td>{h().jsonMetadataOffset}</td>
                     <td>{formatBytes(h().jsonMetadataLength)}</td>
                   </tr>
                   <tr>
-                    <td>Leaf Dirs</td>
+                    <td class="app-text-light">Leaf Dirs</td>
                     <td>{h().leafDirectoryOffset}</td>
                     <td>{formatBytes(h().leafDirectoryLength || 0)}</td>
                   </tr>
                   <tr>
-                    <td>Tile Data</td>
+                    <td class="app-text-light">Tile Data</td>
                     <td>{h().tileDataOffset}</td>
                     <td>{formatBytes(h().tileDataLength || 0)}</td>
                   </tr>
@@ -455,6 +465,7 @@ function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
                 stateUrl={props.genericTileset().getStateUrl()}
                 setHoveredTile={setHoveredTile}
                 setOpenedLeaf={setOpenedLeaf}
+                isLeaf
               />
             </div>
           </div>
@@ -470,28 +481,69 @@ function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
       >
         <Show when={header()}>
           {(h) => (
-            <div class="p-2">
-              <div>clustered: {h().clustered ? "true" : "false"}</div>
-              <div>total addressed tiles: {h().numAddressedTiles}</div>
-              <div>total tile entries: {h().numTileEntries}</div>
-              <div>total contents: {h().numTileContents}</div>
-              <div>
-                internal compression:{" "}
-                {compressionToString(h().internalCompression)}
-              </div>
-              <div>
-                tile compression: {compressionToString(h().tileCompression)}
-              </div>
-              <div>tile type: {tileTypeExt(h().tileType)}</div>
-              <div>min zoom: {h().minZoom}</div>
-              <div>max zoom: {h().maxZoom}</div>
-              <div>center zoom: {h().centerZoom}</div>
-              <div>
-                bounds: {h().minLon} {h().minLat} {h().maxLon} {h().maxLat}
-              </div>
-              <div>
-                center: {h().centerLon} {h().centerLat}
-              </div>
+            <div class="flex text-xs overflow-x-scroll">
+              <table class="table-auto border-separate border-spacing-2 w-1/2">
+                <tbody>
+                  <tr>
+                    <td class="text-right app-text-light">Addressed tiles</td>
+                    <td>{h().numAddressedTiles.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Tile entries</td>
+                    <td>{h().numTileEntries.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Tile contents</td>
+                    <td>{h().numTileContents.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Clustered</td>
+                    <td>{h().clustered ? "true" : "false"}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">
+                      Internal compression
+                    </td>
+                    <td>{compressionToString(h().internalCompression)}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Tile compression</td>
+                    <td>{compressionToString(h().tileCompression)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <table class="table-auto border-separate border-spacing-2 w-1/2">
+                <tbody>
+                  <tr>
+                    <td class="text-right app-text-light">Tile type</td>
+                    <td>{tileTypeExt(h().tileType)}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Min zoom</td>
+                    <td>{h().minZoom}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Max zoom</td>
+                    <td>{h().maxZoom}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Center zoom</td>
+                    <td>{h().centerZoom}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Bounds</td>
+                    <td>
+                      {h().minLon} {h().minLat} {h().maxLon} {h().maxLat}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-right app-text-light">Center</td>
+                    <td>
+                      {h().centerLon} {h().centerLat}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           )}
         </Show>

@@ -45,8 +45,8 @@ Usage
       -o, --output PATH               Path to output file (optional alternative to
                                       a positional arg).
 
-      --title TEXT                    PMTiles dataset title.
       --description TEXT              PMTiles dataset description.
+      --name TEXT                     PMTiles metadata name.
       --overlay                       Export as an overlay (the default).
       --baselayer                     Export as a base layer.
       -f, --format [JPEG|PNG|WEBP]    Tile image format.  [default: WEBP]

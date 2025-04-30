@@ -1,3 +1,14 @@
+1.0.1
+------
+* README fixes by @roblabs [#564]
+
+1.0.0
+------
+* show progress by default, add `--silent` option [#545]
+* change defaults from JPEG/256/nearest to WEBP/512/bilinear
+* rename title to name
+* automatic guessing of maxzoom
+
 0.0.6
 ------
 

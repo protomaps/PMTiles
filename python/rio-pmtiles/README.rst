@@ -45,13 +45,13 @@ Usage
       -o, --output PATH               Path to output file (optional alternative to
                                       a positional arg).
 
-      --title TEXT                    PMTiles dataset title.
-      --description TEXT              PMTiles dataset description.
+      --name TEXT                     PMTiles metadata name.
+      --description TEXT              PMTiles metadata description.
       --overlay                       Export as an overlay (the default).
       --baselayer                     Export as a base layer.
-      -f, --format [JPEG|PNG|WEBP]    Tile image format.
+      -f, --format [JPEG|PNG|WEBP]    Tile image format.  [default: WEBP]
       --tile-size INTEGER             Width and height of individual square tiles
-                                      to create.  [default: 256]
+                                      to create.  [default: 512]
 
       --zoom-levels MIN..MAX          A min...max range of export zoom levels. The
                                       default zoom level is the one at which the
@@ -64,7 +64,7 @@ Usage
       --dst-nodata FLOAT              Manually override destination nodata
       --resampling [nearest|bilinear|cubic|cubic_spline|lanczos|average|mode|gauss|max|min|med|q1|q3|rms]
                                       Resampling method to use.  [default:
-                                      nearest]
+                                      bilinear]
 
       --version                       Show the version and exit.
       --rgba                          Select RGBA output. For PNG or WEBP only.

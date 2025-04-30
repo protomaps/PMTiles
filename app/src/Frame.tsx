@@ -60,7 +60,9 @@ export const ExampleChooser = (props: {
             class="block p-2 flex text-left flex-col hover:bg-slate dark:hover:bg-purple w-full cursor-pointer"
             type="button"
             onClick={() => {
-              loadSample("https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2025-04-23/places.pmtiles");
+              loadSample(
+                "https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2025-04-23/places.pmtiles",
+              );
             }}
           >
             <div>places.pmtiles</div>

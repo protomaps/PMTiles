@@ -120,6 +120,7 @@ def guess_maxzoom(crs, bounds, width, height, tile_size):
 @output_opt
 @click.option("--name", help="PMTiles metadata name.")
 @click.option("--description", help="PMTiles metadata description.")
+@click.option("--attribution", help="PMTiles metadata attribution.")
 @click.option(
     "--overlay",
     "layer_type",
@@ -226,6 +227,7 @@ def pmtiles(
     output,
     name,
     description,
+    attribution,
     layer_type,
     img_format,
     tile_size,
@@ -300,6 +302,7 @@ def pmtiles(
             # Name and description.
             name = name or os.path.basename(src.name)
             description = description or src.name
+            attribution = attribution or None
 
             # Compute the geographic bounding box of the dataset.
             (west, east), (south, north) = transform(
@@ -374,7 +377,7 @@ def pmtiles(
         outfile.write(b"\x00" * 16384)
         entries = []
 
-        metadata = gzip.compress(json.dumps({'name':name,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}'}).encode())
+        metadata = gzip.compress(json.dumps({'name':name,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}','attribution':attribution}).encode())
         outfile.write(metadata)
 
         header = {}

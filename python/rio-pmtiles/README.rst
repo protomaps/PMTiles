@@ -47,6 +47,7 @@ Usage
 
       --name TEXT                     PMTiles metadata name.
       --description TEXT              PMTiles metadata description.
+      --attribution TEXT              PMTiles metadata attribution.
       --overlay                       Export as an overlay (the default).
       --baselayer                     Export as a base layer.
       -f, --format [JPEG|PNG|WEBP]    Tile image format.  [default: WEBP]

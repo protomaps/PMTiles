@@ -253,8 +253,8 @@ function MapView(props: {
         id: "tileset_raster",
         type: "raster",
         paint: {
-          "raster-resampling":"nearest"
-        }
+          "raster-resampling": "nearest",
+        },
       });
     }
   };

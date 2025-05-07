@@ -116,10 +116,7 @@ function MapView(props: {
     if (archiveForProtocol) {
       protocol.add(archiveForProtocol);
     }
-    let flavor = "white";
-    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-      flavor = "black";
-    }
+
     if (await tileset.isOverlay()) {
       setBasemap(true);
     }
@@ -198,7 +195,7 @@ function MapView(props: {
           },
           paint: {
             "text-color": colorForIdx(i),
-            "text-halo-color": flavor,
+            "text-halo-color": "black",
             "text-halo-width": 2,
           },
           filter: ["==", ["geometry-type"], "LineString"],
@@ -216,7 +213,7 @@ function MapView(props: {
           },
           paint: {
             "text-color": colorForIdx(i),
-            "text-halo-color": flavor,
+            "text-halo-color": "black",
             "text-halo-width": 2,
           },
           filter: ["==", ["geometry-type"], "Point"],
@@ -240,7 +237,7 @@ function MapView(props: {
           },
           paint: {
             "text-color": colorForIdx(i),
-            "text-halo-color": flavor,
+            "text-halo-color": "black",
             "text-halo-width": 2,
           },
           filter: ["==", ["geometry-type"], "Polygon"],
@@ -255,6 +252,9 @@ function MapView(props: {
         source: "tileset",
         id: "tileset_raster",
         type: "raster",
+        paint: {
+          "raster-resampling":"nearest"
+        }
       });
     }
   };
@@ -330,11 +330,6 @@ function MapView(props: {
       );
     }
 
-    let flavor = "white";
-    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-      flavor = "black";
-    }
-
     map = new MaplibreMap({
       hash: "map",
       container: mapContainer,
@@ -343,7 +338,7 @@ function MapView(props: {
         version: 8,
         glyphs:
           "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-        sprite: `https://protomaps.github.io/basemaps-assets/sprites/v4/${flavor}`,
+        sprite: "https://protomaps.github.io/basemaps-assets/sprites/v4/black",
         sources: {
           basemap: {
             type: "vector",
@@ -355,7 +350,7 @@ function MapView(props: {
               "Background © <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a>",
           },
         },
-        layers: layers("basemap", namedFlavor(flavor), { lang: "en" }).map(
+        layers: layers("basemap", namedFlavor("black"), { lang: "en" }).map(
           (l) => {
             if (!("layout" in l)) {
               l.layout = {};
@@ -504,6 +499,7 @@ function MapView(props: {
             classList={{
               "h-full": true,
               "flex-1": true,
+              "bg-gray-900": true,
               inspectFeatures: props.inspectFeatures(),
               frozen: frozen(),
             }}

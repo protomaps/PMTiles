@@ -377,7 +377,7 @@ def pmtiles(
         outfile.write(b"\x00" * 16384)
         entries = []
 
-        metadata = gzip.compress(json.dumps({'name':name,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}','attribution':attribution}).encode())
+        metadata = gzip.compress(json.dumps({'name':name,'type':layer_type,'description':description,'writer':f'rio-pmtiles {rio_pmtiles_version}','attribution':attribution,'tileSize':int(tile_size)}).encode())
         outfile.write(metadata)
 
         header = {}

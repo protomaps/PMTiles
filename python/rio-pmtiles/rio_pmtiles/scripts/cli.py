@@ -26,7 +26,7 @@ import shapely.wkt
 import supermercado.burntiles
 from tqdm import tqdm
 from pmtiles.tile import TileType, Entry, zxy_to_tileid, Compression, serialize_header, tileid_to_zxy
-from pmtiles.writer import Writer, optimize_directories
+from pmtiles.writer import optimize_directories
 
 from rio_pmtiles import __version__ as rio_pmtiles_version
 from rio_pmtiles.worker import init_worker, process_tile

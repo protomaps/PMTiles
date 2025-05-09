@@ -1,3 +1,8 @@
+1.0.2
+------
+* attribution and tileSize in metadata by @roblabs [#570]
+* cleanup of requirements/imports
+
 1.0.1
 ------
 * README fixes by @roblabs [#564]

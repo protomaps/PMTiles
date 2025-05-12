@@ -200,6 +200,16 @@ export function Frame(props: {
           <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
           <form class="flex flex-1 items-center" onSubmit={loadTileset}>
             <span class="relative flex flex-1 items-center app-border">
+              <Show
+                when={
+                  props.tileset() &&
+                  props.tileset()?.getStateUrl() === undefined
+                }
+              >
+                <span class="bg-yellow-500 rounded px-2 text-sm text-black">
+                  local file {props.tileset()?.getLocalFileName()}
+                </span>
+              </Show>
               <input
                 class="px-2 flex-1"
                 type="text"

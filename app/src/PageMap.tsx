@@ -369,6 +369,10 @@ function MapView(props: {
       fitToBounds();
     }
 
+    if (props.showTileBoundaries()) {
+      map.showTileBoundaries = true;
+    }
+
     setZoom(map.getZoom());
     map.on("zoom", (e) => {
       setZoom(e.target.getZoom());
@@ -461,7 +465,7 @@ function MapView(props: {
           </button>
           <span class="app-border rounded px-2 flex items-center">
             <input
-              class="mr-1"
+              class="mr-1 cursor-pointer"
               id="inspectFeatures"
               checked={props.inspectFeatures()}
               type="checkbox"
@@ -469,11 +473,13 @@ function MapView(props: {
                 props.setInspectFeatures(!props.inspectFeatures());
               }}
             />
-            <label for="inspectFeatures">Inspect features</label>
+            <label for="inspectFeatures" class="cursor-pointer">
+              Inspect features
+            </label>
           </span>
           <span class="app-border rounded px-2 flex items-center">
             <input
-              class="mr-1"
+              class="mr-1 cursor-pointer"
               id="showTileBoundaries"
               checked={props.showTileBoundaries()}
               type="checkbox"
@@ -481,7 +487,9 @@ function MapView(props: {
                 props.setShowTileBoundaries(!props.showTileBoundaries());
               }}
             />
-            <label for="showTileBoundaries">Show tile bounds</label>
+            <label class="cursor-pointer" for="showTileBoundaries">
+              Show tile bounds
+            </label>
           </span>
           <button
             class="px-4 py-1 btn-secondary cursor-pointer"

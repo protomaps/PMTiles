@@ -16,6 +16,7 @@ export interface Tileset {
   getZxy(z: number, x: number, y: number): Promise<ArrayBuffer | undefined>;
   getMetadata(): Promise<Metadata>;
   getStateUrl(): string | undefined;
+  getLocalFileName(): string;
   getMaplibreSourceUrl(): string;
   getBounds(): Promise<[number, number, number, number]>;
   getMaxZoom(): Promise<number>;
@@ -91,6 +92,10 @@ class RemotePMTilesTileset extends PMTilesTileset implements Tileset {
     return this.url;
   }
 
+  getLocalFileName() {
+    return "";
+  }
+
   getMaplibreSourceUrl() {
     return `pmtiles://${this.url}`;
   }
@@ -111,6 +116,10 @@ class LocalPMTilesTileset extends PMTilesTileset implements Tileset {
   // the local file cannot be persisted in the URL.
   getStateUrl() {
     return undefined;
+  }
+
+  getLocalFileName() {
+    return this.name;
   }
 
   getMaplibreSourceUrl() {
@@ -167,6 +176,10 @@ class TileJSONTileset implements Tileset {
 
   getStateUrl() {
     return this.url;
+  }
+
+  getLocalFileName() {
+    return "";
   }
 
   async getZxy(z: number, x: number, y: number) {

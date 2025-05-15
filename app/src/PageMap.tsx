@@ -570,6 +570,7 @@ function PageMap() {
     });
     hash = parseHash(location.hash);
   }
+  const iframe = (hash.iframe === "true");
 
   const mapHashPassed = hash.map !== undefined;
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
@@ -597,7 +598,7 @@ function PageMap() {
   });
 
   return (
-    <Frame tileset={tileset} setTileset={setTileset} page="map">
+    <Frame tileset={tileset} setTileset={setTileset} page="map" iframe={iframe}>
       <Show
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}

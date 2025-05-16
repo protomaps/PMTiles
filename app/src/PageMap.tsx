@@ -117,8 +117,12 @@ function MapView(props: {
       protocol.add(archiveForProtocol);
     }
 
+    let fillOpacity = 0.2;
+    let fillHighlightOpacity = 0.4;
     if (await tileset.isOverlay()) {
       setBasemap(true);
+      fillOpacity = 0.6;
+      fillHighlightOpacity = 0.8;
     }
 
     if (await tileset.isVector()) {
@@ -139,8 +143,8 @@ function MapView(props: {
             "fill-opacity": [
               "case",
               ["boolean", ["feature-state", "hover"], false],
-              0.25,
-              0.1,
+              fillHighlightOpacity,
+              fillOpacity,
             ],
           },
           filter: ["==", ["geometry-type"], "Polygon"],

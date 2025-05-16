@@ -131,6 +131,7 @@ export function Frame(props: {
   children: JSX.Element;
   page: string;
   pmtilesOnly?: boolean;
+  iframe?: boolean;
 }) {
   const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
   const [activeDrag, setActiveDrag] = createSignal<boolean>(false);
@@ -195,69 +196,76 @@ export function Frame(props: {
       ondragover={dragover}
       ondrop={drop}
     >
-      <div class="flex-none flex items-center px-4 md:px-0 pt-4 md:pt-0 flex-col md:flex-row">
-        <div class="flex items-center flex-grow flex-1">
-          <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
-          <form class="flex flex-1 items-center" onSubmit={loadTileset}>
-            <span class="relative flex flex-1 items-center app-border">
-              <Show
-                when={
-                  props.tileset() &&
-                  props.tileset()?.getStateUrl() === undefined
-                }
-              >
-                <span class="bg-yellow-500 rounded px-2 text-sm text-black">
-                  local file {props.tileset()?.getLocalFileName()}
-                </span>
-              </Show>
-              <input
-                class="px-2 flex-1"
-                type="text"
-                name="url"
-                placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}
-                value={props.tileset()?.getStateUrl() || ""}
-              />
-              <Show when={props.tileset()}>
-                <button
-                  type="button"
-                  class="mr-2 text-sm px-2 btn-secondary cursor-pointer"
-                  onClick={() => props.setTileset(undefined)}
+      <Show when={!props.iframe}>
+        <div class="flex-none flex items-center px-4 md:px-0 pt-4 md:pt-0 flex-col md:flex-row">
+          <div class="flex items-center flex-grow flex-1">
+            <h1 class="hidden md:inline text-xl mx-5">{pageTitle}</h1>
+            <form class="flex flex-1 items-center" onSubmit={loadTileset}>
+              <span class="relative flex flex-1 items-center app-border">
+                <Show
+                  when={
+                    props.tileset() &&
+                    props.tileset()?.getStateUrl() === undefined
+                  }
+                  fallback={
+                    <input
+                      class="px-2 flex-1"
+                      type="text"
+                      name="url"
+                      placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}
+                      value={props.tileset()?.getStateUrl() || ""}
+                    />
+                  }
                 >
-                  clear
-                </button>
-              </Show>
-            </span>
-            <button class="px-4 ml-2 btn-primary cursor-pointer" type="submit">
-              load
-            </button>
-            <a
-              href="https://github.com/protomaps/PMTiles"
-              target="_blank"
-              rel="noreferrer"
-              class="hidden md:inline text-xs mx-4"
-            >
-              @{GIT_SHA}
-            </a>
-          </form>
+                  <span class="flex-1 app-well rounded px-2 m-1 text-sm">
+                    {props.tileset()?.getLocalFileName()}
+                  </span>
+                </Show>
+                <Show when={props.tileset()}>
+                  <button
+                    type="button"
+                    class="mr-2 text-sm px-2 btn-secondary cursor-pointer"
+                    onClick={() => props.setTileset(undefined)}
+                  >
+                    clear
+                  </button>
+                </Show>
+              </span>
+              <button
+                class="px-4 ml-2 btn-primary cursor-pointer"
+                type="submit"
+              >
+                load
+              </button>
+              <a
+                href="https://github.com/protomaps/PMTiles"
+                target="_blank"
+                rel="noreferrer"
+                class="hidden md:inline text-xs mx-4"
+              >
+                @{GIT_SHA}
+              </a>
+            </form>
+          </div>
+          <div class="flex">
+            <LinkTab
+              page="map"
+              selected={props.page === "map"}
+              tileset={props.tileset}
+            />
+            <LinkTab
+              page="archive"
+              selected={props.page === "archive"}
+              tileset={props.tileset}
+            />
+            <LinkTab
+              page="tile"
+              selected={props.page === "tile"}
+              tileset={props.tileset}
+            />
+          </div>
         </div>
-        <div class="flex">
-          <LinkTab
-            page="map"
-            selected={props.page === "map"}
-            tileset={props.tileset}
-          />
-          <LinkTab
-            page="archive"
-            selected={props.page === "archive"}
-            tileset={props.tileset}
-          />
-          <LinkTab
-            page="tile"
-            selected={props.page === "tile"}
-            tileset={props.tileset}
-          />
-        </div>
-      </div>
+      </Show>
       <Show when={errorMessage()}>
         <div class="bg-red-900 px-2 py-3 flex justify-between">
           <span>{errorMessage()}</span>

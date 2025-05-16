@@ -117,8 +117,12 @@ function MapView(props: {
       protocol.add(archiveForProtocol);
     }
 
+    let fillOpacity = 0.2;
+    let fillHighlightOpacity = 0.4;
     if (await tileset.isOverlay()) {
       setBasemap(true);
+      fillOpacity = 0.6;
+      fillHighlightOpacity = 0.8;
     }
 
     if (await tileset.isVector()) {
@@ -139,8 +143,8 @@ function MapView(props: {
             "fill-opacity": [
               "case",
               ["boolean", ["feature-state", "hover"], false],
-              0.25,
-              0.1,
+              fillHighlightOpacity,
+              fillOpacity,
             ],
           },
           filter: ["==", ["geometry-type"], "Polygon"],
@@ -522,10 +526,10 @@ function MapView(props: {
               setBasemap={setBasemap}
             />
           </div>
-          <div class="absolute left-2 bottom-2">
+          <div class="absolute left-3 top-28">
             <button
               type="button"
-              class="flex items-center rounded border app-bg app-border cursor-pointer"
+              class="flex items-center rounded app-border cursor-pointer"
               onClick={roundZoom}
             >
               <span class="app-well px-1 rounded-l">Z</span>
@@ -570,6 +574,7 @@ function PageMap() {
     });
     hash = parseHash(location.hash);
   }
+  const iframe = hash.iframe === "true";
 
   const mapHashPassed = hash.map !== undefined;
   const [tileset, setTileset] = createSignal<Tileset | undefined>(
@@ -597,7 +602,7 @@ function PageMap() {
   });
 
   return (
-    <Frame tileset={tileset} setTileset={setTileset} page="map">
+    <Frame tileset={tileset} setTileset={setTileset} page="map" iframe={iframe}>
       <Show
         when={tileset()}
         fallback={<ExampleChooser setTileset={setTileset} />}

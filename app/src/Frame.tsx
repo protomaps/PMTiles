@@ -131,7 +131,7 @@ export function Frame(props: {
   children: JSX.Element;
   page: string;
   pmtilesOnly?: boolean;
-  iframe: boolean;
+  iframe?: boolean;
 }) {
   const [errorMessage, setErrorMessage] = createSignal<string | undefined>();
   const [activeDrag, setActiveDrag] = createSignal<boolean>(false);
@@ -207,18 +207,20 @@ export function Frame(props: {
                     props.tileset() &&
                     props.tileset()?.getStateUrl() === undefined
                   }
+                  fallback={
+                    <input
+                      class="px-2 flex-1"
+                      type="text"
+                      name="url"
+                      placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}
+                      value={props.tileset()?.getStateUrl() || ""}
+                    />
+                  }
                 >
-                  <span class="bg-yellow-500 rounded px-2 text-sm text-black">
-                    local file {props.tileset()?.getLocalFileName()}
+                  <span class="flex-1 app-well rounded px-2 m-1 text-sm">
+                    {props.tileset()?.getLocalFileName()}
                   </span>
                 </Show>
-                <input
-                  class="px-2 flex-1"
-                  type="text"
-                  name="url"
-                  placeholder={`${props.pmtilesOnly ? "" : "TileJSON or "}.pmtiles`}
-                  value={props.tileset()?.getStateUrl() || ""}
-                />
                 <Show when={props.tileset()}>
                   <button
                     type="button"
@@ -229,7 +231,10 @@ export function Frame(props: {
                   </button>
                 </Show>
               </span>
-              <button class="px-4 ml-2 btn-primary cursor-pointer" type="submit">
+              <button
+                class="px-4 ml-2 btn-primary cursor-pointer"
+                type="submit"
+              >
                 load
               </button>
               <a

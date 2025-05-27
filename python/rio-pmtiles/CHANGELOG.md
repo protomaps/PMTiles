@@ -1,3 +1,7 @@
+1.0.3
+------
+* add `pyproject.toml` and switch to `python -m build` for modernized build, resolving naming deprecation
+
 1.0.2
 ------
 * attribution and tileSize in metadata by @roblabs [#570]

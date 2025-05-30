@@ -533,7 +533,7 @@ function MapView(props: {
               onClick={roundZoom}
             >
               <span class="app-well px-1 rounded-l">Z</span>
-              <span class="px-2 text-base rounded-r-md rounded-r">
+              <span class="px-2 text-base text-white rounded-r-md rounded-r">
                 {zoom().toFixed(2)}
               </span>
             </button>

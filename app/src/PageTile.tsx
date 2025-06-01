@@ -86,7 +86,7 @@ function parseTile(data: ArrayBuffer, vectorLayers: string[]): Layer[] {
     }
 
     // sort so that points and linestrings are above polygons
-    features.sort((a,b) => a.type > b.type ? -1 : 1);
+    features.sort((a, b) => (a.type > b.type ? -1 : 1));
 
     layers.push({ name: name, features: features });
   }

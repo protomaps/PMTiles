@@ -132,10 +132,12 @@ export default {
       cacheableHeaders: Headers,
       status: number
     ) => {
-      cacheableHeaders.set(
-        "Cache-Control",
-        env.CACHE_CONTROL || "public, max-age=86400"
-      );
+      if (!cacheableHeaders.has("Cache-Control")) {
+        cacheableHeaders.set(
+          "Cache-Control",
+          env.CACHE_CONTROL || "public, max-age=86400"
+        );
+      }
 
       const cacheable = new Response(body, {
         headers: cacheableHeaders,
@@ -161,8 +163,29 @@ export default {
         cacheableHeaders.set("Content-Type", "application/json");
         const t = await p.getTileJson(
           `https://${env.PUBLIC_HOSTNAME || url.hostname}/${name}`
-        );
+        ) as { tiles: string[] };
+        const etag = pHeader.etag;
+        if (etag) {
+          t.tiles = t.tiles.map((t) => {
+            const u = new URL(t);
+            u.searchParams.set("v", etag);
+            return u.toString();
+          });
+        }
         return cacheableResponse(JSON.stringify(t), cacheableHeaders, 200);
+      }
+
+      const urlEtag = url.searchParams.get("v");
+      console.log("urlEtag", urlEtag, "header etag", pHeader.etag);
+      if (urlEtag && urlEtag === pHeader.etag) {
+        // when the tileset is updated, the etag changes. That means that tiles
+        // with the version param can be immutable.
+        // We do a check with our etag to see if it matches. If it does, then we can
+        // be sure that the tileset has not changed and we can set the cache to immutable.
+        cacheableHeaders.set("Cache-Control", "public, immutable, max-age=31536000");
+      } else if (urlEtag) {
+        // if the etag does not match, we don't want to error, but we also don't want to cache it.
+        cacheableHeaders.set("Cache-Control", "no-store");
       }
 
       if (tile[0] < pHeader.minZoom || tile[0] > pHeader.maxZoom) {

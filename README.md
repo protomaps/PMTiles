@@ -9,37 +9,52 @@
 
 PMTiles is a single-file archive format for tiled data. A PMTiles archive can be hosted on a commodity storage platform such as S3, and enables low-cost, zero-maintenance map applications that are "serverless" - free of a custom tile backend or third party provider.
 
-* [Protomaps Blog: Dynamic Maps, Static Storage](http://protomaps.com/blog/dynamic-maps-static-storage)
-
 * [PMTiles Viewer](https://pmtiles.io) - inspect and preview PMTiles local or remote PMTiles archives.
     * Archives on cloud storage may require CORS for the origin `https://protomaps.github.io`
 
+* [Documentation]() - for how to create and read PMTiles.
+
+* [How to read PMTiles in Leaflet or MapLibre GL JS]() - for how to create and read PMTiles.
+
+* [Creating PMTiles with Tippecanoe]()
+
+* [Uploading pmtiles using the CLI]() or with [rclone]()
+
+## Examples
+
 * [Vector Tiles Example (US Zip Codes)](https://pmtiles.io/?url=https%3A%2F%2Fr2-public.protomaps.com%2Fprotomaps-sample-datasets%2Fcb_2018_us_zcta510_500k.pmtiles)
 
+## This Repository
 
-Demos require MapLibre GL JS v1.15 or later.
+### Specification
 
-See also:
-* [Cloud Optimized GeoTIFFs](https://www.cogeo.org)
+## Specification
 
-## Creating PMTiles
+The current specification version is [Version 3](./spec/v3/spec.md).
 
-Download the `pmtiles` binary for your system at [go-pmtiles/Releases](https://github.com/protomaps/go-pmtiles/releases).
+### Implementations
 
-    pmtiles convert INPUT.mbtiles OUTPUT.pmtiles
-    pmtiles upload OUTPUT.pmtiles s3://my-bucket?region=us-west-2 // requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY env vars to be set
+* Python rio-pmtiles implementation
+
+* Python library
+
+* JavaScript library, for browsers
+
+* MapLibre implementation
+
+* OpenLayers implementation
+
+* Leaflet implementation (Raster)
+
+- for Vector, see protomaps-leaflet
+
+* AWS Lambda implementation
+
+* Cloudflare Workers implementation
+
+- for the pmtiles CLI, see [go-pmtiles](https://github.com/protomaps/go-pmtiles)
 
 ## Consuming PMTiles
-
-### JavaScript
-
-See [js/README.md](js/README.md) and [js/examples](js/examples) for usage in Leaflet or MapLibre GL JS.
-
-See [openlayers/README.md](openlayers/README.md) for usage in OpenLayers.
-
-### Go
-
-See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.
 
 ### Python
 
@@ -50,10 +65,6 @@ See https://github.com/protomaps/PMTiles/tree/main/python/bin for library usage
 [PMTiles on AWS Lambda](https://github.com/protomaps/PMTiles/tree/main/serverless/aws)
 
 [PMTiles on Cloudflare Workers](https://github.com/protomaps/PMTiles/tree/main/serverless/cloudflare)
-
-## Specification
-
-The current specification version is [Version 3](./spec/v3/spec.md).
 
 ## Recipes
 

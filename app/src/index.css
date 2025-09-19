@@ -20,7 +20,7 @@ json-viewer {
 	--color-purple: #3131dc;
 	--color-slate: #e7e7f9;
 	--color-source-background: #212121;
-	--color-source-primary: #6E6E6E;
+	--color-source-primary: #6e6e6e;
 	--color-source-primary-hover: #767676;
 }
 
@@ -28,7 +28,8 @@ json-viewer {
 	.app-bg {
 		@apply bg-gray-100 border-gray-400 divide-gray-400;
 	}
-	.iframe.app-bg, .iframe .app-bg {
+	.iframe.app-bg,
+	.iframe .app-bg {
 		@apply bg-white;
 	}
 	.app-border {
@@ -64,7 +65,8 @@ json-viewer {
 		.app-bg {
 			@apply bg-gray-900 text-white;
 		}
-		.iframe.app-bg, .iframe .app-bg {
+		.iframe.app-bg,
+		.iframe .app-bg {
 			@apply bg-source-background;
 		}
 		.app-border {

@@ -460,7 +460,19 @@ function MapView(props: {
   return (
     <div class="flex flex-col md:flex-row w-full h-full">
       <div class="flex-1 flex flex-col">
-        <div classList={{"flex-none":true,"pb-4":true,"pt-4":!props.iframe,"px-4":!props.iframe,"flex":true,"justify-between":true,"text-xs":true,"md:text-base":true,"space-x-2":true}}>
+        <div
+          classList={{
+            "flex-none": true,
+            "pb-4": true,
+            "pt-4": !props.iframe,
+            "px-4": !props.iframe,
+            flex: true,
+            "justify-between": true,
+            "text-xs": true,
+            "md:text-base": true,
+            "space-x-2": true,
+          }}
+        >
           <button
             class="px-4 btn-primary cursor-pointer"
             type="button"

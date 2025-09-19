@@ -192,7 +192,14 @@ export function Frame(props: {
 
   return (
     <div
-      classList={{"flex":true,"flex-col":true,"h-dvh":true,"w-full":true,"app-bg":true,"iframe":props.iframe}}
+      classList={{
+        flex: true,
+        "flex-col": true,
+        "h-dvh": true,
+        "w-full": true,
+        "app-bg": true,
+        iframe: props.iframe,
+      }}
       ondragover={dragover}
       ondrop={drop}
     >

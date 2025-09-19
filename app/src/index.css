@@ -8,6 +8,9 @@ json-viewer {
 	overflow-x: scroll;
 	padding: 4px;
 }
+.iframe json-viewer {
+	background-color: #212121;
+}
 
 .tile-border {
 	stroke: black;
@@ -16,11 +19,17 @@ json-viewer {
 @theme {
 	--color-purple: #3131dc;
 	--color-slate: #e7e7f9;
+	--color-source-background: #212121;
+	--color-source-primary: #6E6E6E;
+	--color-source-primary-hover: #767676;
 }
 
 @layer components {
 	.app-bg {
 		@apply bg-gray-100 border-gray-400 divide-gray-400;
+	}
+	.iframe.app-bg, .iframe .app-bg {
+		@apply bg-white;
 	}
 	.app-border {
 		@apply border border-gray-300 divide-gray-300;
@@ -34,20 +43,35 @@ json-viewer {
 	.app-well {
 		@apply bg-gray-200 hover:bg-gray-300;
 	}
+	.iframe .app-well {
+		@apply bg-white;
+	}
 
 	.btn-primary {
 		@apply rounded bg-purple text-white shadow-sm hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple;
 	}
+	.iframe .btn-primary {
+		@apply bg-source-primary hover:bg-source-primary-hover;
+	}
 	.btn-secondary {
 		@apply rounded bg-gray-700 text-white shadow-sm hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple;
+	}
+	.iframe .btn-secondary {
+		@apply bg-source-primary hover:bg-source-primary-hover;
 	}
 
 	@media (prefers-color-scheme: dark) {
 		.app-bg {
 			@apply bg-gray-900 text-white;
 		}
+		.iframe.app-bg, .iframe .app-bg {
+			@apply bg-source-background;
+		}
 		.app-border {
 			@apply border border-gray-600 divide-gray-600;
+		}
+		.iframe .app-border {
+			@apply border-source-primary;
 		}
 		.app-divide {
 			@apply divide-gray-600;
@@ -57,6 +81,9 @@ json-viewer {
 		}
 		.app-well {
 			@apply bg-gray-700 hover:bg-gray-600;
+		}
+		.iframe .app-well {
+			@apply bg-source-background;
 		}
 	}
 }

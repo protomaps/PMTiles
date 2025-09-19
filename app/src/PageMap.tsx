@@ -49,6 +49,7 @@ function MapView(props: {
   inspectFeatures: Accessor<boolean>;
   setInspectFeatures: Setter<boolean>;
   mapHashPassed: boolean;
+  iframe: boolean;
 }) {
   let mapContainer: HTMLDivElement | undefined;
   let hiddenRef: HTMLDivElement | undefined;
@@ -459,7 +460,19 @@ function MapView(props: {
   return (
     <div class="flex flex-col md:flex-row w-full h-full">
       <div class="flex-1 flex flex-col">
-        <div class="flex-none p-4 flex justify-between text-xs md:text-base space-x-2">
+        <div
+          classList={{
+            "flex-none": true,
+            "pb-4": true,
+            "pt-4": !props.iframe,
+            "px-4": !props.iframe,
+            flex: true,
+            "justify-between": true,
+            "text-xs": true,
+            "md:text-base": true,
+            "space-x-2": true,
+          }}
+        >
           <button
             class="px-4 btn-primary cursor-pointer"
             type="button"
@@ -511,7 +524,8 @@ function MapView(props: {
             classList={{
               "h-full": true,
               "flex-1": true,
-              "bg-gray-900": true,
+              "bg-gray-900": !props.iframe,
+              "bg-black": props.iframe,
               inspectFeatures: props.inspectFeatures(),
               frozen: frozen(),
             }}
@@ -617,6 +631,7 @@ function PageMap() {
             inspectFeatures={inspectFeatures}
             setInspectFeatures={setInspectFeatures}
             mapHashPassed={mapHashPassed}
+            iframe={iframe}
           />
         )}
       </Show>

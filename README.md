@@ -43,7 +43,7 @@ See the [go-pmtiles](https://github.com/protomaps/go-pmtiles) repository.
 
 ### Python
 
-See https://github.com/protomaps/PMTiles/tree/main/python/bin for library usage
+See [pmtiles scripts](https://github.com/protomaps/PMTiles/tree/main/python/pmtiles/bin) for library usage
 
 ### Serverless
 

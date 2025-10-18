@@ -1,6 +1,7 @@
 import gzip
 import io
 from enum import Enum
+from typing import TypedDict
 
 
 class Entry:
@@ -186,7 +187,35 @@ class MagicNumberNotFound(Exception):
     pass
 
 
-def deserialize_header(buf):
+class HeaderDict(TypedDict):
+    version: int
+    root_offset: int
+    root_length: int
+    metadata_offset: int
+    metadata_length: int
+    leaf_directory_offset: int
+    leaf_directory_length: int
+    tile_data_offset: int
+    tile_data_length: int
+    addressed_tiles_count: int
+    tile_entries_count: int
+    tile_contents_count: int
+    clustered: bool
+    internal_compression: Compression
+    tile_compression: Compression
+    tile_type: TileType
+    min_zoom: int
+    max_zoom: int
+    min_lon_e7: int
+    min_lat_e7: int
+    max_lon_e7: int
+    max_lat_e7: int
+    center_zoom: int
+    center_lon_e7: int
+    center_lat_e7: int
+
+
+def deserialize_header(buf) -> HeaderDict:
     if buf[0:7].decode() != "PMTiles":
         raise MagicNumberNotFound()
 
@@ -228,7 +257,7 @@ def deserialize_header(buf):
     }
 
 
-def serialize_header(h):
+def serialize_header(h: HeaderDict):
     b_io = io.BytesIO()
 
     def write_uint64(i):

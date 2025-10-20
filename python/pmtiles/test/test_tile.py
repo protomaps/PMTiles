@@ -1,7 +1,7 @@
 import unittest
 from pmtiles.tile import zxy_to_tileid, tileid_to_zxy, Entry
 from pmtiles.tile import read_varint, write_varint
-from pmtiles.tile import Entry, find_tile, Compression, TileType
+from pmtiles.tile import Entry, find_tile, Compression, TileType, HeaderDict
 from pmtiles.tile import serialize_directory, deserialize_directory
 from pmtiles.tile import serialize_header, deserialize_header, SpecVersionUnsupported, MagicNumberNotFound
 import io
@@ -194,3 +194,9 @@ class TestHeader(unittest.TestCase):
 
         with self.assertRaises(MagicNumberNotFound):
             result = deserialize_header(b'PM\x00\x02')
+
+    def test_type(self):
+        result = deserialize_header(b"PMTiles\x03" + b"\x00" * 120)
+        self.assertIsInstance(result, dict)
+        expected_keys = set(HeaderDict.__annotations__.keys())
+        self.assertTrue(expected_keys.issubset(result.keys()))

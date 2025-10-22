@@ -1,6 +1,6 @@
 # Protomaps on Cloudflare
 
-See installation and configuration instructions at [Protomaps Docs: Deploy on Cloudflare](https://protomaps.com/docs/cdn/cloudflare)
+See installation and configuration instructions at [Protomaps Docs: Deploy on Cloudflare](https://docs.protomaps.com/deploy/cloudflare)
 
 ## Development
 

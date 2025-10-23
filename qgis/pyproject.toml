@@ -1,0 +1,37 @@
+[project]
+name = "qgis-pmtiles"
+version = "0.1.0"
+description = "QGIS plugin to generate PMTiles."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pmtiles",
+]
+
+# Can't be used until https://github.com/opengisch/qgis-plugin-ci/issues/350 is looked at
+#[tool.qgis-plugin-ci]
+#plugin_path = "PMTiles"
+#github_organization_slug = "protomaps"
+#project_slug = "pmtiles"
+
+[tool.uv.sources]
+pmtiles = { path = "../python/pmtiles" }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.1",
+]
+
+[tool.ruff]
+fix = true
+line-length = 88
+target-version = "py311"
+exclude = [
+    ".ruff_cache",
+    "PMTiles/__version__.py",
+]
+[tool.ruff.lint]
+select = ["I", "E", "W", "D", "B", "F", "N", "Q"]
+ignore = ["N999", "N802"]
+[tool.ruff.lint.pydocstyle]
+convention = "google"

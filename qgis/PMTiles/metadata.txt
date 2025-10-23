@@ -1,0 +1,30 @@
+[general]
+name=PMTiles
+description=QGIS plugin to generate PMTiles.
+email=sam.woodcock@hotosm.org
+version=0.1.0
+author=Sam Woodcock
+
+category=form
+icon=logo.svg
+tags=protomaps,pmtiles,mbtiles,basemap,imagery
+tracker=https://github.com/protomaps/PMTiles
+repository=https://github.com/protomaps/PMTiles
+homepage=https://github.com/protomaps/PMTiles
+
+about=
+    GDAL can't handle raster PMTiles as of yet (last checked 23/10/2025).
+
+    As a consequence QGIS does not have support for reading or writing raster PMTile files.
+
+    This plugin is an interim solution to convert MBTiles file into PMTiles, using the official Python package.
+
+    The `pmtiles` Python package is bundled inside the plugin, do avoid needing externally installed dependencies.
+
+changelog=
+    v0.1.0 - Initial release
+
+qgisMinimumVersion=3.40
+supportsQt6=True
+experimental=False
+deprecated=False

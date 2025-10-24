@@ -25,8 +25,9 @@ def init_worker(
     warp_opts=None,
     creation_opts=None,
     exclude_empties=True,
+    max_zoom=None,
 ):
-    global base_kwds, filename, resampling, open_options, warp_options, creation_options, exclude_empty_tiles
+    global base_kwds, filename, resampling, open_options, warp_options, creation_options, exclude_empty_tiles, max_zoom_level
     resampling = Resampling[resampling_method]
     base_kwds = profile.copy()
     filename = path
@@ -34,6 +35,7 @@ def init_worker(
     warp_options = warp_opts.copy() if warp_opts is not None else {}
     creation_options = creation_opts.copy() if creation_opts is not None else {}
     exclude_empty_tiles = exclude_empties
+    max_zoom_level = max_zoom
 
 
 def process_tile(tile):
@@ -54,7 +56,28 @@ def process_tile(tile):
         Image bytes corresponding to the tile.
 
     """
-    global base_kwds, resampling, filename, open_options, warp_options, creation_options, exclude_empty_tiles
+    global base_kwds, resampling, filename, open_options, warp_options, creation_options, exclude_empty_tiles, max_zoom_level
+
+    # Determine overview level to use
+    temp_src = rasterio.open(filename)
+    overviews = temp_src.overviews(1)
+    temp_src.close()
+    overview_level = 0
+    if overviews and tile.z < max_zoom_level:
+        OVERSAMPLING_FACTOR = 4  # oversampling factor to ensure sufficient pixels for resampling operations
+        target_factor = 2 ** (max_zoom_level - tile.z) / OVERSAMPLING_FACTOR
+        best_overview = 0
+        best_score = float("inf")
+        for i_overview, factor in enumerate(overviews, start=1):
+            if factor <= target_factor:
+                score = abs(factor - target_factor)
+                if score < best_score:
+                    best_score = score
+                    best_overview = i_overview
+        overview_level = best_overview
+
+    if overview_level > 0:
+        open_options["OVERVIEW_LEVEL"] = overview_level
 
     with rasterio.open(filename, **open_options) as src:
 

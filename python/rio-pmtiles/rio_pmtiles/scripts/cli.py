@@ -359,7 +359,7 @@ def pmtiles(
             {
                 "driver": img_format.upper(),
                 "dtype": "uint8",
-                "nodata": 0,
+                "nodata": 255 if rgba else 0,
                 "height": tile_size,
                 "width": tile_size,
                 "count": count,

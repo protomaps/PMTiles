@@ -62,13 +62,13 @@ def process_tile(tile):
     temp_src = rasterio.open(filename)
     overviews = temp_src.overviews(1)
     temp_src.close()
-    overview_level = 0
+    overview_level = None
     if overviews and tile.z < max_zoom_level:
         OVERSAMPLING_FACTOR = 4  # oversampling factor to ensure sufficient pixels for resampling operations
         target_factor = 2 ** (max_zoom_level - tile.z) / OVERSAMPLING_FACTOR
-        best_overview = 0
+        best_overview = overview_level
         best_score = float("inf")
-        for i_overview, factor in enumerate(overviews, start=1):
+        for i_overview, factor in enumerate(overviews):
             if factor <= target_factor:
                 score = abs(factor - target_factor)
                 if score < best_score:
@@ -76,7 +76,7 @@ def process_tile(tile):
                     best_overview = i_overview
         overview_level = best_overview
 
-    if overview_level > 0:
+    if overview_level is not None:
         open_options["OVERVIEW_LEVEL"] = overview_level
 
     with rasterio.open(filename, **open_options) as src:

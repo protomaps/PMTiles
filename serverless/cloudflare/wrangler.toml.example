@@ -3,9 +3,14 @@ main = "src/index.ts"
 compatibility_date = "2024-09-02"
 minify = false
 
-r2_buckets  = [
-  { binding = "BUCKET", preview_bucket_name = "my-bucket-development", bucket_name = "my-bucket-production" }
-]
+# R2 bucket bindings; adjust names for dev vs prod buckets.
+[[r2_buckets]]
+# Alias used in the worker (env.BUCKET)
+binding = "BUCKET"
+# Bucket used when running `wrangler dev`
+preview_bucket_name = "my-bucket-development-name"
+# Bucket used on `wrangler deploy`
+bucket_name = "my-bucket-production-name"
 
 [vars]
 # change to https://example.com, etc. to limit CORS origins

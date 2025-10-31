@@ -335,11 +335,12 @@ def pmtiles(
                 warp_options["cutline"] = shapely.wkt.dumps(cutline_rev)
 
         # Resolve the minimum and maximum zoom levels for export.
+        maxzoom_in_file = guess_maxzoom(src.crs, src.bounds, src.width, src.height, tile_size)
         if zoom_levels:
             minzoom, maxzoom = map(int, zoom_levels.split(".."))
         else:
             minzoom = 0
-            maxzoom = guess_maxzoom(src.crs, src.bounds, src.width, src.height, tile_size)
+            maxzoom = maxzoom_in_file
 
         log.debug("Zoom range: %d..%d", minzoom, maxzoom)
 
@@ -358,7 +359,7 @@ def pmtiles(
             {
                 "driver": img_format.upper(),
                 "dtype": "uint8",
-                "nodata": 0,
+                "nodata": 255 if rgba else 0,
                 "height": tile_size,
                 "width": tile_size,
                 "count": count,
@@ -442,6 +443,7 @@ def pmtiles(
                 warp_options,
                 creation_options,
                 exclude_empty_tiles,
+                maxzoom_in_file,
             ),
         ) as executor:
             for tile, contents in executor.map(process_tile, unwrap_tiles(tiles)):

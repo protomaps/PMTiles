@@ -122,7 +122,9 @@ describe("pmtiles v3", () => {
   });
 
   test("tile search with multiple tile entries", () => {
-    let entries: Entry[] = [{ tileId: 100, offset: 1, length: 1, runLength: 2 }];
+    let entries: Entry[] = [
+      { tileId: 100, offset: 1, length: 1, runLength: 2 },
+    ];
     let entry = findTile(entries, 101);
     assert.strictEqual(entry?.offset, 1);
     assert.strictEqual(entry?.length, 1);

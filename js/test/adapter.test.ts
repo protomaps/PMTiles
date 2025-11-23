@@ -1,7 +1,7 @@
 import assert from "node:assert";
-import { afterEach, beforeEach, describe, it, test } from "node:test";
-import { MockServer } from "./utils";
+import { describe, test } from "node:test";
 import { PMTiles, Protocol } from "../src";
+import { MockServer } from "./utils";
 
 const mockserver = new MockServer();
 

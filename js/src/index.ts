@@ -355,7 +355,7 @@ export class FetchSource implements Source {
     let userAgent = "";
     if ("navigator" in globalThis) {
       //biome-ignore lint: cf workers
-      userAgent = (globalThis as any).navigator.userAgent || "";
+      userAgent = (globalThis as any).navigator?.userAgent ?? "";
     }
     const isWindows = userAgent.indexOf("Windows") > -1;
     const isChromiumBased = /Chrome|Chromium|Edg|OPR|Brave/.test(userAgent);

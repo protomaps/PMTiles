@@ -1,12 +1,11 @@
 import assert from "node:assert";
-import { describe, test } from "node:test";
+import { describe, mock, test } from "node:test";
 import { PMTiles, Protocol } from "../src";
-import { MockServer } from "./utils";
-
-const mockserver = new MockServer();
+import { mockServer } from "./utils";
 
 describe("Protocol", () => {
   test("get TileJSON", async () => {
+    mockServer.reset();
     const pmtiles = new PMTiles("http://localhost:1337/example.pmtiles");
     const protocol = new Protocol();
     protocol.add(pmtiles);
@@ -25,6 +24,7 @@ describe("Protocol", () => {
       maxzoom: 0,
       bounds: [0, 0, 0.9999999, 1],
     });
+    assert.equal(mockServer.numRequests, 1);
   });
 
   test("get tile data", async () => {

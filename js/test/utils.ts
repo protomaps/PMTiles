@@ -2,7 +2,7 @@ import fs from "fs";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 
-export class MockServer {
+class MockServer {
   etag?: string;
   numRequests: number;
   lastCache?: string;
@@ -40,3 +40,5 @@ export class MockServer {
     server.listen({ onUnhandledRequest: "error" });
   }
 }
+
+export const mockServer = new MockServer();

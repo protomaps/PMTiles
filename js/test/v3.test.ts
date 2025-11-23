@@ -1,7 +1,7 @@
 import fs from "fs";
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it, test } from "node:test";
-import { MockServer } from "./utils";
+import { mockServer } from "./utils";
 
 import {
   BufferPosition,
@@ -18,8 +18,6 @@ import {
   tileTypeExt,
   zxyToTileId,
 } from "../src/index";
-
-const mockserver = new MockServer();
 
 describe("pmtiles v3", () => {
   test("varint", () => {
@@ -296,25 +294,26 @@ describe("pmtiles v3", () => {
   });
 
   test("etag change", async () => {
+    mockServer.reset();
     const p = new PMTiles("http://localhost:1337/example.pmtiles");
-    const tile = await p.getZxy(0, 0, 0);
+    await p.getZxy(0, 0, 0);
     // header + tile
-    assert.strictEqual(2, mockserver.numRequests);
-    mockserver.etag = "etag_2";
+    assert.strictEqual(2, mockServer.numRequests);
+    mockServer.etag = "etag_2";
     await p.getZxy(0, 0, 0);
     // tile + header again + tile
-    assert.strictEqual(5, mockserver.numRequests);
+    assert.strictEqual(5, mockServer.numRequests);
   });
 
   test("weak etags", async () => {
-    mockserver.reset();
+    mockServer.reset();
     const p = new PMTiles("http://localhost:1337/example.pmtiles");
-    const tile = await p.getZxy(0, 0, 0);
-    // header + tile
-    assert.strictEqual(2, mockserver.numRequests);
-    mockserver.etag = "W/weak_etag";
     await p.getZxy(0, 0, 0);
-    assert.strictEqual(3, mockserver.numRequests);
+    // header + tile
+    assert.strictEqual(2, mockServer.numRequests);
+    mockServer.etag = "W/weak_etag";
+    await p.getZxy(0, 0, 0);
+    assert.strictEqual(3, mockServer.numRequests);
   });
 
   // handle < 16384 bytes archive case
@@ -401,7 +400,7 @@ describe("pmtiles v3", () => {
     it("works around caching bug on chrome on windows", async () => {
       const p = new PMTiles("http://localhost:1337/example.pmtiles");
       await p.getZxy(0, 0, 0);
-      assert.equal("no-store", mockserver.lastCache);
+      assert.equal("no-store", mockServer.lastCache);
     });
   });
 });

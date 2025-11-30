@@ -80,7 +80,9 @@ Resources:
   LambdaFunctionUrlPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
-      Action: lambda:InvokeFunctionUrl
+      Action:
+        - lambda:InvokeFunctionUrl
+        - lambda:InvokeFunction
       FunctionName: !Ref LambdaFunction
       Principal: '*'
       FunctionUrlAuthType: NONE
@@ -174,7 +176,7 @@ Resources:
     Type: 'AWS::Lambda::Function'
     Properties:
       FunctionName: !Sub "${AWS::StackName}-LambdaFunction"
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Architectures: [arm64]
       Role: !GetAtt LambdaExecutionRole.Arn
       Handler: index.handler

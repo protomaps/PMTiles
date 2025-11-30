@@ -1,3 +1,8 @@
+1.1.0
+------
+* Compute and use OVERVIEW_LEVEL to read appropriate overviews instead of full resolution by @qchenevier [#601]
+* Use nodata=255 for RGBA inputs/outputs to prevent warnings by @qchenevier [#601]
+
 1.0.3
 ------
 * add `pyproject.toml` and switch to `python -m build` for modernized build, resolving naming deprecation

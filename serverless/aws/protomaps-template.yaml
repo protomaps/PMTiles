@@ -77,15 +77,20 @@ Resources:
       TargetFunctionArn: !GetAtt LambdaFunction.Arn
       InvokeMode: BUFFERED
 
-  LambdaFunctionUrlPermission:
-    Type: 'AWS::Lambda::Permission'
+  LambdaFunctionUrlPermissionInvokeUrl:
+    Type: AWS::Lambda::Permission
     Properties:
-      Action:
-        - lambda:InvokeFunctionUrl
-        - lambda:InvokeFunction
+      Action: lambda:InvokeFunctionUrl
       FunctionName: !Ref LambdaFunction
       Principal: '*'
       FunctionUrlAuthType: NONE
+
+  LambdaFunctionUrlPermissionInvokeFunction:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunction
+      Principal: '*'
 
   ViewerRequestCloudFrontFunction:
     Type: AWS::CloudFront::Function

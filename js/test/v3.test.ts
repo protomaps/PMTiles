@@ -418,15 +418,21 @@ test("pmtiles get TileJSON", async () => {
   assert.equal("2", tilejson.version);
 });
 
+const originalUserAgent = navigator.userAgent;
+
 describe("user agent", async () => {
   beforeEach(() => {
-    // @ts-ignore
-    global.navigator = { userAgent: "Windows Chrome" };
+    Object.defineProperty(globalThis.navigator, "userAgent", {
+      value: "Windows Chrome",
+      configurable: true,
+    });
   });
 
   afterEach(() => {
-    // @ts-ignore
-    global.navigator.userAgent = undefined;
+    Object.defineProperty(globalThis.navigator, "userAgent", {
+      value: originalUserAgent,
+      configurable: true,
+    });
   });
 
   it("works around caching bug on chrome on windows", async () => {

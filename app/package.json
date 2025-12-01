@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@maplibre/maplibre-gl-style-spec": "^23.1.0",
+    "@maplibre/maplibre-gl-style-spec": "^24.3.1",
     "@tailwindcss/vite": "^4.1.17",
     "@types/d3-axis": "^3.0.6",
     "@types/d3-path": "^3.1.1",

@@ -17,7 +17,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 22.x
       - run: cd js && npm ci && npm run build
       - run: echo "VITE_GIT_SHA=$(git rev-parse --short HEAD)" >> app/.env
       - run: cd app && npm ci && npm run check && npm run build
@@ -45,7 +45,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 22.x
       - run: python .github/check_examples.py
       - run: cd js && npm ci && npm test
       - run: cd js && npm run biome-check

@@ -215,12 +215,13 @@ export class Protocol {
       }
 
       if (this.metadata) {
-        return {
-          data: await instance.getTileJson(params.url),
-        };
+        const data = await instance.getTileJson(params.url);
+        abortController.signal.throwIfAborted();
+        return { data };
       }
 
       const h = await instance.getHeader();
+      abortController.signal.throwIfAborted();
 
       if (h.minLon >= h.maxLon || h.minLat >= h.maxLat) {
         console.error(
@@ -255,6 +256,7 @@ export class Protocol {
 
     const header = await instance.getHeader();
     const resp = await instance?.getZxy(+z, +x, +y, abortController.signal);
+    abortController.signal.throwIfAborted();
     if (resp) {
       return {
         data: new Uint8Array(resp.data),

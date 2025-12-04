@@ -879,11 +879,12 @@ export class PMTiles {
 
   constructor(
     source: Source | string,
+    customHeaders?: Headers,
     cache?: Cache,
     decompress?: DecompressFunc
   ) {
     if (typeof source === "string") {
-      this.source = new FetchSource(source);
+      this.source = new FetchSource(source, customHeaders);
     } else {
       this.source = source;
     }

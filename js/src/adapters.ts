@@ -90,6 +90,31 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
   return new cls(options);
 };
 
+const deepEqual = (a: any, b: any) => {
+  if (a === b) {
+    return true;
+  }
+
+  if (a === null || typeof a !== 'object' || b === null || typeof b !== 'object') {
+    return false;
+  }
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length!== keysB.length) {
+    return false;
+  }
+
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 type GetResourceResponse<T> = ExpiryData & {
   data: T;
 };
@@ -209,8 +234,8 @@ export class Protocol {
     if (params.type === "json") {
       const pmtilesUrl = params.url.substr(10);
       let instance = this.tiles.get(pmtilesUrl);
-      if (!instance) {
-        instance = new PMTiles(pmtilesUrl);
+      if (!instance || !deepEqual((instance.source as any).customHeaders, params.headers as Headers)) {
+        instance = new PMTiles(pmtilesUrl, params.headers as Headers);
         this.tiles.set(pmtilesUrl, instance);
       }
 
@@ -245,8 +270,8 @@ export class Protocol {
     const pmtilesUrl = result[1];
 
     let instance = this.tiles.get(pmtilesUrl);
-    if (!instance) {
-      instance = new PMTiles(pmtilesUrl);
+    if (!instance || !deepEqual((instance.source as any).customHeaders, params.headers)) {
+      instance = new PMTiles(pmtilesUrl, params.headers as Headers);
       this.tiles.set(pmtilesUrl, instance);
     }
     const z = result[2];

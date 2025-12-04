@@ -23,8 +23,8 @@ import { useGeographic } from 'ol/proj';
 
 const rasterLayer = new WebGLTile({
   source: new PMTilesRasterSource({
-    url:"https://r2-public.protomaps.com/protomaps-sample-datasets/terrarium_z9.pmtiles",
-    attributions:["https://github.com/tilezen/joerd/blob/master/docs/attribution.md"],
+    url:"https://download.mapterhorn.com/planet.pmtiles",
+    attributions:["https://mapterhorn.com/attribution/"],
     tileSize: [512,512]
   })
 });

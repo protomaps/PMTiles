@@ -37,7 +37,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.5.3",
     "@types/leaflet": "^1.9.8",
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.26",
     "msw": "^2.5.0",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",

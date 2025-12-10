@@ -57,8 +57,11 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
             const imageUrl = window.URL.createObjectURL(blob);
             el.src = imageUrl;
             el.cancel = undefined;
-            done(undefined, el);
-          }
+          }else{
+	    el.style.display = "none";		
+            el.cancel = undefined;	  
+	  }
+          done(undefined, el);		  
         })
         .catch((e) => {
           if (e.name !== "AbortError") {

@@ -426,28 +426,28 @@ function ArchiveView(props: { genericTileset: Accessor<Tileset> }) {
                   <tr>
                     <td class="app-text-light">Root Dir</td>
                     <td>{h().rootDirectoryOffset}</td>
-                    <td title={h().rootDirectoryLength}>
+                    <td title={h().rootDirectoryLength.toString()}>
                       {formatBytes(h().rootDirectoryLength)}
                     </td>
                   </tr>
                   <tr>
                     <td class="app-text-light">Metadata</td>
                     <td>{h().jsonMetadataOffset}</td>
-                    <td title={h().jsonMetadataLength}>
+                    <td title={h().jsonMetadataLength.toString()}>
                       {formatBytes(h().jsonMetadataLength)}
                     </td>
                   </tr>
                   <tr>
                     <td class="app-text-light">Leaf Dirs</td>
                     <td>{h().leafDirectoryOffset}</td>
-                    <td title={h().leafDirectoryLength}>
+                    <td title={(h().leafDirectoryLength || 0).toString()}>
                       {formatBytes(h().leafDirectoryLength || 0)}
                     </td>
                   </tr>
                   <tr>
                     <td class="app-text-light">Tile Data</td>
                     <td>{h().tileDataOffset}</td>
-                    <td title={h().tileDataLength}>
+                    <td title={(h().tileDataLength || 0).toString()}>
                       {formatBytes(h().tileDataLength || 0)}
                     </td>
                   </tr>

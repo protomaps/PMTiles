@@ -150,10 +150,12 @@ def guess_maxzoom(crs, bounds, width, height, tile_size):
     "--zoom-levels",
     default=None,
     metavar="MIN..MAX",
-    help="A min...max range of export zoom levels. "
-    "The default zoom level is the one at which "
-    "is the one at which the dataset is contained within "
-    "a single tile.",
+    help="A min..max range of export zoom levels. "
+    "The default min zoom level is 0 (dataset "
+    "contained in a single tile), and the default "
+    "max is calculated based on the available "
+    "detail in the dataset. Either or both of "
+    "min/max may be omitted.",
 )
 @click.option(
     "-j",

@@ -9,22 +9,40 @@ from .tile import zxy_to_tileid, tileid_to_zxy, TileType, Compression
 
 
 def mbtiles_to_header_json(mbtiles_metadata):
+    # Metadata spec: https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md#metadata
+
     header = {}
 
+    # MBTiles don't work well without zooms, so we expect them to be set.
     header["min_zoom"] = int(mbtiles_metadata["minzoom"])
-
     header["max_zoom"] = int(mbtiles_metadata["maxzoom"])
 
-    bounds = mbtiles_metadata["bounds"].split(",")
-    header["min_lon_e7"] = int(float(bounds[0]) * 10000000)
-    header["min_lat_e7"] = int(float(bounds[1]) * 10000000)
-    header["max_lon_e7"] = int(float(bounds[2]) * 10000000)
-    header["max_lat_e7"] = int(float(bounds[3]) * 10000000)
+    # Default to global bounds in case 'bounds' not present.
+    bounds_str = mbtiles_metadata.get("bounds", "-180.0,-85.05112878,180.0,85.05112878")
+    try:
+        bounds = [float(x.strip()) for x in bounds_str.split(",")]
+        min_lon, min_lat, max_lon, max_lat = bounds
+    except Exception:
+        min_lon, min_lat, max_lon, max_lat = -180.0, -85.05112878, 180.0, 85.05112878
+    header["min_lon_e7"] = int(min_lon * 1e7)
+    header["min_lat_e7"] = int(min_lat * 1e7)
+    header["max_lon_e7"] = int(max_lon * 1e7)
+    header["max_lat_e7"] = int(max_lat * 1e7)
 
-    center = mbtiles_metadata["center"].split(",")
-    header["center_lon_e7"] = int(float(center[0]) * 10000000)
-    header["center_lat_e7"] = int(float(center[1]) * 10000000)
-    header["center_zoom"] = int(center[2])
+    # The spec expects 'center', but not all tools respect this. Provide a default as the center of the bounds.
+    center_str = mbtiles_metadata.get("center")
+    try:
+        if center_str:
+            parts = [p.strip() for p in center_str.split(",")]
+            header["center_lon_e7"] = int(float(parts[0]) * 1e7)
+            header["center_lat_e7"] = int(float(parts[1]) * 1e7)
+            header["center_zoom"] = int(float(parts[2]))
+        else:
+            raise ValueError
+    except Exception:
+        header["center_zoom"] = header["min_zoom"]
+        header["center_lon_e7"] = (header["min_lon_e7"] + header["max_lon_e7"]) // 2
+        header["center_lat_e7"] = (header["min_lat_e7"] + header["max_lat_e7"]) // 2
 
     tile_format = mbtiles_metadata["format"]
     if tile_format == "pbf":
@@ -88,7 +106,7 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
         if maxzoom:
             pmtiles_header["max_zoom"] = int(maxzoom)
             mbtiles_metadata["maxzoom"] = maxzoom
-        result = writer.finalize(pmtiles_header, pmtiles_metadata)
+        writer.finalize(pmtiles_header, pmtiles_metadata)
 
     conn.close()
 

@@ -1,3 +1,7 @@
+4.3.1
+* fix leafletRasterLayer handling of empty tiles by @thisisaaronland [#620]
+* maplibre: properly abort requests using AbortController by @andrewda [#608]
+
 4.3.0
 * improve ZXY to HilbertID conversion by @ciscorn [#527]
 

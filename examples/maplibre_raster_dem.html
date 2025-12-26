@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>PMTiles MapLibre Raster DEM Example</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" crossorigin="anonymous">
+        <script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/pmtiles@4.3.2/dist/pmtiles.js"></script>
+        <style>
+            body {
+                margin: 0;
+            }
+            #map {
+                height:100%; width:100%;
+            }
+            #overlay {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+                font:  600 16px sans-serif;
+                background-color: white;
+                border-radius: 4px;
+                padding: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="overlay">
+        </div>
+        <script type="text/javascript">
+            let protocol = new pmtiles.Protocol({metadata: true});
+            maplibregl.addProtocol("pmtiles", protocol.tile);
+
+            const map = new maplibregl.Map({
+              container: "map",
+              zoom: 0,
+              center: [0, 0],
+              style: {
+                version: 8,
+                sources: {
+                  example_source: {
+                    type: "raster-dem",
+                    url: "pmtiles://https://download.mapterhorn.com/planet.pmtiles",
+                    encoding: "terrarium",
+                    attribution: "<a href='https://mapterhorn.com/attribution'>© Mapterhorn</a>"
+                  },
+                },
+                layers: [
+                  {
+                    id: "dem",
+                    source: "example_source",
+                    type: "hillshade",
+                  },
+                ],
+              },
+            });
+        </script>
+    </body>
+</html>

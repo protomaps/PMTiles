@@ -56,6 +56,8 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
             const blob = new Blob([arr.data], { type: mimeType });
             const imageUrl = window.URL.createObjectURL(blob);
             el.src = imageUrl;
+          } else {
+            el.style.display = "none";
           }
           el.cancel = undefined;
           done(undefined, el);

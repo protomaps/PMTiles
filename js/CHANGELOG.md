@@ -1,3 +1,6 @@
+4.3.2
+* fix leafletRasterLayer empty images: set `display: none`
+
 4.3.1
 * fix leafletRasterLayer handling of empty tiles by @thisisaaronland [#620]
 * maplibre: properly abort requests using AbortController by @andrewda [#608]

@@ -75,7 +75,8 @@ def test_export_tiles(tmpdir, data):
         src = MmapSource(f)
         assert len(list(all_tiles(src))) == 19
 
-def test_export_zoom(tmpdir, data):
+
+def test_export_zoom_both(tmpdir, data):
     inputfile = str(data.join("RGB.byte.tif"))
     outputfile = str(tmpdir.join("export.pmtiles"))
     runner = CliRunner()
@@ -87,6 +88,46 @@ def test_export_zoom(tmpdir, data):
     with open(outputfile, 'rb') as f:
         src = MmapSource(f)
         assert len(list(all_tiles(src))) == 6
+
+def test_export_zoom_neither(tmpdir, data):
+    inputfile = str(data.join("RGB.byte.tif"))
+    outputfile = str(tmpdir.join("export.pmtiles"))
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ["pmtiles", inputfile, outputfile, "--zoom-levels", ".."]
+    )
+    assert result.exit_code == 0
+
+    with open(outputfile, "rb") as f:
+        src = MmapSource(f)
+        assert len(list(all_tiles(src))) == 19
+
+def test_export_zoom_only_min(tmpdir, data):
+    inputfile = str(data.join("RGB.byte.tif"))
+    outputfile = str(tmpdir.join("export.pmtiles"))
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ["pmtiles", inputfile, outputfile, "--zoom-levels", "6.."]
+    )
+    assert result.exit_code == 0
+
+    with open(outputfile, "rb") as f:
+        src = MmapSource(f)
+        assert len(list(all_tiles(src))) == 12
+
+def test_export_zoom_only_max(tmpdir, data):
+    inputfile = str(data.join("RGB.byte.tif"))
+    outputfile = str(tmpdir.join("export.pmtiles"))
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ["pmtiles", inputfile, outputfile, "--zoom-levels", "..7"]
+    )
+    assert result.exit_code == 0
+
+    with open(outputfile, "rb") as f:
+        src = MmapSource(f)
+        assert len(list(all_tiles(src))) == 13
+
 
 def test_export_jobs(tmpdir, data):
     inputfile = str(data.join("RGB.byte.tif"))

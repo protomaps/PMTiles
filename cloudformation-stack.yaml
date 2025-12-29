@@ -1,0 +1,719 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Serve Z/X/Y tiles through CloudFront + Lambda from an existing S3 bucket.
+Parameters:
+  BucketName:
+    Description: >-
+      Name of an existing S3 bucket with .pmtiles tilesets. Should be in the
+      same region as your CloudFormation stack. Can be a RequesterPays bucket in
+      another account.
+    Type: String
+    MinLength: 1
+  DefaultTTL:
+    Description: Default time-to-live for cached tiles in the CloudFront distribution.
+    Type: Number
+    Default: 86400
+  AllowedOrigins:
+    Description: >-
+      Comma-separated list of domains (e.g. example.com) allowed by browser CORS
+      policy, or * for all origins.
+    Type: List<String>
+    Default: '*'
+  PublicHostname:
+    Description: >-
+      Optional. Replace *.cloudfront.net in TileJSON with a custom hostname
+      (e.g. example.com). See docs on how this value is cached.
+    Type: String
+Outputs:
+  CloudFrontDistributionUrl:
+    Description: URL of the CloudFront distribution for cached tiles.
+    Value: !Sub https://${CloudFrontDistribution.DomainName}
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDistributionURL
+Conditions:
+  IsPublicHostnameProvided: !Not 
+    - !Equals 
+      - !Ref PublicHostname
+      - ''
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}
+      RetentionInDays: 7
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-LambdaLoggingPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub >-
+                  arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:log-stream:*
+        - PolicyName: !Sub ${AWS::StackName}-LambdaS3AccessPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub arn:aws:s3:::${BucketName}/*
+  LambdaFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt LambdaFunction.Arn
+      InvokeMode: BUFFERED
+  LambdaFunctionUrlPermissionInvokeUrl:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref LambdaFunction
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+  LambdaFunctionUrlPermissionInvokeFunction:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunction
+      Principal: '*'
+  ViewerRequestCloudFrontFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub ${AWS::StackName}-ViewerRequestCloudFrontFunction
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          const request = event.request;
+          request.headers['x-distribution-domain-name'] = { value: event.context.distributionDomainName };
+          return request;
+        }
+      FunctionConfig:
+        Comment: Add x-distribution-domain header.
+        Runtime: cloudfront-js-2.0
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DeletionPolicy: Delete
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: LambdaOrigin
+            DomainName: !Select 
+              - 2
+              - !Split 
+                - /
+                - !GetAtt LambdaFunctionUrl.FunctionUrl
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+        DefaultCacheBehavior:
+          TargetOriginId: LambdaOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: !Ref CachePolicyId
+          ResponseHeadersPolicyId: !Ref ResponseHeadersPolicyId
+          OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+          FunctionAssociations: !If 
+            - IsPublicHostnameProvided
+            - !Ref AWS::NoValue
+            - - EventType: viewer-request
+                FunctionARN: !GetAtt ViewerRequestCloudFrontFunction.FunctionARN
+        Enabled: true
+        HttpVersion: http2and3
+        Comment: CloudFront Distribution
+        PriceClass: PriceClass_All
+  CachePolicyId:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub ${AWS::StackName}-CachePolicyConfig
+        DefaultTTL: !Ref DefaultTTL
+        MaxTTL: 31536000
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          CookiesConfig:
+            CookieBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+  ResponseHeadersPolicyId:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${AWS::StackName}-ResponseHeadersPolicyConfig
+        CorsConfig:
+          AccessControlAllowOrigins:
+            Items: !Ref AllowedOrigins
+          AccessControlAllowHeaders:
+            Items:
+              - '*'
+          AccessControlAllowMethods:
+            Items:
+              - GET
+              - HEAD
+              - OPTIONS
+          AccessControlExposeHeaders:
+            Items:
+              - ETag
+          AccessControlAllowCredentials: false
+          OriginOverride: true
+        Comment: CORS policy for Protomaps
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-LambdaFunction
+      Runtime: nodejs22.x
+      Architectures:
+        - arm64
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: index.handler
+      MemorySize: 512
+      LoggingConfig:
+        LogGroup: !Ref LogGroup
+      Environment:
+        Variables:
+          BUCKET: !Ref BucketName
+          PUBLIC_HOSTNAME: !Ref PublicHostname
+      Code:
+        ZipFile: >
+          //sha:754e15b
+
+          "use strict";var fr=Object.create;var te=Object.defineProperty;var
+          vr=Object.getOwnPropertyDescriptor;var
+          pr=Object.getOwnPropertyNames;var
+          gr=Object.getPrototypeOf,dr=Object.prototype.hasOwnProperty;var
+          K=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),mr=(t,e)=>{for(var
+          r in e)te(t,r,{get:e[r],enumerable:!0})},Ne=(t,e,r,n)=>{if(e&&typeof
+          e=="object"||typeof e=="function")for(let i of
+          pr(e))!dr.call(t,i)&&i!==r&&te(t,i,{get:()=>e[i],enumerable:!(n=vr(e,i))||n.enumerable});return
+          t};var
+          je=(t,e,r)=>(r=t!=null?fr(gr(t)):{},Ne(e||!t||!t.__esModule?te(r,"default",{value:t,enumerable:!0}):r,t)),yr=t=>Ne(te({},"__esModule",{value:!0}),t);var
+          xt=K((xi,wt)=>{var
+          ie=Object.defineProperty,Jr=Object.getOwnPropertyDescriptor,Qr=Object.getOwnPropertyNames,Yr=Object.prototype.hasOwnProperty,oe=(t,e)=>ie(t,"name",{value:e,configurable:!0}),Xr=(t,e)=>{for(var
+          r in e)ie(t,r,{get:e[r],enumerable:!0})},en=(t,e,r,n)=>{if(e&&typeof
+          e=="object"||typeof e=="function")for(let i of
+          Qr(e))!Yr.call(t,i)&&i!==r&&ie(t,i,{get:()=>e[i],enumerable:!(n=Jr(e,i))||n.enumerable});return
+          t},tn=t=>en(ie({},"__esModule",{value:!0}),t),ht={};Xr(ht,{AlgorithmId:()=>gt,EndpointURLScheme:()=>pt,FieldPosition:()=>dt,HttpApiKeyAuthLocation:()=>vt,HttpAuthLocation:()=>ft,IniSectionType:()=>mt,RequestHandlerProtocol:()=>yt,SMITHY_CONTEXT_KEY:()=>an,getDefaultClientConfiguration:()=>on,resolveDefaultRuntimeConfig:()=>sn});wt.exports=tn(ht);var
+          ft=(t=>(t.HEADER="header",t.QUERY="query",t))(ft||{}),vt=(t=>(t.HEADER="header",t.QUERY="query",t))(vt||{}),pt=(t=>(t.HTTP="http",t.HTTPS="https",t))(pt||{}),gt=(t=>(t.MD5="md5",t.CRC32="crc32",t.CRC32C="crc32c",t.SHA1="sha1",t.SHA256="sha256",t))(gt||{}),rn=oe(t=>{let
+          e=[];return t.sha256!==void
+          0&&e.push({algorithmId:()=>"sha256",checksumConstructor:()=>t.sha256}),t.md5!=null&&e.push({algorithmId:()=>"md5",checksumConstructor:()=>t.md5}),{_checksumAlgorithms:e,addChecksumAlgorithm(r){this._checksumAlgorithms.push(r)},checksumAlgorithms(){return
+          this._checksumAlgorithms}}},"getChecksumConfiguration"),nn=oe(t=>{let
+          e={};return
+          t.checksumAlgorithms().forEach(r=>{e[r.algorithmId()]=r.checksumConstructor()}),e},"resolveChecksumRuntimeConfig"),on=oe(t=>({...rn(t)}),"getDefaultClientConfiguration"),sn=oe(t=>({...nn(t)}),"resolveDefaultRuntimeConfig"),dt=(t=>(t[t.HEADER=0]="HEADER",t[t.TRAILER=1]="TRAILER",t))(dt||{}),an="__smithy_context",mt=(t=>(t.PROFILE="profile",t.SSO_SESSION="sso-session",t.SERVICES="services",t))(mt||{}),yt=(t=>(t.HTTP_0_9="http/0.9",t.HTTP_1_0="http/1.0",t.TDS_8_0="tds/8.0",t))(yt||{})});var
+          zt=K((Ei,St)=>{var
+          se=Object.defineProperty,ln=Object.getOwnPropertyDescriptor,un=Object.getOwnPropertyNames,cn=Object.prototype.hasOwnProperty,N=(t,e)=>se(t,"name",{value:e,configurable:!0}),hn=(t,e)=>{for(var
+          r in e)se(t,r,{get:e[r],enumerable:!0})},fn=(t,e,r,n)=>{if(e&&typeof
+          e=="object"||typeof e=="function")for(let i of
+          un(e))!cn.call(t,i)&&i!==r&&se(t,i,{get:()=>e[i],enumerable:!(n=ln(e,i))||n.enumerable});return
+          t},vn=t=>fn(se({},"__esModule",{value:!0}),t),Ct={};hn(Ct,{Field:()=>dn,Fields:()=>mn,HttpRequest:()=>yn,HttpResponse:()=>wn,IHttpRequest:()=>Tt.HttpRequest,getHttpHandlerExtensionConfiguration:()=>pn,isValidHostname:()=>_t,resolveHttpHandlerRuntimeConfig:()=>gn});St.exports=vn(Ct);var
+          pn=N(t=>{let
+          e=t.httpHandler;return{setHttpHandler(r){e=r},httpHandler(){return
+          e},updateHttpClientConfig(r,n){e.updateHttpClientConfig(r,n)},httpHandlerConfigs(){return
+          e.httpHandlerConfigs()}}},"getHttpHandlerExtensionConfiguration"),gn=N(t=>({httpHandler:t.httpHandler()}),"resolveHttpHandlerRuntimeConfig"),Tt=xt(),bt=class{constructor({name:e,kind:r=Tt.FieldPosition.HEADER,values:n=[]}){this.name=e,this.kind=r,this.values=n}add(e){this.values.push(e)}set(e){this.values=e}remove(e){this.values=this.values.filter(r=>r!==e)}toString(){return
+          this.values.map(e=>e.includes(",")||e.includes("
+          ")?`"${e}"`:e).join(", ")}get(){return this.values}};N(bt,"Field");var
+          dn=bt,Et=class{constructor({fields:e=[],encoding:r="utf-8"}){this.entries={},e.forEach(this.setField.bind(this)),this.encoding=r}setField(e){this.entries[e.name.toLowerCase()]=e}getField(e){return
+          this.entries[e.toLowerCase()]}removeField(e){delete
+          this.entries[e.toLowerCase()]}getByType(e){return
+          Object.values(this.entries).filter(r=>r.kind===e)}};N(Et,"Fields");var
+          mn=Et,At=class
+          Ce{constructor(e){this.method=e.method||"GET",this.hostname=e.hostname||"localhost",this.port=e.port,this.query=e.query||{},this.headers=e.headers||{},this.body=e.body,this.protocol=e.protocol?e.protocol.slice(-1)!==":"?`${e.protocol}:`:e.protocol:"https:",this.path=e.path?e.path.charAt(0)!=="/"?`/${e.path}`:e.path:"/",this.username=e.username,this.password=e.password,this.fragment=e.fragment}static
+          clone(e){let r=new Ce({...e,headers:{...e.headers}});return
+          r.query&&(r.query=Pt(r.query)),r}static
+          isInstance(e){if(!e)return!1;let r=e;return"method"in r&&"protocol"in
+          r&&"hostname"in r&&"path"in r&&typeof r.query=="object"&&typeof
+          r.headers=="object"}clone(){return
+          Ce.clone(this)}};N(At,"HttpRequest");var yn=At;function Pt(t){return
+          Object.keys(t).reduce((e,r)=>{let
+          n=t[r];return{...e,[r]:Array.isArray(n)?[...n]:n}},{})}N(Pt,"cloneQuery");var
+          Ht=class{constructor(e){this.statusCode=e.statusCode,this.reason=e.reason,this.headers=e.headers||{},this.body=e.body}static
+          isInstance(e){if(!e)return!1;let r=e;return typeof
+          r.statusCode=="number"&&typeof
+          r.headers=="object"}};N(Ht,"HttpResponse");var wn=Ht;function
+          _t(t){return/^[a-z0-9][a-z0-9\.\-]*[a-z0-9]$/.test(t)}N(_t,"isValidHostname")});var
+          Rt=K((Ai,Ut)=>{var
+          ae=Object.defineProperty,xn=Object.getOwnPropertyDescriptor,Cn=Object.getOwnPropertyNames,Tn=Object.prototype.hasOwnProperty,Te=(t,e)=>ae(t,"name",{value:e,configurable:!0}),bn=(t,e)=>{for(var
+          r in e)ae(t,r,{get:e[r],enumerable:!0})},En=(t,e,r,n)=>{if(e&&typeof
+          e=="object"||typeof e=="function")for(let i of
+          Cn(e))!Tn.call(t,i)&&i!==r&&ae(t,i,{get:()=>e[i],enumerable:!(n=xn(e,i))||n.enumerable});return
+          t},An=t=>En(ae({},"__esModule",{value:!0}),t),Ot={};bn(Ot,{escapeUri:()=>Mt,escapeUriPath:()=>Hn});Ut.exports=An(Ot);var
+          Mt=Te(t=>encodeURIComponent(t).replace(/[!'()*]/g,Pn),"escapeUri"),Pn=Te(t=>`%${t.charCodeAt(0).toString(16).toUpperCase()}`,"hexEncode"),Hn=Te(t=>t.split("/").map(Mt).join("/"),"escapeUriPath")});var
+          It=K((Pi,kt)=>{var
+          le=Object.defineProperty,_n=Object.getOwnPropertyDescriptor,Sn=Object.getOwnPropertyNames,zn=Object.prototype.hasOwnProperty,On=(t,e)=>le(t,"name",{value:e,configurable:!0}),Mn=(t,e)=>{for(var
+          r in e)le(t,r,{get:e[r],enumerable:!0})},Un=(t,e,r,n)=>{if(e&&typeof
+          e=="object"||typeof e=="function")for(let i of
+          Sn(e))!zn.call(t,i)&&i!==r&&le(t,i,{get:()=>e[i],enumerable:!(n=_n(e,i))||n.enumerable});return
+          t},Rn=t=>Un(le({},"__esModule",{value:!0}),t),Dt={};Mn(Dt,{buildQueryString:()=>Lt});kt.exports=Rn(Dt);var
+          be=Rt();function Lt(t){let e=[];for(let r of
+          Object.keys(t).sort()){let
+          n=t[r];if(r=(0,be.escapeUri)(r),Array.isArray(n))for(let
+          i=0,o=n.length;i<o;i++)e.push(`${r}=${(0,be.escapeUri)(n[i])}`);else{let
+          i=r;(n||typeof
+          n=="string")&&(i+=`=${(0,be.escapeUri)(n)}`),e.push(i)}}return
+          e.join("&")}On(Lt,"buildQueryString")});var rr=K((zi,tr)=>{var
+          Dn=Object.create,X=Object.defineProperty,Ln=Object.getOwnPropertyDescriptor,kn=Object.getOwnPropertyNames,In=Object.getPrototypeOf,Nn=Object.prototype.hasOwnProperty,C=(t,e)=>X(t,"name",{value:e,configurable:!0}),jn=(t,e)=>{for(var
+          r in e)X(t,r,{get:e[r],enumerable:!0})},Bt=(t,e,r,n)=>{if(e&&typeof
+          e=="object"||typeof e=="function")for(let i of
+          kn(e))!Nn.call(t,i)&&i!==r&&X(t,i,{get:()=>e[i],enumerable:!(n=Ln(e,i))||n.enumerable});return
+          t},Bn=(t,e,r)=>(r=t!=null?Dn(In(t)):{},Bt(e||!t||!t.__esModule?X(r,"default",{value:t,enumerable:!0}):r,t)),$n=t=>Bt(X({},"__esModule",{value:!0}),t),$t={};jn($t,{DEFAULT_REQUEST_TIMEOUT:()=>Kn,NodeHttp2Handler:()=>Yn,NodeHttpHandler:()=>Wn,streamCollector:()=>ei});tr.exports=$n($t);var
+          Ft=zt(),qt=It(),Ee=require("http"),Ae=require("https"),Fn=["ECONNRESET","EPIPE","ETIMEDOUT"],Zt=C(t=>{let
+          e={};for(let r of Object.keys(t)){let
+          n=t[r];e[r]=Array.isArray(n)?n.join(","):n}return
+          e},"getTransformedHeaders"),qn=C((t,e,r=0)=>{if(!r)return;let
+          n=setTimeout(()=>{t.destroy(),e(Object.assign(new Error(`Socket timed
+          out without establishing a connection within ${r}
+          ms`),{name:"TimeoutError"}))},r);t.on("socket",i=>{i.connecting?i.on("connect",()=>{clearTimeout(n)}):clearTimeout(n)})},"setConnectionTimeout"),Zn=C((t,{keepAlive:e,keepAliveMsecs:r})=>{e===!0&&t.on("socket",n=>{n.setKeepAlive(e,r||0)})},"setSocketKeepAlive"),Gn=C((t,e,r=0)=>{t.setTimeout(r,()=>{t.destroy(),e(Object.assign(new
+          Error(`Connection timed out after ${r}
+          ms`),{name:"TimeoutError"}))})},"setSocketTimeout"),Gt=require("stream"),Nt=1e3;async
+          function He(t,e,r=Nt){let
+          n=e.headers??{},i=n.Expect||n.expect,o=-1,s=!1;i==="100-continue"&&await
+          Promise.race([new
+          Promise(a=>{o=Number(setTimeout(a,Math.max(Nt,r)))}),new
+          Promise(a=>{t.on("continue",()=>{clearTimeout(o),a()}),t.on("error",()=>{s=!0,clearTimeout(o),a()})})]),s||Kt(t,e.body)}C(He,"writeRequestBody");function
+          Kt(t,e){if(e instanceof
+          Gt.Readable){e.pipe(t);return}if(e){if(Buffer.isBuffer(e)||typeof
+          e=="string"){t.end(e);return}let r=e;if(typeof
+          r=="object"&&r.buffer&&typeof r.byteOffset=="number"&&typeof
+          r.byteLength=="number"){t.end(Buffer.from(r.buffer,r.byteOffset,r.byteLength));return}t.end(Buffer.from(e));return}t.end()}C(Kt,"writeBody");var
+          Kn=0,Wt=class
+          Pe{constructor(e){this.socketWarningTimestamp=0,this.metadata={handlerProtocol:"http/1.1"},this.configProvider=new
+          Promise((r,n)=>{typeof
+          e=="function"?e().then(i=>{r(this.resolveDefaultConfig(i))}).catch(n):r(this.resolveDefaultConfig(e))})}static
+          create(e){return typeof e?.handle=="function"?e:new Pe(e)}static
+          checkSocketUsage(e,r,n=console){var
+          i,o,s;let{sockets:a,requests:l,maxSockets:c}=e;if(typeof
+          c!="number"||c===1/0||Date.now()-15e3<r)return r;if(a&&l)for(let u in
+          a){let h=((i=a[u])==null?void 0:i.length)??0,y=((o=l[u])==null?void
+          0:o.length)??0;if(h>=c&&y>=2*c)return(s=n?.warn)==null||s.call(n,`@smithy/node-http-handler:WARN
+          - socket usage at capacity=${h} and ${y} additional requests are
+          enqueued.
+
+          See
+          https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/node-configuring-maxsockets.html
+
+          or increase socketAcquisitionWarningTimeout=(millis) in the
+          NodeHttpHandler config.`),Date.now()}return
+          r}resolveDefaultConfig(e){let{requestTimeout:r,connectionTimeout:n,socketTimeout:i,httpAgent:o,httpsAgent:s}=e||{},a=!0,l=50;return{connectionTimeout:n,requestTimeout:r??i,httpAgent:o
+          instanceof Ee.Agent||typeof o?.destroy=="function"?o:new
+          Ee.Agent({keepAlive:a,maxSockets:l,...o}),httpsAgent:s instanceof
+          Ae.Agent||typeof s?.destroy=="function"?s:new
+          Ae.Agent({keepAlive:a,maxSockets:l,...s}),logger:console}}destroy(){var
+          e,r,n,i;(r=(e=this.config)==null?void
+          0:e.httpAgent)==null||r.destroy(),(i=(n=this.config)==null?void
+          0:n.httpsAgent)==null||i.destroy()}async
+          handle(e,{abortSignal:r}={}){this.config||(this.config=await
+          this.configProvider);let n;return new Promise((i,o)=>{let s,a=C(async
+          p=>{await s,clearTimeout(n),i(p)},"resolve"),l=C(async p=>{await
+          s,clearTimeout(n),o(p)},"reject");if(!this.config)throw new
+          Error("Node HTTP request handler config is not
+          resolved");if(r?.aborted){let p=new Error("Request
+          aborted");p.name="AbortError",l(p);return}let
+          c=e.protocol==="https:",f=c?this.config.httpsAgent:this.config.httpAgent;n=setTimeout(()=>{this.socketWarningTimestamp=Pe.checkSocketUsage(f,this.socketWarningTimestamp,this.config.logger)},this.config.socketAcquisitionWarningTimeout??(this.config.requestTimeout??2e3)+(this.config.connectionTimeout??1e3));let
+          u=(0,qt.buildQueryString)(e.query||{}),h;if(e.username!=null||e.password!=null){let
+          p=e.username??"",x=e.password??"";h=`${p}:${x}`}let
+          y=e.path;u&&(y+=`?${u}`),e.fragment&&(y+=`#${e.fragment}`);let
+          g={headers:e.headers,host:e.hostname,method:e.method,path:y,port:e.port,agent:f,auth:h},b=(c?Ae.request:Ee.request)(g,p=>{let
+          x=new
+          Ft.HttpResponse({statusCode:p.statusCode||-1,reason:p.statusMessage,headers:Zt(p.headers),body:p});a({response:x})});if(b.on("error",p=>{Fn.includes(p.code)?l(Object.assign(p,{name:"TimeoutError"})):l(p)}),qn(b,l,this.config.connectionTimeout),Gn(b,l,this.config.requestTimeout),r){let
+          p=C(()=>{b.destroy();let x=new Error("Request
+          aborted");x.name="AbortError",l(x)},"onAbort");if(typeof
+          r.addEventListener=="function"){let
+          x=r;x.addEventListener("abort",p,{once:!0}),b.once("close",()=>x.removeEventListener("abort",p))}else
+          r.onabort=p}let O=g.agent;typeof O=="object"&&"keepAlive"in
+          O&&Zn(b,{keepAlive:O.keepAlive,keepAliveMsecs:O.keepAliveMsecs}),s=He(b,e,this.config.requestTimeout).catch(p=>(clearTimeout(n),o(p)))})}updateHttpClientConfig(e,r){this.config=void
+          0,this.configProvider=this.configProvider.then(n=>({...n,[e]:r}))}httpHandlerConfigs(){return
+          this.config??{}}};C(Wt,"NodeHttpHandler");var
+          Wn=Wt,jt=require("http2"),Vn=Bn(require("http2")),Vt=class{constructor(e){this.sessions=[],this.sessions=e??[]}poll(){if(this.sessions.length>0)return
+          this.sessions.shift()}offerLast(e){this.sessions.push(e)}contains(e){return
+          this.sessions.includes(e)}remove(e){this.sessions=this.sessions.filter(r=>r!==e)}[Symbol.iterator](){return
+          this.sessions[Symbol.iterator]()}destroy(e){for(let r of
+          this.sessions)r===e&&(r.destroyed||r.destroy())}};C(Vt,"NodeHttp2ConnectionPool");var
+          Jn=Vt,Jt=class{constructor(e){if(this.sessionCache=new
+          Map,this.config=e,this.config.maxConcurrency&&this.config.maxConcurrency<=0)throw
+          new RangeError("maxConcurrency must be greater than
+          zero.")}lease(e,r){let
+          n=this.getUrlString(e),i=this.sessionCache.get(n);if(i){let
+          l=i.poll();if(l&&!this.config.disableConcurrency)return l}let
+          o=Vn.default.connect(n);this.config.maxConcurrency&&o.settings({maxConcurrentStreams:this.config.maxConcurrency},l=>{if(l)throw
+          new Error("Fail to set maxConcurrentStreams to
+          "+this.config.maxConcurrency+"when creating new session for
+          "+e.destination.toString())}),o.unref();let
+          s=C(()=>{o.destroy(),this.deleteSession(n,o)},"destroySessionCb");o.on("goaway",s),o.on("error",s),o.on("frameError",s),o.on("close",()=>this.deleteSession(n,o)),r.requestTimeout&&o.setTimeout(r.requestTimeout,s);let
+          a=this.sessionCache.get(n)||new Jn;return
+          a.offerLast(o),this.sessionCache.set(n,a),o}deleteSession(e,r){let
+          n=this.sessionCache.get(e);n&&n.contains(r)&&(n.remove(r),this.sessionCache.set(e,n))}release(e,r){var
+          n;let
+          i=this.getUrlString(e);(n=this.sessionCache.get(i))==null||n.offerLast(r)}destroy(){for(let[e,r]of
+          this.sessionCache){for(let n of
+          r)n.destroyed||n.destroy(),r.remove(n);this.sessionCache.delete(e)}}setMaxConcurrentStreams(e){if(this.config.maxConcurrency&&this.config.maxConcurrency<=0)throw
+          new RangeError("maxConcurrentStreams must be greater than
+          zero.");this.config.maxConcurrency=e}setDisableConcurrentStreams(e){this.config.disableConcurrency=e}getUrlString(e){return
+          e.destination.toString()}};C(Jt,"NodeHttp2ConnectionManager");var
+          Qn=Jt,Qt=class
+          Yt{constructor(e){this.metadata={handlerProtocol:"h2"},this.connectionManager=new
+          Qn({}),this.configProvider=new Promise((r,n)=>{typeof
+          e=="function"?e().then(i=>{r(i||{})}).catch(n):r(e||{})})}static
+          create(e){return typeof e?.handle=="function"?e:new
+          Yt(e)}destroy(){this.connectionManager.destroy()}async
+          handle(e,{abortSignal:r}={}){this.config||(this.config=await
+          this.configProvider,this.connectionManager.setDisableConcurrentStreams(this.config.disableConcurrentStreams||!1),this.config.maxConcurrentStreams&&this.connectionManager.setMaxConcurrentStreams(this.config.maxConcurrentStreams));let{requestTimeout:n,disableConcurrentStreams:i}=this.config;return
+          new Promise((o,s)=>{var a;let l=!1,c,f=C(async d=>{await
+          c,o(d)},"resolve"),u=C(async d=>{await
+          c,s(d)},"reject");if(r?.aborted){l=!0;let d=new Error("Request
+          aborted");d.name="AbortError",u(d);return}let{hostname:h,method:y,port:g,protocol:w,query:b}=e,O="";if(e.username!=null||e.password!=null){let
+          d=e.username??"",A=e.password??"";O=`${d}:${A}@`}let
+          p=`${w}//${O}${h}${g?`:${g}`:""}`,x={destination:new
+          URL(p)},M=this.connectionManager.lease(x,{requestTimeout:(a=this.config)==null?void
+          0:a.sessionTimeout,disableConcurrentStreams:i||!1}),D=C(d=>{i&&this.destroySession(M),l=!0,u(d)},"rejectWithDestroy"),j=(0,qt.buildQueryString)(b||{}),B=e.path;j&&(B+=`?${j}`),e.fragment&&(B+=`#${e.fragment}`);let
+          E=M.request({...e.headers,[jt.constants.HTTP2_HEADER_PATH]:B,[jt.constants.HTTP2_HEADER_METHOD]:y});if(M.ref(),E.on("response",d=>{let
+          A=new
+          Ft.HttpResponse({statusCode:d[":status"]||-1,headers:Zt(d),body:E});l=!0,f({response:A}),i&&(M.close(),this.connectionManager.deleteSession(p,M))}),n&&E.setTimeout(n,()=>{E.close();let
+          d=new Error(`Stream timed out because of no activity for ${n}
+          ms`);d.name="TimeoutError",D(d)}),r){let d=C(()=>{E.close();let A=new
+          Error("Request
+          aborted");A.name="AbortError",D(A)},"onAbort");if(typeof
+          r.addEventListener=="function"){let
+          A=r;A.addEventListener("abort",d,{once:!0}),E.once("close",()=>A.removeEventListener("abort",d))}else
+          r.onabort=d}E.on("frameError",(d,A,P)=>{D(new Error(`Frame type id
+          ${d} in stream id ${P} has failed with code
+          ${A}.`))}),E.on("error",D),E.on("aborted",()=>{D(new Error(`HTTP/2
+          stream is abnormally aborted in mid-communication with result code
+          ${E.rstCode}.`))}),E.on("close",()=>{M.unref(),i&&M.destroy(),l||D(new
+          Error("Unexpected error: http2 request did not get a
+          response"))}),c=He(E,e,n)})}updateHttpClientConfig(e,r){this.config=void
+          0,this.configProvider=this.configProvider.then(n=>({...n,[e]:r}))}httpHandlerConfigs(){return
+          this.config??{}}destroySession(e){e.destroyed||e.destroy()}};C(Qt,"NodeHttp2Handler");var
+          Yn=Qt,Xt=class extends
+          Gt.Writable{constructor(){super(...arguments),this.bufferedBytes=[]}_write(e,r,n){this.bufferedBytes.push(e),n()}};C(Xt,"Collector");var
+          Xn=Xt,ei=C(t=>ti(t)?er(t):new Promise((e,r)=>{let n=new
+          Xn;t.pipe(n),t.on("error",i=>{n.end(),r(i)}),n.on("error",r),n.on("finish",function(){let
+          i=new
+          Uint8Array(Buffer.concat(this.bufferedBytes));e(i)})}),"streamCollector"),ti=C(t=>typeof
+          ReadableStream=="function"&&t instanceof
+          ReadableStream,"isReadableStreamInstance");async function er(t){let
+          e=[],r=t.getReader(),n=!1,i=0;for(;!n;){let{done:a,value:l}=await
+          r.read();l&&(e.push(l),i+=l.length),n=a}let o=new
+          Uint8Array(i),s=0;for(let a of e)o.set(a,s),s+=a.length;return
+          o}C(er,"collectReadableStream")});var
+          oi={};mr(oi,{handler:()=>ii,handlerRaw:()=>sr});module.exports=yr(oi);var
+          Be=require("module"),wr=(0,Be.createRequire)("/"),xr;try{xr=wr("worker_threads").Worker}catch{}var
+          _=Uint8Array,q=Uint16Array,Cr=Int32Array,$e=new
+          _([0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0,0]),Fe=new
+          _([0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,0,0]),Tr=new
+          _([16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]),qe=function(t,e){for(var
+          r=new q(31),n=0;n<31;++n)r[n]=e+=1<<t[n-1];for(var i=new
+          Cr(r[30]),n=1;n<30;++n)for(var
+          o=r[n];o<r[n+1];++o)i[o]=o-r[n]<<5|n;return{b:r,r:i}},Ze=qe($e,2),Ge=Ze.b,br=Ze.r;Ge[28]=258,br[258]=28;var
+          Ke=qe(Fe,0),Er=Ke.b,ai=Ke.r,ge=new
+          q(32768);for(v=0;v<32768;++v)k=(v&43690)>>1|(v&21845)<<1,k=(k&52428)>>2|(k&13107)<<2,k=(k&61680)>>4|(k&3855)<<4,ge[v]=((k&65280)>>8|(k&255)<<8)>>1;var
+          k,v,W=function(t,e,r){for(var n=t.length,i=0,o=new
+          q(e);i<n;++i)t[i]&&++o[t[i]-1];var s=new
+          q(e);for(i=1;i<e;++i)s[i]=s[i-1]+o[i-1]<<1;var a;if(r){a=new
+          q(1<<e);var l=15-e;for(i=0;i<n;++i)if(t[i])for(var
+          c=i<<4|t[i],f=e-t[i],u=s[t[i]-1]++<<f,h=u|(1<<f)-1;u<=h;++u)a[ge[u]>>l]=c}else
+          for(a=new
+          q(n),i=0;i<n;++i)t[i]&&(a[i]=ge[s[t[i]-1]++]>>15-t[i]);return a},V=new
+          _(288);for(v=0;v<144;++v)V[v]=8;var v;for(v=144;v<256;++v)V[v]=9;var
+          v;for(v=256;v<280;++v)V[v]=7;var v;for(v=280;v<288;++v)V[v]=8;var
+          v,We=new _(32);for(v=0;v<32;++v)We[v]=5;var v;var Ar=W(V,9,1);var
+          Pr=W(We,5,1),ve=function(t){for(var
+          e=t[0],r=1;r<t.length;++r)t[r]>e&&(e=t[r]);return
+          e},U=function(t,e,r){var
+          n=e/8|0;return(t[n]|t[n+1]<<8)>>(e&7)&r},pe=function(t,e){var
+          r=e/8|0;return(t[r]|t[r+1]<<8|t[r+2]<<16)>>(e&7)},Hr=function(t){return(t+7)/8|0},_r=function(t,e,r){return(e==null||e<0)&&(e=0),(r==null||r>t.length)&&(r=t.length),new
+          _(t.subarray(e,r))};var Sr=["unexpected EOF","invalid block
+          type","invalid length/literal","invalid distance","stream
+          finished","no stream handler",,"no callback","invalid UTF-8
+          data","extra field too long","date not in range 1980-2099","filename
+          too long","stream finishing","invalid zip data"],H=function(t,e,r){var
+          n=new
+          Error(e||Sr[t]);if(n.code=t,Error.captureStackTrace&&Error.captureStackTrace(n,H),!r)throw
+          n;return n},de=function(t,e,r,n){var
+          i=t.length,o=n?n.length:0;if(!i||e.f&&!e.l)return r||new _(0);var
+          s=!r,a=s||e.i!=2,l=e.i;s&&(r=new _(i*3));var c=function(Le){var
+          ke=r.length;if(Le>ke){var Ie=new
+          _(Math.max(ke*2,Le));Ie.set(r),r=Ie}},f=e.f||0,u=e.p||0,h=e.b||0,y=e.l,g=e.d,w=e.m,b=e.n,O=i*8;do{if(!y){f=U(t,u,1);var
+          p=U(t,u+1,3);if(u+=3,p)if(p==1)y=Ar,g=Pr,w=9,b=5;else if(p==2){var
+          j=U(t,u,31)+257,B=U(t,u+10,15)+4,E=j+U(t,u+5,31)+1;u+=14;for(var d=new
+          _(E),A=new _(19),P=0;P<B;++P)A[Tr[P]]=U(t,u+P*3,7);u+=B*3;for(var
+          ze=ve(A),ar=(1<<ze)-1,lr=W(A,ze,1),P=0;P<E;){var
+          Oe=lr[U(t,u,ar)];u+=Oe&15;var x=Oe>>4;if(x<16)d[P++]=x;else{var
+          $=0,ee=0;for(x==16?(ee=3+U(t,u,3),u+=2,$=d[P-1]):x==17?(ee=3+U(t,u,7),u+=3):x==18&&(ee=11+U(t,u,127),u+=7);ee--;)d[P++]=$}}var
+          Me=d.subarray(0,j),I=d.subarray(j);w=ve(Me),b=ve(I),y=W(Me,w,1),g=W(I,b,1)}else
+          H(1);else{var
+          x=Hr(u)+4,M=t[x-4]|t[x-3]<<8,D=x+M;if(D>i){l&&H(0);break}a&&c(h+M),r.set(t.subarray(x,D),h),e.b=h+=M,e.p=u=D*8,e.f=f;continue}if(u>O){l&&H(0);break}}a&&c(h+131072);for(var
+          ur=(1<<w)-1,cr=(1<<b)-1,ce=u;;ce=u){var
+          $=y[pe(t,u)&ur],F=$>>4;if(u+=$&15,u>O){l&&H(0);break}if($||H(2),F<256)r[h++]=F;else
+          if(F==256){ce=u,y=null;break}else{var Ue=F-254;if(F>264){var
+          P=F-257,G=$e[P];Ue=U(t,u,(1<<G)-1)+Ge[P],u+=G}var
+          he=g[pe(t,u)&cr],fe=he>>4;he||H(3),u+=he&15;var I=Er[fe];if(fe>3){var
+          G=Fe[fe];I+=pe(t,u)&(1<<G)-1,u+=G}if(u>O){l&&H(0);break}a&&c(h+131072);var
+          Re=h+Ue;if(h<I){var
+          De=o-I,hr=Math.min(I,Re);for(De+h<0&&H(3);h<hr;++h)r[h]=n[De+h]}for(;h<Re;++h)r[h]=r[h-I]}}e.l=y,e.p=ce,e.b=h,e.f=f,y&&(f=1,e.m=w,e.d=g,e.n=b)}while(!f);return
+          h!=r.length&&s?_r(r,0,h):r.subarray(0,h)};var zr=new _(0);var
+          Or=function(t){(t[0]!=31||t[1]!=139||t[2]!=8)&&H(6,"invalid gzip
+          data");var e=t[3],r=10;e&4&&(r+=(t[10]|t[11]<<8)+2);for(var
+          n=(e>>3&1)+(e>>4&1);n>0;n-=!t[r++]);return r+(e&2)},Mr=function(t){var
+          e=t.length;return(t[e-4]|t[e-3]<<8|t[e-2]<<16|t[e-1]<<24)>>>0};var
+          Ur=function(t,e){return((t[0]&15)!=8||t[0]>>4>7||(t[0]<<8|t[1])%31)&&H(6,"invalid
+          zlib data"),(t[1]>>5&1)==+!e&&H(6,"invalid zlib data:
+          "+(t[1]&32?"need":"unexpected")+" dictionary"),(t[1]>>3&4)+2};function
+          Rr(t,e){return de(t,{i:2},e&&e.out,e&&e.dictionary)}function
+          Dr(t,e){var r=Or(t);return r+8>t.length&&H(6,"invalid gzip
+          data"),de(t.subarray(r,-8),{i:2},e&&e.out||new
+          _(Mr(t)),e&&e.dictionary)}function Lr(t,e){return
+          de(t.subarray(Ur(t,e&&e.dictionary),-4),{i:2},e&&e.out,e&&e.dictionary)}function
+          Ve(t,e){return
+          t[0]==31&&t[1]==139&&t[2]==8?Dr(t,e):(t[0]&15)!=8||t[0]>>4>7||(t[0]<<8|t[1])%31?Rr(t,e):Lr(t,e)}var
+          kr=typeof TextDecoder<"u"&&new
+          TextDecoder,Ir=0;try{kr.decode(zr,{stream:!0}),Ir=1}catch{}var
+          Nr=Object.defineProperty,J=Math.pow,m=(t,e)=>Nr(t,"name",{value:e,configurable:!0}),T=(t,e,r)=>new
+          Promise((n,i)=>{var
+          o=l=>{try{a(r.next(l))}catch(c){i(c)}},s=l=>{try{a(r.throw(l))}catch(c){i(c)}},a=l=>l.done?n(l.value):Promise.resolve(l.value).then(o,s);a((r=r.apply(t,e)).next())}),ci=m((t,e)=>{let
+          r=!1,n="",i=L.GridLayer.extend({createTile:m((o,s)=>{let
+          a=document.createElement("img"),l=new
+          AbortController,c=l.signal;return
+          a.cancel=()=>{l.abort()},r||(t.getHeader().then(f=>{f.tileType===1?console.error("Error:
+          archive contains MVT vector tiles, but leafletRasterLayer is for
+          displaying raster tiles. See
+          https://github.com/protomaps/PMTiles/tree/main/js for
+          details."):f.tileType===2?n="image/png":f.tileType===3?n="image/jpeg":f.tileType===4?n="image/webp":f.tileType===5&&(n="image/avif")}),r=!0),t.getZxy(o.z,o.x,o.y,c).then(f=>{if(f){let
+          u=new
+          Blob([f.data],{type:n}),h=window.URL.createObjectURL(u);a.src=h,a.cancel=void
+          0,s(void 0,a)}}).catch(f=>{if(f.name!=="AbortError")throw
+          f}),a},"createTile"),_removeTile:m(function(o){let
+          s=this._tiles[o];s&&(s.el.cancel&&s.el.cancel(),s.el.width=0,s.el.height=0,s.el.deleted=!0,L.DomUtil.remove(s.el),delete
+          this._tiles[o],this.fire("tileunload",{tile:s.el,coords:this._keyToTileCoords(o)}))},"_removeTile")});return
+          new i(e)},"leafletRasterLayer"),jr=m(t=>(e,r)=>{if(r instanceof
+          AbortController)return t(e,r);let n=new AbortController;return
+          t(e,n).then(i=>r(void
+          0,i.data,i.cacheControl||"",i.expires||""),i=>r(i)).catch(i=>r(i)),{cancel:m(()=>n.abort(),"cancel")}},"v3compat"),Br=class{constructor(e){this.tilev4=m((r,n)=>T(this,null,function*(){if(r.type==="json"){let
+          y=r.url.substr(10),g=this.tiles.get(y);if(g||(g=new
+          re(y),this.tiles.set(y,g)),this.metadata)return{data:yield
+          g.getTileJson(r.url)};let w=yield
+          g.getHeader();return(w.minLon>=w.maxLon||w.minLat>=w.maxLat)&&console.error(`Bounds
+          of PMTiles archive ${w.minLon},${w.minLat},${w.maxLon},${w.maxLat} are
+          not
+          valid.`),{data:{tiles:[`${r.url}/{z}/{x}/{y}`],minzoom:w.minZoom,maxzoom:w.maxZoom,bounds:[w.minLon,w.minLat,w.maxLon,w.maxLat]}}}let
+          i=new
+          RegExp(/pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/),o=r.url.match(i);if(!o)throw
+          new Error("Invalid PMTiles protocol URL");let
+          s=o[1],a=this.tiles.get(s);a||(a=new re(s),this.tiles.set(s,a));let
+          l=o[2],c=o[3],f=o[4],u=yield a.getHeader(),h=yield
+          a?.getZxy(+l,+c,+f,n.signal);if(h)return{data:new
+          Uint8Array(h.data),cacheControl:h.cacheControl,expires:h.expires};if(u.tileType===1){if(this.errorOnMissingTile)throw
+          new Error("Tile not found.");return{data:new
+          Uint8Array}}return{data:null}}),"tilev4"),this.tile=jr(this.tilev4),this.tiles=new
+          Map,this.metadata=e?.metadata||!1,this.errorOnMissingTile=e?.errorOnMissingTile||!1}add(e){this.tiles.set(e.source.getKey(),e)}get(e){return
+          this.tiles.get(e)}};m(Br,"Protocol");function
+          Je(t,e){return(e>>>0)*4294967296+(t>>>0)}m(Je,"toNum");function
+          Qe(t,e){let
+          r=e.buf,n=r[e.pos++],i=(n&112)>>4;if(n<128||(n=r[e.pos++],i|=(n&127)<<3,n<128)||(n=r[e.pos++],i|=(n&127)<<10,n<128)||(n=r[e.pos++],i|=(n&127)<<17,n<128)||(n=r[e.pos++],i|=(n&127)<<24,n<128)||(n=r[e.pos++],i|=(n&1)<<31,n<128))return
+          Je(t,i);throw new Error("Expected varint not more than 10
+          bytes")}m(Qe,"readVarintRemainder");function Z(t){let
+          e=t.buf,r=e[t.pos++],n=r&127;return
+          r<128||(r=e[t.pos++],n|=(r&127)<<7,r<128)||(r=e[t.pos++],n|=(r&127)<<14,r<128)||(r=e[t.pos++],n|=(r&127)<<21,r<128)?n:(r=e[t.pos],n|=(r&15)<<28,Qe(n,t))}m(Z,"readVarint");function
+          me(t,e,r,n){if(n===0){r===1&&(e[0]=t-1-e[0],e[1]=t-1-e[1]);let
+          i=e[0];e[0]=e[1],e[1]=i}}m(me,"rotate");function Ye(t,e){let
+          r=J(2,t),n=e,i=e,o=e,s=[0,0],a=1;for(;a<r;)n=1&o/2,i=1&(o^n),me(a,s,n,i),s[0]+=a*n,s[1]+=a*i,o=o/4,a*=2;return[t,s[0],s[1]]}m(Ye,"idOnLevel");var
+          $r=[0,1,5,21,85,341,1365,5461,21845,87381,349525,1398101,5592405,22369621,89478485,357913941,1431655765,5726623061,22906492245,91625968981,366503875925,1466015503701,5864062014805,23456248059221,93824992236885,375299968947541,0x5555555555555];function
+          Xe(t,e,r){if(t>26)throw new Error("Tile zoom level exceeds max safe
+          number limit (26)");if(e>J(2,t)-1||r>J(2,t)-1)throw new Error("tile
+          x/y outside zoom level bounds");let
+          n=$r[t],i=J(2,t),o=0,s=0,a=0,l=[e,r],c=i/2;for(;c>0;)o=(l[0]&c)>0?1:0,s=(l[1]&c)>0?1:0,a+=c*c*(3*o^s),me(c,l,o,s),c=c/2;return
+          n+a}m(Xe,"zxyToTileId");function Fr(t){let e=0,r=0;for(let
+          n=0;n<27;n++){let i=(1<<n)*(1<<n);if(e+i>t)return Ye(n,t-e);e+=i}throw
+          new Error("Tile zoom level exceeds max safe number limit
+          (26)")}m(Fr,"tileIdToZxy");var
+          Y=(t=>(t[t.Unknown=0]="Unknown",t[t.None=1]="None",t[t.Gzip=2]="Gzip",t[t.Brotli=3]="Brotli",t[t.Zstd=4]="Zstd",t))(Y||{});function
+          ne(t,e){return T(this,null,function*(){if(e===1||e===0)return
+          t;if(e===2){if(typeof globalThis.DecompressionStream>"u")return Ve(new
+          Uint8Array(t));let r=new Response(t).body;if(!r)throw new
+          Error("Failed to read response stream");let n=r.pipeThrough(new
+          globalThis.DecompressionStream("gzip"));return new
+          Response(n).arrayBuffer()}throw new Error("Compression method not
+          supported")})}m(ne,"defaultDecompress");var
+          S=(t=>(t[t.Unknown=0]="Unknown",t[t.Mvt=1]="Mvt",t[t.Png=2]="Png",t[t.Jpeg=3]="Jpeg",t[t.Webp=4]="Webp",t[t.Avif=5]="Avif",t))(S||{});function
+          et(t){return
+          t===1?".mvt":t===2?".png":t===3?".jpg":t===4?".webp":t===5?".avif":""}m(et,"tileTypeExt");var
+          qr=127;function tt(t,e){let r=0,n=t.length-1;for(;r<=n;){let
+          i=n+r>>1,o=e-t[i].tileId;if(o>0)r=i+1;else if(o<0)n=i-1;else return
+          t[i]}return
+          n>=0&&(t[n].runLength===0||e-t[n].tileId<t[n].runLength)?t[n]:null}m(tt,"findTile");var
+          Zr=class{constructor(e){this.file=e}getKey(){return
+          this.file.name}getBytes(e,r){return
+          T(this,null,function*(){return{data:yield
+          this.file.slice(e,e+r).arrayBuffer()}})}};m(Zr,"FileSource");var
+          rt=class{constructor(e,r=new
+          Headers){this.url=e,this.customHeaders=r,this.mustReload=!1;let
+          n="";"navigator"in
+          globalThis&&(n=globalThis.navigator.userAgent||"");let
+          i=n.indexOf("Windows")>-1,o=/Chrome|Chromium|Edg|OPR|Brave/.test(n);this.chromeWindowsNoCache=!1,i&&o&&(this.chromeWindowsNoCache=!0)}getKey(){return
+          this.url}setHeaders(e){this.customHeaders=e}getBytes(e,r,n,i){return
+          T(this,null,function*(){let o,s;n?s=n:(o=new
+          AbortController,s=o.signal);let a=new
+          Headers(this.customHeaders);a.set("range",`bytes=${e}-${e+r-1}`);let
+          l;this.mustReload?l="reload":this.chromeWindowsNoCache&&(l="no-store");let
+          c=yield
+          fetch(this.url,{signal:s,cache:l,headers:a});if(e===0&&c.status===416){let
+          h=c.headers.get("Content-Range");if(!h||!h.startsWith("bytes
+          */"))throw new Error("Missing content-length on 416 response");let
+          y=+h.substr(8);c=yield
+          fetch(this.url,{signal:s,cache:"reload",headers:{range:`bytes=0-${y-1}`}})}let
+          f=c.headers.get("Etag");if(f!=null&&f.startsWith("W/")&&(f=null),c.status===416||i&&f&&f!==i)throw
+          this.mustReload=!0,new Q(`Server returned non-matching ETag ${i} after
+          one retry. Check browser extensions and servers for issues that may
+          affect correct ETag headers.`);if(c.status>=300)throw new Error(`Bad
+          response code: ${c.status}`);let
+          u=c.headers.get("Content-Length");if(c.status===200&&(!u||+u>r))throw
+          o&&o.abort(),new Error("Server returned no content-length header or
+          content-length exceeding request. Check that your storage backend
+          supports HTTP Byte Serving.");return{data:yield
+          c.arrayBuffer(),etag:f||void
+          0,cacheControl:c.headers.get("Cache-Control")||void
+          0,expires:c.headers.get("Expires")||void
+          0}})}};m(rt,"FetchSource");var Gr=rt;function z(t,e){let
+          r=t.getUint32(e+4,!0),n=t.getUint32(e+0,!0);return
+          r*J(2,32)+n}m(z,"getUint64");function nt(t,e){let r=new
+          DataView(t),n=r.getUint8(7);if(n>3)throw new Error(`Archive is spec
+          version ${n} but this library supports up to spec version
+          3`);return{specVersion:n,rootDirectoryOffset:z(r,8),rootDirectoryLength:z(r,16),jsonMetadataOffset:z(r,24),jsonMetadataLength:z(r,32),leafDirectoryOffset:z(r,40),leafDirectoryLength:z(r,48),tileDataOffset:z(r,56),tileDataLength:z(r,64),numAddressedTiles:z(r,72),numTileEntries:z(r,80),numTileContents:z(r,88),clustered:r.getUint8(96)===1,internalCompression:r.getUint8(97),tileCompression:r.getUint8(98),tileType:r.getUint8(99),minZoom:r.getUint8(100),maxZoom:r.getUint8(101),minLon:r.getInt32(102,!0)/1e7,minLat:r.getInt32(106,!0)/1e7,maxLon:r.getInt32(110,!0)/1e7,maxLat:r.getInt32(114,!0)/1e7,centerZoom:r.getUint8(118),centerLon:r.getInt32(119,!0)/1e7,centerLat:r.getInt32(123,!0)/1e7,etag:e}}m(nt,"bytesToHeader");function
+          ye(t){let e={buf:new Uint8Array(t),pos:0},r=Z(e),n=[],i=0;for(let
+          o=0;o<r;o++){let
+          s=Z(e);n.push({tileId:i+s,offset:0,length:0,runLength:1}),i+=s}for(let
+          o=0;o<r;o++)n[o].runLength=Z(e);for(let
+          o=0;o<r;o++)n[o].length=Z(e);for(let o=0;o<r;o++){let
+          s=Z(e);s===0&&o>0?n[o].offset=n[o-1].offset+n[o-1].length:n[o].offset=s-1}return
+          n}m(ye,"deserializeIndex");var it=class extends
+          Error{};m(it,"EtagMismatch");var Q=it;function we(t,e){return
+          T(this,null,function*(){let r=yield t.getBytes(0,16384);if(new
+          DataView(r.data).getUint16(0,!0)!==19792)throw new Error("Wrong magic
+          number for PMTiles archive");let
+          n=r.data.slice(0,qr),i=nt(n,r.etag),o=r.data.slice(i.rootDirectoryOffset,i.rootDirectoryOffset+i.rootDirectoryLength),s=`${t.getKey()}|${i.etag||""}|${i.rootDirectoryOffset}|${i.rootDirectoryLength}`,a=ye(yield
+          e(o,i.internalCompression));return[i,[s,a.length,a]]})}m(we,"getHeaderAndRoot");function
+          xe(t,e,r,n,i){return T(this,null,function*(){let o=yield
+          t.getBytes(r,n,void 0,i.etag),s=yield
+          e(o.data,i.internalCompression),a=ye(s);if(a.length===0)throw new
+          Error("Empty directory is invalid");return
+          a})}m(xe,"getDirectory");var
+          ot=class{constructor(e=100,r=!0,n=ne){this.cache=new
+          Map,this.maxCacheEntries=e,this.counter=1,this.decompress=n}getHeader(e){return
+          T(this,null,function*(){let
+          r=e.getKey(),n=this.cache.get(r);if(n)return
+          n.lastUsed=this.counter++,n.data;let i=yield
+          we(e,this.decompress);return
+          i[1]&&this.cache.set(i[1][0],{lastUsed:this.counter++,data:i[1][2]}),this.cache.set(r,{lastUsed:this.counter++,data:i[0]}),this.prune(),i[0]})}getDirectory(e,r,n,i){return
+          T(this,null,function*(){let
+          o=`${e.getKey()}|${i.etag||""}|${r}|${n}`,s=this.cache.get(o);if(s)return
+          s.lastUsed=this.counter++,s.data;let a=yield
+          xe(e,this.decompress,r,n,i);return
+          this.cache.set(o,{lastUsed:this.counter++,data:a}),this.prune(),a})}prune(){if(this.cache.size>this.maxCacheEntries){let
+          e=1/0,r;this.cache.forEach((n,i)=>{n.lastUsed<e&&(e=n.lastUsed,r=i)}),r&&this.cache.delete(r)}}invalidate(e){return
+          T(this,null,function*(){this.cache.delete(e.getKey())})}};m(ot,"ResolvedValueCache");var
+          st=ot,at=class{constructor(e=100,r=!0,n=ne){this.cache=new
+          Map,this.invalidations=new
+          Map,this.maxCacheEntries=e,this.counter=1,this.decompress=n}getHeader(e){return
+          T(this,null,function*(){let
+          r=e.getKey(),n=this.cache.get(r);if(n)return
+          n.lastUsed=this.counter++,yield n.data;let i=new
+          Promise((o,s)=>{we(e,this.decompress).then(a=>{a[1]&&this.cache.set(a[1][0],{lastUsed:this.counter++,data:Promise.resolve(a[1][2])}),o(a[0]),this.prune()}).catch(a=>{s(a)})});return
+          this.cache.set(r,{lastUsed:this.counter++,data:i}),i})}getDirectory(e,r,n,i){return
+          T(this,null,function*(){let
+          o=`${e.getKey()}|${i.etag||""}|${r}|${n}`,s=this.cache.get(o);if(s)return
+          s.lastUsed=this.counter++,yield s.data;let a=new
+          Promise((l,c)=>{xe(e,this.decompress,r,n,i).then(f=>{l(f),this.prune()}).catch(f=>{c(f)})});return
+          this.cache.set(o,{lastUsed:this.counter++,data:a}),a})}prune(){if(this.cache.size>=this.maxCacheEntries){let
+          e=1/0,r;this.cache.forEach((n,i)=>{n.lastUsed<e&&(e=n.lastUsed,r=i)}),r&&this.cache.delete(r)}}invalidate(e){return
+          T(this,null,function*(){let
+          r=e.getKey();if(this.invalidations.get(r))return yield
+          this.invalidations.get(r);this.cache.delete(e.getKey());let n=new
+          Promise((i,o)=>{this.getHeader(e).then(s=>{i(),this.invalidations.delete(r)}).catch(s=>{o(s)})});this.invalidations.set(r,n)})}};m(at,"SharedPromiseCache");var
+          Kr=at,lt=class{constructor(e,r,n){typeof e=="string"?this.source=new
+          Gr(e):this.source=e,n?this.decompress=n:this.decompress=ne,r?this.cache=r:this.cache=new
+          Kr}getHeader(){return T(this,null,function*(){return yield
+          this.cache.getHeader(this.source)})}getZxyAttempt(e,r,n,i){return
+          T(this,null,function*(){let o=Xe(e,r,n),s=yield
+          this.cache.getHeader(this.source);if(e<s.minZoom||e>s.maxZoom)return;let
+          a=s.rootDirectoryOffset,l=s.rootDirectoryLength;for(let
+          c=0;c<=3;c++){let f=yield
+          this.cache.getDirectory(this.source,a,l,s),u=tt(f,o);if(u){if(u.runLength>0){let
+          h=yield
+          this.source.getBytes(s.tileDataOffset+u.offset,u.length,i,s.etag);return{data:yield
+          this.decompress(h.data,s.tileCompression),cacheControl:h.cacheControl,expires:h.expires}}a=s.leafDirectoryOffset+u.offset,l=u.length}else
+          return}throw new Error("Maximum directory depth
+          exceeded")})}getZxy(e,r,n,i){return T(this,null,function*(){try{return
+          yield this.getZxyAttempt(e,r,n,i)}catch(o){if(o instanceof Q)return
+          this.cache.invalidate(this.source),yield
+          this.getZxyAttempt(e,r,n,i);throw o}})}getMetadataAttempt(){return
+          T(this,null,function*(){let e=yield
+          this.cache.getHeader(this.source),r=yield
+          this.source.getBytes(e.jsonMetadataOffset,e.jsonMetadataLength,void
+          0,e.etag),n=yield this.decompress(r.data,e.internalCompression),i=new
+          TextDecoder("utf-8");return
+          JSON.parse(i.decode(n))})}getMetadata(){return
+          T(this,null,function*(){try{return yield
+          this.getMetadataAttempt()}catch(e){if(e instanceof Q)return
+          this.cache.invalidate(this.source),yield
+          this.getMetadataAttempt();throw e}})}getTileJson(e){return
+          T(this,null,function*(){let r=yield this.getHeader(),n=yield
+          this.getMetadata(),i=et(r.tileType);return{tilejson:"3.0.0",scheme:"xyz",tiles:[`${e}/{z}/{x}/{y}${i}`],vector_layers:n.vector_layers,attribution:n.attribution,description:n.description,name:n.name,version:n.version,bounds:[r.minLon,r.minLat,r.maxLon,r.maxLat],center:[r.centerLon,r.centerLat,r.centerZoom],minzoom:r.minZoom,maxzoom:r.maxZoom}})}};m(lt,"PMTiles");var
+          re=lt;var
+          ut=(t,e)=>e?e.replaceAll("{name}",t):t+".pmtiles",Wr=/^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+)\/(?<Z>\d+)\/(?<X>\d+)\/(?<Y>\d+).(?<EXT>[a-z]+)$/,Vr=/^\/(?<NAME>[0-9a-zA-Z\/!\-_\.\*\'\(\)]+).json$/,ct=t=>{let
+          e=t.match(Wr);if(e){let
+          n=e.groups;return{ok:!0,name:n.NAME,tile:[+n.Z,+n.X,+n.Y],ext:n.EXT}}let
+          r=t.match(Vr);return
+          r?{ok:!0,name:r.groups.NAME,ext:"json"}:{ok:!1,name:"",tile:[0,0,0],ext:""}};var
+          nr=require("crypto"),Se=je(require("zlib")),ue=require("@aws-sdk/client-s3"),ir=je(rr()),ri=new
+          ue.S3Client({requestHandler:new
+          ir.NodeHttpHandler({connectionTimeout:500,socketTimeout:500})});async
+          function or(t,e){if(e===Y.None||e===Y.Unknown)return
+          t;if(e===Y.Gzip)return Se.default.gunzipSync(t);throw new
+          Error("Compression method not supported")}var ni=new st(void 0,void
+          0,or),_e=class{constructor(e){this.archiveName=e}getKey(){return
+          this.archiveName}async getBytes(e,r,n,i){let o;try{o=await ri.send(new
+          ue.GetObjectCommand({Bucket:process.env.BUCKET,Key:ut(this.archiveName,process.env.PMTILES_PATH),Range:"bytes="+e+"-"+(e+r-1),IfMatch:i,RequestPayer:"requester"}))}catch(a){throw
+          a instanceof Error&&a.name==="PreconditionFailed"?new Q:a}let s=await
+          o.Body?.transformToByteArray();if(!s)throw new Error("Failed to read
+          S3 response
+          body");return{data:s.buffer,etag:o.ETag,expires:o.Expires?.toISOString(),cacheControl:o.CacheControl}}},R=(t,e,r=!1,n={})=>({statusCode:t,body:e,headers:n,isBase64Encoded:r}),sr=async(t,e,r)=>{let
+          n,i=!1;if(t.pathParameters)if(i=!0,t.pathParameters.proxy)n=`/${t.pathParameters.proxy}`;else
+          return R(500,"Proxy integration missing tile_path parameter");else
+          n=t.rawPath;if(!n)return R(500,"Invalid event configuration");let
+          o={};process.env.CORS&&(o["Access-Control-Allow-Origin"]=process.env.CORS);let{ok:s,name:a,tile:l,ext:c}=ct(n);if(!s)return
+          R(400,"Invalid tile URL",!1,o);let f=new _e(a),u=new
+          re(f,ni,or);try{let h=await
+          u.getHeader();if(!l){if(!(process.env.PUBLIC_HOSTNAME||t.headers["x-distribution-domain-name"]))return
+          R(501,"PUBLIC_HOSTNAME must be set for
+          TileJSON",!1,o);o["Content-Type"]="application/json";let g=await
+          u.getTileJson(`https://${process.env.PUBLIC_HOSTNAME||t.headers["x-distribution-domain-name"]||""}/${a}`);return
+          R(200,JSON.stringify(g),!1,o)}if(l[0]<h.minZoom||l[0]>h.maxZoom)return
+          R(404,"",!1,o);for(let g
+          of[[S.Mvt,"mvt"],[S.Png,"png"],[S.Jpeg,"jpg"],[S.Webp,"webp"],[S.Avif,"avif"]])if(h.tileType===g[0]&&c!==g[1]){if(h.tileType===S.Mvt&&c==="pbf")continue;return
+          R(400,`Bad request: requested .${c} but archive has type
+          .${g[1]}`,!1,o)}let y=await
+          u.getZxy(l[0],l[1],l[2]);if(y){switch(h.tileType){case
+          S.Mvt:o["Content-Type"]="application/vnd.mapbox-vector-tile";break;case
+          S.Png:o["Content-Type"]="image/png";break;case
+          S.Jpeg:o["Content-Type"]="image/jpeg";break;case
+          S.Webp:o["Content-Type"]="image/webp";break;case
+          S.Avif:o["Content-Type"]="image/avif";break}let
+          g=y.data;if(r&&(g=r(g,h.tileType)),o["Cache-Control"]=process.env.CACHE_CONTROL||"public,
+          max-age=86400",o.ETag=`"${(0,nr.createHash)("sha256").update(Buffer.from(g)).digest("hex")}"`,i){let
+          w=Se.default.gzipSync(g);return
+          o["Content-Encoding"]="gzip",R(200,Buffer.from(w).toString("base64"),!0,o)}return
+          R(200,Buffer.from(g).toString("base64"),!0,o)}return
+          R(204,"",!1,o)}catch(h){if(h.name==="AccessDenied")return
+          R(403,"Bucket access unauthorized",!1,o);throw
+          h}},ii=async(t,e)=>await
+          sr(t,e);0&&(module.exports={handler,handlerRaw});

@@ -1,0 +1,104 @@
+<html>
+    <head>
+        <title>PMTiles MapLibre Example</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" crossorigin="anonymous">
+        <script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/pmtiles@4.3.2/dist/pmtiles.js"></script>
+        <style>
+            body {
+                margin: 0;
+            }
+            #map {
+                height:calc(100% - 50px);
+                width:100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        Description from PMTiles metadata: <span id="description"></span>
+        <script type="text/javascript">
+            // Advanced MapLibre example demonstrating PMTiles JavaScript API + pmtiles:// protocol.
+
+            let protocol = new pmtiles.Protocol();
+            maplibregl.addProtocol("pmtiles", protocol.tile);
+
+            let PMTILES_URL = "https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles";
+
+            let source = new pmtiles.FetchSource(PMTILES_URL, new Headers({'Content-Language': 'xx'}));
+
+            const p = new pmtiles.PMTiles(source);
+
+            // this is so we share one instance across the JS code and the map renderer
+            protocol.add(p);
+
+            p.getMetadata().then((m) => {
+              document.getElementById("description").textContent = m.description;
+            })
+
+            // we first fetch the header so we can get the center lon, lat of the map.
+            p.getHeader().then((h) => {
+              const map = new maplibregl.Map({
+                container: "map",
+                zoom: h.maxZoom - 2,
+                center: [h.centerLon, h.centerLat],
+                style: {
+                  version: 8,
+                  sources: {
+                    example_source: {
+                      type: "vector",
+                      // For standard Z/X/Y tile APIs or Z/X/Y URLs served from go-pmtiles, replace "url" with "tiles" and remove all the pmtiles-related client code.
+                      // tiles: ["https://example.com/{z}/[x}/{y}.mvt"],
+                      // see https://maplibre.org/maplibre-style-spec/sources/#vector
+                      url: "pmtiles://" + PMTILES_URL,
+                      attribution:
+                        '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+                    },
+                  },
+                  layers: [
+                    {
+                      id: "water",
+                      source: "example_source",
+                      "source-layer": "water",
+                      filter: ["==",["geometry-type"],"Polygon"],
+                      type: "fill",
+                      paint: {
+                        "fill-color": "#80b1d3",
+                      },
+                    },
+                    {
+                      id: "buildings",
+                      source: "example_source",
+                      "source-layer": "buildings",
+                      type: "fill",
+                      paint: {
+                        "fill-color": "#d9d9d9",
+                      },
+                    },
+                    {
+                      id: "roads",
+                      source: "example_source",
+                      "source-layer": "roads",
+                      type: "line",
+                      paint: {
+                        "line-color": "#fc8d62",
+                      },
+                    },
+                    {
+                      id: "pois",
+                      source: "example_source",
+                      "source-layer": "pois",
+                      type: "circle",
+                      paint: {
+                        "circle-color": "#ffffb3",
+                      },
+                    },
+                  ],
+                },
+              });
+              map.showTileBoundaries = true;
+            });
+        </script>
+    </body>
+</html>

@@ -150,10 +150,12 @@ def guess_maxzoom(crs, bounds, width, height, tile_size):
     "--zoom-levels",
     default=None,
     metavar="MIN..MAX",
-    help="A min...max range of export zoom levels. "
-    "The default zoom level "
-    "is the one at which the dataset is contained within "
-    "a single tile.",
+    help="A min..max range of export zoom levels. "
+    "The default min zoom level is 0 (dataset "
+    "contained in a single tile), and the default "
+    "max is calculated based on the available "
+    "detail in the dataset. Either or both of "
+    "min/max may be omitted.",
 )
 @click.option(
     "-j",
@@ -337,7 +339,11 @@ def pmtiles(
         # Resolve the minimum and maximum zoom levels for export.
         maxzoom_in_file = guess_maxzoom(src.crs, src.bounds, src.width, src.height, tile_size)
         if zoom_levels:
-            minzoom, maxzoom = map(int, zoom_levels.split(".."))
+            specified_levels = zoom_levels.split("..")
+            minzoom = specified_levels[0]
+            minzoom = 0 if minzoom == "" else int(minzoom)
+            maxzoom = specified_levels[1]
+            maxzoom = maxzoom_in_file if maxzoom == "" else int(maxzoom)
         else:
             minzoom = 0
             maxzoom = maxzoom_in_file

@@ -8,6 +8,7 @@
   "types": "dist/esm/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
+    "./src/": "./src/",
     ".": {
       "import": {
         "types": "./dist/esm/index.d.ts",

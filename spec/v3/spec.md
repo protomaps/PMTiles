@@ -180,14 +180,15 @@ The Tile Type is a 1-byte field specifying the type of tiles.
 
 The field can have one of the following values:
 
-| Value  | Meaning            |
-| :----- | :----------------- |
-| `0x00` | Unknown / Other    |
-| `0x01` | MVT Vector Tile    |
-| `0x02` | PNG                |
-| `0x03` | JPEG               |
-| `0x04` | WebP               |
-| `0x05` | AVIF               |
+| Value  | Meaning              |
+| :----- | :------------------- |
+| `0x00` | Unknown / Other      |
+| `0x01` | MVT Vector Tile      |
+| `0x02` | PNG                  |
+| `0x03` | JPEG                 |
+| `0x04` | WebP                 |
+| `0x05` | AVIF                 |
+| `0x06` | Maplibre Vector Tile |
 
 #### Min Zoom (MinZ)
 

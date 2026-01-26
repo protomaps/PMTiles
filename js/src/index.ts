@@ -205,6 +205,7 @@ export enum TileType {
   Jpeg = 3,
   Webp = 4,
   Avif = 5,
+  Mlt = 6,
 }
 
 export function tileTypeExt(t: TileType): string {
@@ -213,6 +214,7 @@ export function tileTypeExt(t: TileType): string {
   if (t === TileType.Jpeg) return ".jpg";
   if (t === TileType.Webp) return ".webp";
   if (t === TileType.Avif) return ".avif";
+  if (t === TileType.Mlt) return ".mlt";
   return "";
 }
 

@@ -126,6 +126,7 @@ class TileType(Enum):
     JPEG = 3
     WEBP = 4
     AVIF = 5
+    MLT = 6
 
 
 def deserialize_directory(buf):

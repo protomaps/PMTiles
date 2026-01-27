@@ -188,7 +188,7 @@ The field can have one of the following values:
 | `0x03` | JPEG                 |
 | `0x04` | WebP                 |
 | `0x05` | AVIF                 |
-| `0x06` | Maplibre Vector Tile |
+| `0x06` | MapLibre Vector Tile |
 
 #### Min Zoom (MinZ)
 

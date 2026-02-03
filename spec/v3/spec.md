@@ -190,7 +190,6 @@ The field can have one of the following values:
 | `0x05` | AVIF                 |
 | `0x06` | MapLibre Vector Tile |
 
-
 #### Min Zoom (MinZ)
 
 The Min Zoom is a 1-byte field specifying the minimum zoom of the tiles.

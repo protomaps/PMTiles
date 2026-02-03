@@ -54,7 +54,7 @@ export class PMTilesTileset {
 
   async isVector() {
     const h = await this.getHeader();
-    return h.tileType === TileType.Mvt || h.tileType === TileType.Mlt;
+    return h.tileType === TileType.Mvt;
   }
 
   async getHeader() {

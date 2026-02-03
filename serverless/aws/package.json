@@ -20,7 +20,7 @@
     "biome-check": "biome check --config-path=../../js src"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.637.0",
+    "@aws-sdk/client-s3": "^3.982.0",
     "@smithy/node-http-handler": "^3.1.4",
     "pmtiles": "^4.3.0"
   }

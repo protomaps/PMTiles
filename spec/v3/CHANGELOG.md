@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 3.5
+- add [MapLibre Vector Tile](https://github.com/maplibre/maplibre-tile-spec) `.mlt` enum by @msbarry [#596]
+
 ## Version 3.4
 - Clarify that entry lengths must be > 0.
 - Add details about ordering of leaf directories.

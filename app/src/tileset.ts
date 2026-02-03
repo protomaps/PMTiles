@@ -171,7 +171,11 @@ class TileJSONTileset implements Tileset {
     const j = await resp.json();
     const template = j.tiles[0];
     const pathname = new URL(template).pathname;
-    return pathname.endsWith(".pbf") || pathname.endsWith(".mvt") || pathname.endsWith(".mlt");
+    return (
+      pathname.endsWith(".pbf") ||
+      pathname.endsWith(".mvt") ||
+      pathname.endsWith(".mlt")
+    );
   }
 
   getStateUrl() {

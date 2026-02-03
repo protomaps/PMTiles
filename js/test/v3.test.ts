@@ -350,6 +350,7 @@ describe("pmtiles v3", () => {
     assert.equal(".jpg", tileTypeExt(TileType.Jpeg));
     assert.equal(".webp", tileTypeExt(TileType.Webp));
     assert.equal(".avif", tileTypeExt(TileType.Avif));
+    assert.equal(".mlt", tileTypeExt(TileType.Mlt));
   });
 
   interface TileJsonLike {

@@ -1,3 +1,6 @@
+4.4.0
+* add [MapLibre Vector Tile](https://github.com/maplibre/maplibre-tile-spec) `.mlt` support by @anscg [#633]
+
 4.3.2
 * fix leafletRasterLayer empty images: set `display: none`
 

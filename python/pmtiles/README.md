@@ -4,6 +4,4 @@
 
 ## Status
 
-This library should be considered experimental.
-
-For async usage, see [aiopmtiles](https://github.com/developmentseed/aiopmtiles) (also experimental)
+For asynchronous I/O, see [aiopmtiles](https://github.com/developmentseed/aiopmtiles)

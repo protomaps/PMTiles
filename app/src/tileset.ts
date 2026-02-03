@@ -54,7 +54,7 @@ export class PMTilesTileset {
 
   async isVector() {
     const h = await this.getHeader();
-    return h.tileType === TileType.Mvt;
+    return h.tileType === TileType.Mvt || h.tileType === TileType.Mlt;
   }
 
   async getHeader() {
@@ -171,7 +171,11 @@ class TileJSONTileset implements Tileset {
     const j = await resp.json();
     const template = j.tiles[0];
     const pathname = new URL(template).pathname;
-    return pathname.endsWith(".pbf") || pathname.endsWith(".mvt");
+    return (
+      pathname.endsWith(".pbf") ||
+      pathname.endsWith(".mvt") ||
+      pathname.endsWith(".mlt")
+    );
   }
 
   getStateUrl() {

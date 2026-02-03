@@ -23,7 +23,7 @@
     "d3-zoom": "^3.0.0",
     "maplibre-gl": "5.13.0",
     "pbf": "^4.0.1",
-    "pmtiles": "^4.3.0",
+    "pmtiles": "^4.4.0",
     "solid-js": "^1.9.5"
   },
   "devDependencies": {

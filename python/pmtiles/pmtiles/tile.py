@@ -1,7 +1,15 @@
 import gzip
 import io
 from enum import Enum
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 12):
+        from collections.abc import Buffer
+    else:
+        from typing_extensions import Buffer
 
 
 class Entry:
@@ -216,8 +224,9 @@ class HeaderDict(TypedDict):
     center_lat_e7: int
 
 
-def deserialize_header(buf) -> HeaderDict:
-    if buf[0:7].decode() != "PMTiles":
+def deserialize_header(buf: Buffer) -> HeaderDict:
+    buf = memoryview(buf)
+    if bytes(buf[0:7]).decode() != "PMTiles":
         raise MagicNumberNotFound()
 
     if buf[7] != 0x3:

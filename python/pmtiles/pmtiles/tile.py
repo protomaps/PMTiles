@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     import sys
 
+    from typing import Sequence, IO
+
     if sys.version_info >= (3, 12):
         from collections.abc import Buffer
     else:
@@ -17,7 +19,12 @@ if TYPE_CHECKING:
 class Entry:
     __slots__ = ("tile_id", "offset", "length", "run_length")
 
-    def __init__(self, tile_id, offset, length, run_length):
+    tile_id: int
+    offset: int
+    length: int
+    run_length: int
+
+    def __init__(self, tile_id: int, offset: int, length: int, run_length: int):
         self.tile_id = tile_id
         self.offset = offset
         self.length = length
@@ -36,7 +43,7 @@ def rotate(n, x, y, rx, ry):
     return x, y
 
 
-def zxy_to_tileid(z, x, y):
+def zxy_to_tileid(z: int, x: int, y: int) -> int:
     if z > 31:
         raise OverflowError("tile zoom exceeds 64-bit limit")
     if x > (1 << z) - 1 or y > (1 << z) - 1:
@@ -54,7 +61,7 @@ def zxy_to_tileid(z, x, y):
     return acc
 
 
-def tileid_to_zxy(tile_id):
+def tileid_to_zxy(tile_id: int) -> tuple[int, int, int]:
     z = ((3 * tile_id + 1).bit_length() - 1) // 2
     if z >= 32:
         raise OverflowError("tile zoom exceeds 64-bit limit")
@@ -75,7 +82,7 @@ def tileid_to_zxy(tile_id):
     return (z, x, y)
 
 
-def find_tile(entries, tile_id):
+def find_tile(entries: list[Entry], tile_id) -> Entry | None:
     m = 0
     n = len(entries) - 1
     while m <= n:
@@ -94,8 +101,10 @@ def find_tile(entries, tile_id):
         if tile_id - entries[n].tile_id < entries[n].run_length:
             return entries[n]
 
+    return None
 
-def read_varint(b_io):
+
+def read_varint(b_io: IO[bytes]) -> int:
     shift = 0
     result = 0
     while True:
@@ -110,7 +119,7 @@ def read_varint(b_io):
     return result
 
 
-def write_varint(b_io, i):
+def write_varint(b_io: IO[bytes], i: int):
     while True:
         towrite = i & 0x7F
         i >>= 7
@@ -139,9 +148,9 @@ class TileType(Enum):
     MLT = 6
 
 
-def deserialize_directory(buf):
+def deserialize_directory(buf: Buffer) -> list[Entry]:
     b_io = io.BytesIO(gzip.decompress(buf))
-    entries = []
+    entries: list[Entry] = []
     num_entries = read_varint(b_io)
 
     last_id = 0
@@ -166,7 +175,7 @@ def deserialize_directory(buf):
     return entries
 
 
-def serialize_directory(entries):
+def serialize_directory(entries: Sequence[Entry]) -> bytes:
     b_io = io.BytesIO()
     write_varint(b_io, len(entries))
 

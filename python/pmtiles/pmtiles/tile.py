@@ -235,8 +235,9 @@ class HeaderDict(TypedDict):
     center_lat_e7: int
 
 
-def deserialize_header(buf: bytes) -> HeaderDict:
-    if buf[0:7].decode() != "PMTiles":
+def deserialize_header(buf: Buffer) -> HeaderDict:
+    buf = memoryview(buf)
+    if bytes(buf[0:7]).decode() != "PMTiles":
         raise MagicNumberNotFound()
 
     if buf[7] != 0x3:

@@ -223,9 +223,11 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
     Licensed under BSD 3-Clause
     """
     verbose = kwargs.get("verbose")
+
     try:
-        metadata = json.load(open(os.path.join(directory_path, 'metadata.json'), 'r'))
-    except IOError:
+        with open(os.path.join(directory_path, "metadata.json")) as f:
+            metadata = json.load(f)
+    except FileNotFoundError:
         raise Exception("metadata.json not found in directory")
 
     tile_format = kwargs.get('tile_format', metadata.get("format"))
@@ -321,14 +323,17 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
             print(" Begin writing %s to .pmtiles ..." % (n_tiles), flush=True)
         for tileid, filepath in tileid_path_set:
             f = open(filepath, 'rb')
-            data = f.read()
-            # force gzip compression only for vector
-            if is_pbf and data[0:2] != b"\x1f\x8b":
-                data = gzip.compress(data)
-            writer.write_tile(tileid, data)
-            count = count + 1
-            if verbose and (count % count_step) == 0:
-                print(" %s tiles inserted of %s" % (count, n_tiles), flush=True)
+            try:
+                data = f.read()
+                # force gzip compression only for vector
+                if is_pbf and data[0:2] != b"\x1f\x8b":
+                    data = gzip.compress(data)
+                writer.write_tile(tileid, data)
+                count = count + 1
+                if verbose and (count % count_step) == 0:
+                    print(" %s tiles inserted of %s" % (count, n_tiles), flush=True)
+            finally:
+                f.close()
 
         if verbose and (count % count_step) != 0:
             print(" %s tiles inserted of %s" % (count, n_tiles))

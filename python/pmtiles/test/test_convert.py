@@ -116,14 +116,14 @@ class TestConvert(unittest.TestCase):
                 "json": '{"vector_layers":[{"abc":123}],"tilestats":{"def":456}}',
             }
         )
-        self.assertEqual(header["min_lon_e7"], -180 * 10000000)
+        self.assertEqual(header["min_lon_e7"], -180 * 1e7)
         self.assertTrue(isinstance(header["min_lon_e7"], int))
-        self.assertEqual(header["min_lat_e7"], -85 * 10000000)
-        self.assertEqual(header["max_lon_e7"], 180 * 10000000)
-        self.assertEqual(header["max_lat_e7"], 85 * 10000000)
+        self.assertEqual(header["min_lat_e7"], -85 * 1e7)
+        self.assertEqual(header["max_lon_e7"], 180 * 1e7)
+        self.assertEqual(header["max_lat_e7"], 85 * 1e7)
         self.assertEqual(header["tile_type"], TileType.MVT)
-        self.assertEqual(header["center_lon_e7"], -122.1906 * 10000000)
-        self.assertEqual(header["center_lat_e7"], 37.7599 * 10000000)
+        self.assertEqual(header["center_lon_e7"], -122.1906 * 1e7)
+        self.assertEqual(header["center_lat_e7"], 37.7599 * 1e7)
         self.assertEqual(header["center_zoom"], 11)
         self.assertEqual(header["min_zoom"], 1)
         self.assertEqual(header["max_zoom"], 2)
@@ -132,3 +132,24 @@ class TestConvert(unittest.TestCase):
         self.assertTrue("name" in json_metadata)
         self.assertTrue("format" in json_metadata)
         self.assertTrue("compression" in json_metadata)
+
+    def test_mbtiles_missing_bounds_center(self):
+        header, json_metadata = mbtiles_to_header_json(
+            {
+                "name": "test_name",
+                "format": "pbf",
+                "minzoom": "1",
+                "maxzoom": "2",
+                "attribution": "<div>abc</div>",
+                "compression": "gzip",
+                "json": '{"vector_layers":[{"abc":123}],"tilestats":{"def":456}}',
+            }
+        )
+        self.assertEqual(header["min_lon_e7"], -180 * 1e7)
+        self.assertTrue(isinstance(header["min_lon_e7"], int))
+        self.assertEqual(header["min_lat_e7"], -850511287)
+        self.assertEqual(header["max_lon_e7"], 180 * 1e7)
+        self.assertEqual(header["max_lat_e7"], 850511287)
+        self.assertEqual(header["center_lon_e7"], 0)
+        self.assertEqual(header["center_lat_e7"], 0)
+        self.assertEqual(header["center_zoom"], 1)

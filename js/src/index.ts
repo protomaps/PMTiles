@@ -551,23 +551,6 @@ function deserializeIndex(buffer: ArrayBuffer): Entry[] {
   return entries;
 }
 
-function detectVersion(a: ArrayBuffer): number {
-  const v = new DataView(a);
-  if (v.getUint16(2, true) === 2) {
-    console.error(
-      "PMTiles spec version 2 is not supported; please see github.com/protomaps/PMTiles for tools to upgrade"
-    );
-    return 2;
-  }
-  if (v.getUint16(2, true) === 1) {
-    console.error(
-      "PMTiles spec version 1 is not supported; please see github.com/protomaps/PMTiles for tools to upgrade"
-    );
-    return 1;
-  }
-  return 3;
-}
-
 /**
  * Error thrown when a response for PMTiles over HTTP does not match previous, cached parts of the archive.
  * The default PMTiles implementation will catch this error once internally and retry a request.

@@ -77,6 +77,7 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
       }
 
       if (tile.el.cancel) tile.el.cancel();
+      if (tile.el.src) window.URL.revokeObjectURL(tile.el.src);
 
       tile.el.width = 0;
       tile.el.height = 0;
@@ -256,7 +257,6 @@ export class Protocol {
     const x = result[3];
     const y = result[4];
 
-    const header = await instance.getHeader();
     const resp = await instance?.getZxy(+z, +x, +y, abortController.signal);
     abortController.signal.throwIfAborted();
     if (resp) {
@@ -266,6 +266,7 @@ export class Protocol {
         expires: resp.expires,
       };
     }
+    const header = await instance.getHeader();
     if (header.tileType === TileType.Mvt) {
       if (this.errorOnMissingTile) {
         throw new Error("Tile not found.");

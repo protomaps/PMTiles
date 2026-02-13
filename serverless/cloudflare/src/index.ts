@@ -6,6 +6,7 @@ import {
   ResolvedValueCache,
   Source,
   TileType,
+  tileTypeExt,
 } from "pmtiles";
 import { pmtiles_path, tile_path } from "../../shared/index";
 
@@ -169,24 +170,27 @@ export default {
         return cacheableResponse(undefined, cacheableHeaders, 404);
       }
 
-      for (const pair of [
-        [TileType.Mvt, "mvt"],
-        [TileType.Png, "png"],
-        [TileType.Jpeg, "jpg"],
-        [TileType.Webp, "webp"],
-        [TileType.Avif, "avif"],
-      ]) {
-        if (pHeader.tileType === pair[0] && ext !== pair[1]) {
-          if (pHeader.tileType === TileType.Mvt && ext === "pbf") {
-            // allow this for now. Eventually we will delete this in favor of .mvt
-            continue;
-          }
-          return cacheableResponse(
-            `Bad request: requested .${ext} but archive has type .${pair[1]}`,
-            cacheableHeaders,
-            400
-          );
-        }
+      const extToType: Record<string, TileType> = {
+        mvt: TileType.Mvt,
+        pbf: TileType.Mvt, // allow this for now. Eventually we will delete this in favor of .mvt
+        png: TileType.Png,
+        jpg: TileType.Jpeg,
+        webp: TileType.Webp,
+        avif: TileType.Avif,
+      };
+
+      const expectedType = extToType[ext];
+      if (
+        pHeader.tileType !== expectedType &&
+        tileTypeExt(pHeader.tileType) !== ""
+      ) {
+        return cacheableResponse(
+          `Bad request: requested .${ext} but archive has type ${tileTypeExt(
+            pHeader.tileType
+          )}`,
+          cacheableHeaders,
+          400
+        );
       }
 
       const tiledata = await p.getZxy(tile[0], tile[1], tile[2]);

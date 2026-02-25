@@ -573,7 +573,8 @@ export interface Cache {
     source: Source,
     offset: number,
     length: number,
-    header: Header
+    header: Header,
+    signal?: AbortSignal
   ) => Promise<Entry[]>;
   invalidate: (source: Source) => Promise<void>;
 }
@@ -614,9 +615,10 @@ async function getDirectory(
   decompress: DecompressFunc,
   offset: number,
   length: number,
-  header: Header
+  header: Header,
+  signal?: AbortSignal
 ): Promise<Entry[]> {
-  const resp = await source.getBytes(offset, length, undefined, header.etag);
+  const resp = await source.getBytes(offset, length, signal, header.etag);
   const data = await decompress(resp.data, header.internalCompression);
   const directory = deserializeIndex(data);
   if (directory.length === 0) {
@@ -684,7 +686,8 @@ export class ResolvedValueCache {
     source: Source,
     offset: number,
     length: number,
-    header: Header
+    header: Header,
+    signal?: AbortSignal
   ): Promise<Entry[]> {
     const cacheKey = `${source.getKey()}|${
       header.etag || ""
@@ -701,7 +704,8 @@ export class ResolvedValueCache {
       this.decompress,
       offset,
       length,
-      header
+      header,
+      signal
     );
     this.cache.set(cacheKey, {
       lastUsed: this.counter++,
@@ -742,9 +746,15 @@ interface SharedPromiseCacheValue {
  *
  * Only caches headers and directories, not individual tile contents.
  */
+interface PendingFetch {
+  controller: AbortController;
+  refs: number;
+}
+
 export class SharedPromiseCache {
   cache: Map<string, SharedPromiseCacheValue>;
   invalidations: Map<string, Promise<void>>;
+  pendingFetches: Map<string, PendingFetch>;
   maxCacheEntries: number;
   counter: number;
   decompress: DecompressFunc;
@@ -756,6 +766,7 @@ export class SharedPromiseCache {
   ) {
     this.cache = new Map<string, SharedPromiseCacheValue>();
     this.invalidations = new Map<string, Promise<void>>();
+    this.pendingFetches = new Map<string, PendingFetch>();
     this.maxCacheEntries = maxCacheEntries;
     this.counter = 1;
     this.decompress = decompress;
@@ -790,11 +801,34 @@ export class SharedPromiseCache {
     return p;
   }
 
+  private trackSignal(
+    cacheKey: string,
+    pending: PendingFetch,
+    signal: AbortSignal
+  ) {
+    pending.refs++;
+    signal.addEventListener(
+      "abort",
+      () => {
+        if (
+          --pending.refs <= 0 &&
+          this.pendingFetches.get(cacheKey) === pending
+        ) {
+          pending.controller.abort();
+          this.cache.delete(cacheKey);
+          this.pendingFetches.delete(cacheKey);
+        }
+      },
+      { once: true }
+    );
+  }
+
   async getDirectory(
     source: Source,
     offset: number,
     length: number,
-    header: Header
+    header: Header,
+    signal?: AbortSignal
   ): Promise<Entry[]> {
     const cacheKey = `${source.getKey()}|${
       header.etag || ""
@@ -802,13 +836,23 @@ export class SharedPromiseCache {
     const cacheValue = this.cache.get(cacheKey);
     if (cacheValue) {
       cacheValue.lastUsed = this.counter++;
+      const pending = this.pendingFetches.get(cacheKey);
+      if (pending) {
+        this.trackSignal(cacheKey, pending, signal ?? new AbortController().signal);
+      }
       const data = await cacheValue.data;
       return data as Entry[];
     }
 
+    const ac = new AbortController();
+    const pending: PendingFetch = { controller: ac, refs: 0 };
+    this.trackSignal(cacheKey, pending, signal ?? new AbortController().signal);
+    this.pendingFetches.set(cacheKey, pending);
+
     const p = new Promise<Entry[]>((resolve, reject) => {
-      getDirectory(source, this.decompress, offset, length, header)
+      getDirectory(source, this.decompress, offset, length, header, ac.signal)
         .then((directory) => {
+          this.pendingFetches.delete(cacheKey);
           resolve(directory);
           this.prune();
         })
@@ -908,6 +952,7 @@ export class PMTiles {
   ): Promise<RangeResponse | undefined> {
     const tileId = zxyToTileId(z, x, y);
     const header = await this.cache.getHeader(this.source);
+    signal?.throwIfAborted();
 
     if (z < header.minZoom || z > header.maxZoom) {
       return undefined;
@@ -920,8 +965,10 @@ export class PMTiles {
         this.source,
         dO,
         dL,
-        header
+        header,
+        signal
       );
+      signal?.throwIfAborted();
       const entry = findTile(directory, tileId);
       if (entry) {
         if (entry.runLength > 0) {

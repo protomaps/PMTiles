@@ -345,7 +345,7 @@ export class FetchSource implements Source {
    * This should be used instead of maplibre's [transformRequest](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#example) for PMTiles archives.
    */
   customHeaders: Headers;
-  credentials: string;
+  credentials: "same-origin" | "include" | undefined;
   /** @hidden */
   mustReload: boolean;
   /** @hidden */
@@ -354,7 +354,7 @@ export class FetchSource implements Source {
   constructor(
     url: string,
     customHeaders: Headers = new Headers(),
-    credentials = "same-origin"
+    credentials: "same-origin" | "include" | undefined = undefined
   ) {
     this.url = url;
     this.customHeaders = customHeaders;
@@ -408,7 +408,7 @@ export class FetchSource implements Source {
     // * it requires CORS configuration becasue If-Match is not a CORs-safelisted header
     // CORs configuration should expose ETag.
     // if any etag mismatch is detected, we need to ignore the browser cache
-    let cache: string | undefined;
+    let cache: "no-store" | "reload" | undefined;
     if (this.mustReload) {
       cache = "reload";
     } else if (this.chromeWindowsNoCache) {
@@ -420,8 +420,7 @@ export class FetchSource implements Source {
       cache: cache,
       headers: requestHeaders,
       credentials: this.credentials,
-      //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
-    } as any);
+    });
 
     // handle edge case where the archive is < 16384 kb total.
     if (offset === 0 && resp.status === 416) {
@@ -436,8 +435,7 @@ export class FetchSource implements Source {
         cache: "reload",
         headers: requestHeaders,
         credentials: this.credentials,
-        //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
-      } as any);
+      });
     }
 
     // if it's a weak etag, it's not useful for us, so ignore it.

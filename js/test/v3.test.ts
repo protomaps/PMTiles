@@ -6,6 +6,7 @@ import { mockServer } from "./utils";
 import {
   BufferPosition,
   Entry,
+  FetchSource,
   PMTiles,
   RangeResponse,
   SharedPromiseCache,
@@ -405,5 +406,38 @@ describe("pmtiles v3", () => {
       await p.getZxy(0, 0, 0);
       assert.equal("no-store", mockServer.lastCache);
     });
+  });
+});
+
+describe("FetchSource", () => {
+  test("customHeaders are sent with requests", async () => {
+    mockServer.reset();
+    const source = new FetchSource(
+      "http://localhost:1337/example.pmtiles",
+      new Headers({ "X-Custom-Header": "test-value" }),
+      "include"
+    );
+    await source.getBytes(0, 100);
+    assert.strictEqual(
+      mockServer.lastRequestHeaders?.get("x-custom-header"),
+      "test-value"
+    );
+    assert.strictEqual(mockServer.lastCredentials, "include");
+  });
+
+  test("customHeaders are preserved on 416 retry", async () => {
+    mockServer.reset();
+    const source = new FetchSource(
+      "http://localhost:1337/small.pmtiles",
+      new Headers({ "X-Custom-Header": "retry-value" }),
+      "include"
+    );
+    await source.getBytes(0, 16384);
+    assert.strictEqual(mockServer.numRequests, 2);
+    assert.strictEqual(
+      mockServer.lastRequestHeaders?.get("x-custom-header"),
+      "retry-value",
+      "include"
+    );
   });
 });

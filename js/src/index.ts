@@ -351,7 +351,11 @@ export class FetchSource implements Source {
   /** @hidden */
   chromeWindowsNoCache: boolean;
 
-  constructor(url: string, customHeaders: Headers = new Headers(), credentials: string = 'same-origin') {
+  constructor(
+    url: string,
+    customHeaders: Headers = new Headers(),
+    credentials = "same-origin"
+  ) {
     this.url = url;
     this.customHeaders = customHeaders;
     this.credentials = credentials;
@@ -413,10 +417,10 @@ export class FetchSource implements Source {
 
     let resp = await fetch(this.url, {
       signal: signal,
-      //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
       cache: cache,
       headers: requestHeaders,
-      credentials: this.credentials
+      credentials: this.credentials,
+      //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
     } as any);
 
     // handle edge case where the archive is < 16384 kb total.
@@ -426,13 +430,13 @@ export class FetchSource implements Source {
         throw new Error("Missing content-length on 416 response");
       }
       const actualLength = +contentRange.substr(8);
-      requestHeaders.set("range", `bytes=0-${actualLength - 1}`)
+      requestHeaders.set("range", `bytes=0-${actualLength - 1}`);
       resp = await fetch(this.url, {
         signal: signal,
-        //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
         cache: "reload",
         headers: requestHeaders,
-        credentials: this.credentials
+        credentials: this.credentials,
+        //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
       } as any);
     }
 

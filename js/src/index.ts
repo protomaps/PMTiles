@@ -345,14 +345,16 @@ export class FetchSource implements Source {
    * This should be used instead of maplibre's [transformRequest](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#example) for PMTiles archives.
    */
   customHeaders: Headers;
+  credentials: string;
   /** @hidden */
   mustReload: boolean;
   /** @hidden */
   chromeWindowsNoCache: boolean;
 
-  constructor(url: string, customHeaders: Headers = new Headers()) {
+  constructor(url: string, customHeaders: Headers = new Headers(), credentials: string = 'same-origin') {
     this.url = url;
     this.customHeaders = customHeaders;
+    this.credentials = credentials;
     this.mustReload = false;
     let userAgent = "";
     if ("navigator" in globalThis) {
@@ -411,9 +413,10 @@ export class FetchSource implements Source {
 
     let resp = await fetch(this.url, {
       signal: signal,
+      //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
       cache: cache,
       headers: requestHeaders,
-      //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
+      credentials: this.credentials
     } as any);
 
     // handle edge case where the archive is < 16384 kb total.
@@ -423,11 +426,13 @@ export class FetchSource implements Source {
         throw new Error("Missing content-length on 416 response");
       }
       const actualLength = +contentRange.substr(8);
+      requestHeaders.set("range", `bytes=0-${actualLength - 1}`)
       resp = await fetch(this.url, {
         signal: signal,
-        cache: "reload",
-        headers: { range: `bytes=0-${actualLength - 1}` },
         //biome-ignore lint: "cache" is incompatible between cloudflare workers and browser
+        cache: "reload",
+        headers: requestHeaders,
+        credentials: this.credentials
       } as any);
     }
 

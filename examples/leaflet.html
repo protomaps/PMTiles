@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <title>PMTiles Leaflet Example</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.0/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.0/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/pmtiles@4.4.0/dist/pmtiles.js"></script>
+        <style>
+            body, #map {
+                height:100vh;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="text/javascript">
+            const map = L.map("map");
+
+            const p = new pmtiles.PMTiles(
+              "https://air.mtn.tw/flowers.pmtiles"
+            );
+            p.getHeader().then((h) => {
+              let layer = pmtiles.leafletRasterLayer(p, {
+                maxNativeZoom: h.maxZoom
+              });
+              map.fitBounds(L.latLngBounds([h.minLat, h.minLon],[h.maxLat, h.maxLon]));
+              layer.addTo(map);
+            });
+        </script>
+    </body>
+</html>

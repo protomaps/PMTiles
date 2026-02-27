@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { describe, mock, test } from "node:test";
+import { describe, test } from "node:test";
 import { PMTiles, Protocol } from "../src";
 import { mockServer } from "./utils";
 

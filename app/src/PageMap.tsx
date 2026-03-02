@@ -130,6 +130,7 @@ function MapView(props: {
       map.addSource("tileset", {
         type: "vector",
         url: tileset.getMaplibreSourceUrl(),
+        encoding: await tileset.getVectorEncoding(),
       });
       const vectorLayers = await tileset.getVectorLayers();
       setLayerVisibility(vectorLayers.map((v) => ({ id: v, visible: true })));

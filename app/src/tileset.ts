@@ -22,6 +22,7 @@ export interface Tileset {
   getMaxZoom(): Promise<number>;
 
   getVectorLayers(): Promise<string[]>;
+  getVectorEncoding(): Promise<"mvt" | "mlt" | undefined>;
   isOverlay(): Promise<boolean>;
   isVector(): Promise<boolean>;
 
@@ -77,6 +78,13 @@ export class PMTilesTileset {
   async getVectorLayers() {
     const m = await this.getMetadata();
     return m.vector_layers.map((l) => l.id);
+  }
+
+  async getVectorEncoding() {
+    const h = await this.getHeader();
+    if (h.tileType === TileType.Mvt) return "mvt";
+    if (h.tileType === TileType.Mlt) return "mlt";
+    return undefined;
   }
 }
 
@@ -206,6 +214,15 @@ class TileJSONTileset implements Tileset {
   async getVectorLayers() {
     const metadata = await this.getMetadata();
     return metadata.vector_layers.map((l: VectorLayer) => l.id);
+  }
+
+  async getVectorEncoding() {
+    const resp = await fetch(this.url);
+    const j = await resp.json();
+    const template = j.tiles[0];
+    const pathname = new URL(template).pathname;
+    if (pathname.endsWith(".mlt")) return "mlt";
+    return "mvt";
   }
 }
 

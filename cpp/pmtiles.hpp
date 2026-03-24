@@ -401,7 +401,7 @@ inline zxy tileid_to_zxy(uint64_t tileid) {
 		throw std::overflow_error("tile zoom exceeds 64-bit limit");
 	}
 	uint8_t z = (bit_width(3 * tileid + 1) - 1) / 2;
-	uint64_t acc = ((1L << (z * 2)) - 1) / 3;
+	uint64_t acc = ((1LL << (z * 2)) - 1) / 3;
 	uint64_t pos = tileid - acc;
 	uint32_t x = 0, y = 0;
 	for (uint8_t a = 0; a < z; a++) {

@@ -1,3 +1,7 @@
+1.2.1
+------
+allow Shapely versions compatible with 2.x by @zstadler [#649]
+
 1.2.0
 ------
 allow min and/or max zoom to be omitted when specifying zoom levels by @JaffaKetchup [#623]

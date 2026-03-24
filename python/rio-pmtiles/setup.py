@@ -38,7 +38,7 @@ setup(
         "pmtiles~=3.0",
         "pyroaring~=1.0",
         "rasterio~=1.0",
-        "shapely~=2.0.0",
+        "shapely~=2.0",
         "supermercado",
         "tqdm~=4.0",
     ],

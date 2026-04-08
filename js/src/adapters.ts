@@ -33,9 +33,9 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
       };
       if (!loaded) {
         source.getHeader().then((header) => {
-          if (header.tileType === TileType.Mvt) {
+          if (header.tileType === TileType.Mvt || header.tileType === TileType.Mlt) {
             console.error(
-              "Error: archive contains MVT vector tiles, but leafletRasterLayer is for displaying raster tiles. See https://github.com/protomaps/PMTiles/tree/main/js for details."
+              "Error: archive contains vector tiles, but leafletRasterLayer is for displaying raster tiles. See https://github.com/protomaps/PMTiles/tree/main/js for details."
             );
           } else if (header.tileType === 2) {
             mimeType = "image/png";
@@ -267,7 +267,7 @@ export class Protocol {
       };
     }
     const header = await instance.getHeader();
-    if (header.tileType === TileType.Mvt) {
+    if (header.tileType === TileType.Mvt || header.tileType === TileType.Mlt) {
       if (this.errorOnMissingTile) {
         throw new Error("Tile not found.");
       }

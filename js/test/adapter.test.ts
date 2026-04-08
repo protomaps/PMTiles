@@ -44,7 +44,7 @@ describe("Protocol", () => {
     assert.strictEqual(result.data.length, 49);
   });
 
-  test("returns empty data for missing tile if errorOnMissingTile is false", async () => {
+  test("returns empty data for missing MVT tile if errorOnMissingTile is false", async () => {
     const pmtiles = new PMTiles("http://localhost:1337/example.pmtiles");
     const protocol = new Protocol({ errorOnMissingTile: false });
     protocol.add(pmtiles);
@@ -61,7 +61,7 @@ describe("Protocol", () => {
     assert.strictEqual(result.data.length, 0);
   });
 
-  test("throws error for missing tile if errorOnMissingTile is true", async () => {
+  test("throws error for missing MVT tile if errorOnMissingTile is true", async () => {
     const pmtiles = new PMTiles("http://localhost:1337/example.pmtiles");
     const protocol = new Protocol({ errorOnMissingTile: true });
     protocol.add(pmtiles);
@@ -69,6 +69,39 @@ describe("Protocol", () => {
     const promise = protocol.tilev4(
       {
         url: "pmtiles://http://localhost:1337/example.pmtiles/25/0/0",
+        type: "arrayBuffer",
+      },
+      new AbortController()
+    );
+
+    assert.rejects(promise, { message: "Tile not found." });
+  });
+
+  test("returns empty data for missing MLT tile if errorOnMissingTile is false", async () => {
+    const pmtiles = new PMTiles("http://localhost:1337/mlt.pmtiles");
+    const protocol = new Protocol({ errorOnMissingTile: false });
+    protocol.add(pmtiles);
+
+    const result = await protocol.tilev4(
+      {
+        url: "pmtiles://http://localhost:1337/mlt.pmtiles/25/0/0",
+        type: "arrayBuffer",
+      },
+      new AbortController()
+    );
+
+    assert.ok(result.data instanceof Uint8Array);
+    assert.strictEqual(result.data.length, 0);
+  });
+
+  test("throws error for missing MLT tile if errorOnMissingTile is true", async () => {
+    const pmtiles = new PMTiles("http://localhost:1337/mlt.pmtiles");
+    const protocol = new Protocol({ errorOnMissingTile: true });
+    protocol.add(pmtiles);
+
+    const promise = protocol.tilev4(
+      {
+        url: "pmtiles://http://localhost:1337/mlt.pmtiles/25/0/0",
         type: "arrayBuffer",
       },
       new AbortController()

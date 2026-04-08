@@ -33,7 +33,10 @@ export const leafletRasterLayer = (source: PMTiles, options: unknown) => {
       };
       if (!loaded) {
         source.getHeader().then((header) => {
-          if (header.tileType === TileType.Mvt || header.tileType === TileType.Mlt) {
+          if (
+            header.tileType === TileType.Mvt ||
+            header.tileType === TileType.Mlt
+          ) {
             console.error(
               "Error: archive contains vector tiles, but leafletRasterLayer is for displaying raster tiles. See https://github.com/protomaps/PMTiles/tree/main/js for details."
             );

@@ -20,7 +20,9 @@ class MockServer {
     this.etag = undefined;
     this.lastRequestHeaders = null;
     const serverBuffer = fs.readFileSync("test/data/test_fixture_1.pmtiles");
-    const serverBufferMlt = fs.readFileSync("test/data/test_fixture_mlt.pmtiles");
+    const serverBufferMlt = fs.readFileSync(
+      "test/data/test_fixture_mlt.pmtiles"
+    );
     const server = setupServer(
       http.get(
         "http://localhost:1337/example.pmtiles",
@@ -67,27 +69,24 @@ class MockServer {
           headers: { etag: this.etag } as HeadersInit,
         });
       }),
-      http.get(
-        "http://localhost:1337/mlt.pmtiles",
-        ({ request, params }) => {
-          this.lastCache = request.cache;
-          this.lastRequestHeaders = request.headers;
-          this.lastCredentials = request.credentials;
-          this.numRequests++;
-          const range = request.headers.get("range")?.substr(6).split("-");
-          if (!range) {
-            throw new Error("invalid range");
-          }
-          const offset = +range[0];
-          const length = +range[1];
-          const body = serverBufferMlt.slice(offset, offset + length - 1);
-          return new HttpResponse(body, {
-            status: 206,
-            statusText: "OK",
-            headers: { etag: this.etag } as HeadersInit,
-          });
+      http.get("http://localhost:1337/mlt.pmtiles", ({ request, params }) => {
+        this.lastCache = request.cache;
+        this.lastRequestHeaders = request.headers;
+        this.lastCredentials = request.credentials;
+        this.numRequests++;
+        const range = request.headers.get("range")?.substr(6).split("-");
+        if (!range) {
+          throw new Error("invalid range");
         }
-      )
+        const offset = +range[0];
+        const length = +range[1];
+        const body = serverBufferMlt.slice(offset, offset + length - 1);
+        return new HttpResponse(body, {
+          status: 206,
+          statusText: "OK",
+          headers: { etag: this.etag } as HeadersInit,
+        });
+      })
     );
     server.listen({ onUnhandledRequest: "error" });
   }

@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 3.6
+- Add `terrarium` encoding for terrain.
+
 ## Version 3.5
 - add [MapLibre Vector Tile](https://github.com/maplibre/maplibre-tile-spec) `.mlt` enum by @msbarry [#596]
 

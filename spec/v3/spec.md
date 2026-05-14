@@ -374,7 +374,7 @@ Additionally, this specification defines the following keys, which MAY be includ
 |`attribution`|An attribution to be displayed when the map is shown to a user. Implementations MAY decide to treat this as HTML or literal text. |string|
 |`type`|The type of the tileset |a string with a value of either `overlay` or `baselayer`|
 |`version`|The version number of the tileset|a string containing a valid version according to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) |
-|`encoding`|Any additional encoding applied to tile data. A value of `terrarium` means the tileset is a Digital Terrain Model with elevation in meters equal to `(red * 256 + green + blue / 256) - 32768`.|string|
+|`encoding`|Any additional encoding applied to tile data. A value of `terrarium` means the tileset is a Digital Terrain Model with elevation in meters equal to `(red * 256 + green + blue / 256) - 32768`; only meaningful for raster images in lossless compression.|string|
 
 ---
 

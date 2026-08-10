@@ -1,3 +1,6 @@
+4.5.0
+* abort pending directory requests when all dependent tile requests are canceled [#662]
+
 4.4.0
 * add [MapLibre Vector Tile](https://github.com/maplibre/maplibre-tile-spec) `.mlt` support by @anscg [#633]
 

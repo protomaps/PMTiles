@@ -8,6 +8,7 @@ import {
   Map as MaplibreMap,
   NavigationControl,
   Popup,
+  type VisibilitySpecification,
   addProtocol,
   getRTLTextPluginStatus,
   setRTLTextPlugin,
@@ -310,7 +311,10 @@ function MapView(props: {
   });
 
   createEffect(() => {
-    const setVisibility = (layerName: string, visibility: string) => {
+    const setVisibility = (
+      layerName: string,
+      visibility: VisibilitySpecification,
+    ) => {
       if (map.getLayer(layerName)) {
         map.setLayoutProperty(layerName, "visibility", visibility);
       }

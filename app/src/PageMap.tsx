@@ -11,7 +11,9 @@ import {
   addProtocol,
   getRTLTextPluginStatus,
   setRTLTextPlugin,
+  setWorkerUrl,
 } from "maplibre-gl";
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import {
   type Accessor,
   type Setter,
@@ -31,6 +33,8 @@ import { ExampleChooser, Frame } from "./Frame";
 import { type LayerVisibility, LayersPanel } from "./LayersPanel";
 import { type Tileset, tilesetFromString } from "./tileset";
 import { colorForIdx, createHash, parseHash, tileInspectUrl } from "./utils";
+
+setWorkerUrl(workerUrl);
 
 declare module "solid-js" {
   namespace JSX {

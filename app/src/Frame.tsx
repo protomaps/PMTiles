@@ -36,7 +36,7 @@ export const ExampleChooser = (props: {
             class="block p-2 flex text-left flex-col hover:bg-slate dark:hover:bg-purple w-full cursor-pointer"
             type="button"
             onClick={() => {
-              loadSample("https://demo-bucket.protomaps.com/v4.pmtiles");
+              loadSample("https://latest.protomaps.com/v4.pmtiles");
             }}
           >
             <div>v4.pmtiles</div>

@@ -61,13 +61,13 @@ export const ExampleChooser = (props: {
             type="button"
             onClick={() => {
               loadSample(
-                "https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2025-04-23/places.pmtiles",
+                "https://r2-public.protomaps.com/overture-tiles/2026-08-19.0/divisions.pmtiles",
               );
             }}
           >
-            <div>places.pmtiles</div>
+            <div>divisions.pmtiles</div>
             <div class="text-xs app-text-light">
-              vector overlay, Overture Places, 2025-04-23 release
+              vector overlay, Overture Divisions, 2026-08-19 release
             </div>
           </button>
           <button

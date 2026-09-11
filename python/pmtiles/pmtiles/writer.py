@@ -52,6 +52,38 @@ def optimize_directories(entries, target_root_len):
             return root_bytes, leaves_bytes, num_leaves
         leaf_size *= 2
 
+def finalize_header(header, addressed_tiles_count, tile_entries, tile_contents_count, metadata, clustered, tile_data_length):
+    header["addressed_tiles_count"] = addressed_tiles_count
+    header["tile_entries_count"] = len(tile_entries)
+    header["tile_contents_count"] = tile_contents_count
+
+    tile_entries = sorted(tile_entries, key=lambda e: e.tile_id)
+
+    header["min_zoom"] = tileid_to_zxy(tile_entries[0].tile_id)[0]
+    header["max_zoom"] = tileid_to_zxy(tile_entries[-1].tile_id)[0]
+
+    root_bytes, leaves_bytes, num_leaves = optimize_directories(
+        tile_entries, 16384 - 127
+    )
+
+    compressed_metadata = gzip.compress(json.dumps(metadata).encode())
+    header["clustered"] = clustered
+    header["internal_compression"] = Compression.GZIP
+    header["root_offset"] = 127
+    header["root_length"] = len(root_bytes)
+    header["metadata_offset"] = header["root_offset"] + header["root_length"]
+    header["metadata_length"] = len(compressed_metadata)
+    header["leaf_directory_offset"] = (
+        header["metadata_offset"] + header["metadata_length"]
+    )
+    header["leaf_directory_length"] = len(leaves_bytes)
+    header["tile_data_offset"] = (
+        header["leaf_directory_offset"] + header["leaf_directory_length"]
+    )
+    header["tile_data_length"] = tile_data_length
+    header_bytes = serialize_header(header)
+
+    return header_bytes, root_bytes, compressed_metadata, leaves_bytes
 
 class Writer:
     def __init__(self, f):
@@ -84,37 +116,7 @@ class Writer:
         self.addressed_tiles += 1
 
     def finalize(self, header, metadata):
-        header["addressed_tiles_count"] = self.addressed_tiles
-        header["tile_entries_count"] = len(self.tile_entries)
-        header["tile_contents_count"] = len(self.hash_to_offset)
-
-        self.tile_entries = sorted(self.tile_entries, key=lambda e: e.tile_id)
-
-        header["min_zoom"] = tileid_to_zxy(self.tile_entries[0].tile_id)[0]
-        header["max_zoom"] = tileid_to_zxy(self.tile_entries[-1].tile_id)[0]
-
-        root_bytes, leaves_bytes, num_leaves = optimize_directories(
-            self.tile_entries, 16384 - 127
-        )
-
-        compressed_metadata = gzip.compress(json.dumps(metadata).encode())
-        header["clustered"] = self.clustered
-        header["internal_compression"] = Compression.GZIP
-        header["root_offset"] = 127
-        header["root_length"] = len(root_bytes)
-        header["metadata_offset"] = header["root_offset"] + header["root_length"]
-        header["metadata_length"] = len(compressed_metadata)
-        header["leaf_directory_offset"] = (
-            header["metadata_offset"] + header["metadata_length"]
-        )
-        header["leaf_directory_length"] = len(leaves_bytes)
-        header["tile_data_offset"] = (
-            header["leaf_directory_offset"] + header["leaf_directory_length"]
-        )
-        header["tile_data_length"] = self.offset
-
-        header_bytes = serialize_header(header)
-
+        header_bytes, root_bytes, compressed_metadata, leaves_bytes = finalize_header(header, self.addressed_tiles, self.tile_entries, len(self.hash_to_offset), metadata, self.clustered, self.offset)
         self.f.write(header_bytes)
         self.f.write(root_bytes)
         self.f.write(compressed_metadata)

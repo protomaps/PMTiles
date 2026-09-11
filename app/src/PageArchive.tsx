@@ -7,8 +7,6 @@ import {
   AttributionControl,
   type GeoJSONSource,
   Map as MaplibreMap,
-  getRTLTextPluginStatus,
-  setRTLTextPlugin,
 } from "maplibre-gl";
 import { Compression, type Entry, tileIdToZxy, tileTypeExt } from "pmtiles";
 import {
@@ -126,13 +124,6 @@ function MapView(props: {
     if (!mapContainer) {
       console.error("Could not mount map element");
       return;
-    }
-
-    if (getRTLTextPluginStatus() === "unavailable") {
-      setRTLTextPlugin(
-        "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
-        true,
-      );
     }
 
     let flavor = "white";

@@ -10,8 +10,6 @@ import {
   Popup,
   type VisibilitySpecification,
   addProtocol,
-  getRTLTextPluginStatus,
-  setRTLTextPlugin,
   setWorkerUrl,
 } from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
@@ -335,13 +333,6 @@ function MapView(props: {
     if (!mapContainer) {
       console.error("Could not mount map element");
       return;
-    }
-
-    if (getRTLTextPluginStatus() === "unavailable") {
-      setRTLTextPlugin(
-        "https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
-        true,
-      );
     }
 
     map = new MaplibreMap({

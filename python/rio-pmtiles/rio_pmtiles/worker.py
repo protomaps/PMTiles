@@ -76,10 +76,11 @@ def process_tile(tile):
                     best_overview = i_overview
         overview_level = best_overview
 
+    opts = dict(open_options)
     if overview_level is not None:
-        open_options["OVERVIEW_LEVEL"] = overview_level
+        opts["OVERVIEW_LEVEL"] = overview_level
 
-    with rasterio.open(filename, **open_options) as src:
+    with rasterio.open(filename, **opts) as src:
 
         bbox = mercantile.xy_bounds(tile)
 

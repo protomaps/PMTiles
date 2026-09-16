@@ -99,7 +99,7 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
             data = res.fetchone()[0]
             # force gzip compression only for vector
             if is_pbf and data[0:2] != b"\x1f\x8b":
-                data = gzip.compress(data)
+                data = gzip.compress(data, mtime=0)
             writer.write_tile(tileid, data)
 
         pmtiles_header, pmtiles_metadata = mbtiles_to_header_json(mbtiles_metadata)
@@ -327,7 +327,7 @@ def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):
                 data = f.read()
                 # force gzip compression only for vector
                 if is_pbf and data[0:2] != b"\x1f\x8b":
-                    data = gzip.compress(data)
+                    data = gzip.compress(data, mtime=0)
                 writer.write_tile(tileid, data)
                 count = count + 1
                 if verbose and (count % count_step) == 0:

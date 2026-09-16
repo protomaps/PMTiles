@@ -66,7 +66,7 @@ def finalize_header(header, addressed_tiles_count, tile_entries, tile_contents_c
         tile_entries, 16384 - 127
     )
 
-    compressed_metadata = gzip.compress(json.dumps(metadata).encode())
+    compressed_metadata = gzip.compress(json.dumps(metadata).encode(), mtime=0)
     header["clustered"] = clustered
     header["internal_compression"] = Compression.GZIP
     header["root_offset"] = 127

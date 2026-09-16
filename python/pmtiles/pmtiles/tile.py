@@ -196,7 +196,7 @@ def serialize_directory(entries: Sequence[Entry]) -> bytes:
         else:
             write_varint(b_io, e.offset + 1)
 
-    return gzip.compress(b_io.getvalue())
+    return gzip.compress(b_io.getvalue(), mtime=0)
 
 
 class SpecVersionUnsupported(Exception):

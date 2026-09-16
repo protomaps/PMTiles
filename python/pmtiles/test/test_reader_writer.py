@@ -1,5 +1,6 @@
 import unittest
 from io import BytesIO
+import time
 from pmtiles.writer import Writer
 from pmtiles.reader import all_tiles, Reader, MemorySource
 from pmtiles.tile import Compression, TileType, tileid_to_zxy, zxy_to_tileid
@@ -68,3 +69,23 @@ class TestReaderWriter(unittest.TestCase):
             ((1,0,0), b"1"),
             ((2,0,0), b"2"),
         ])
+
+    def test_reproducible_write(self):
+        def get_bytes():
+            buf = BytesIO()
+            writer = Writer(buf)
+            writer.write_tile(zxy_to_tileid(0, 0, 0), b"1")
+            writer.write_tile(zxy_to_tileid(1, 0, 0), b"2")
+            writer.write_tile(zxy_to_tileid(2, 0, 0), b"3")
+            writer.finalize(
+                {
+                    "tile_compression": Compression.UNKNOWN,
+                    "tile_type": TileType.UNKNOWN,
+                },
+                {"key": "value"},
+            )
+            return buf.getvalue()
+        bytes_1 = get_bytes()
+        time.sleep(2)
+        bytes_2 = get_bytes()
+        self.assertEqual(bytes_1, bytes_2)

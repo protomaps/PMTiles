@@ -20,6 +20,11 @@ Parameters:
     Description: 'Optional. Replace *.cloudfront.net in TileJSON with a custom hostname (e.g. example.com). See docs on how this value is cached.'
     Type: String
 
+  PmtilesPath:
+    Description: 'Optional. Defines how a tileset name is translated into an S3 key, using {name} as the placeholder (e.g. tiles/{name}.pmtiles). Leave empty for the default {name}.pmtiles.'
+    Type: String
+    Default: ''
+
 Outputs:
   CloudFrontDistributionUrl:
     Description: 'URL of the CloudFront distribution for cached tiles.'
@@ -192,6 +197,7 @@ Resources:
         Variables:
           BUCKET: !Ref BucketName
           PUBLIC_HOSTNAME: !Ref PublicHostname
+          PMTILES_PATH: !Ref PmtilesPath
       Code:
         S3Bucket: !Ref BucketName
         S3Key: lambda_function.zip

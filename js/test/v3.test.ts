@@ -9,6 +9,7 @@ import {
   FetchSource,
   PMTiles,
   RangeResponse,
+  ResolvedValueCache,
   SharedPromiseCache,
   Source,
   TileType,
@@ -330,6 +331,20 @@ describe("pmtiles v3", () => {
     assert.ok(cache.cache.get("2"));
     assert.ok(cache.cache.get("1"));
     assert.ok(!cache.cache.get("0"));
+  });
+
+  test("cache stays within maxCacheEntries across many archives", async () => {
+    for (const cache of [
+      new ResolvedValueCache(5),
+      new SharedPromiseCache(5),
+    ]) {
+      for (let i = 0; i < 10; i++) {
+        await cache.getHeader(
+          new TestNodeFileSource("test/data/test_fixture_1.pmtiles", `${i}`)
+        );
+      }
+      assert.strictEqual(cache.cache.size, 5);
+    }
   });
 
   test("pmtiles get metadata", async () => {

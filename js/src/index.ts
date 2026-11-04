@@ -716,7 +716,7 @@ export class ResolvedValueCache {
   }
 
   prune() {
-    if (this.cache.size > this.maxCacheEntries) {
+    while (this.cache.size > this.maxCacheEntries) {
       let minUsed = Infinity;
       let minKey = undefined;
       this.cache.forEach((cacheValue: ResolvedValue, key: string) => {
@@ -725,9 +725,8 @@ export class ResolvedValueCache {
           minKey = key;
         }
       });
-      if (minKey) {
-        this.cache.delete(minKey);
-      }
+      if (minKey === undefined) break;
+      this.cache.delete(minKey);
     }
   }
 
@@ -869,7 +868,7 @@ export class SharedPromiseCache {
   }
 
   prune() {
-    if (this.cache.size >= this.maxCacheEntries) {
+    while (this.cache.size > this.maxCacheEntries) {
       let minUsed = Infinity;
       let minKey = undefined;
       this.cache.forEach((cacheValue: SharedPromiseCacheValue, key: string) => {
@@ -878,9 +877,8 @@ export class SharedPromiseCache {
           minKey = key;
         }
       });
-      if (minKey) {
-        this.cache.delete(minKey);
-      }
+      if (minKey === undefined) break;
+      this.cache.delete(minKey);
     }
   }
 

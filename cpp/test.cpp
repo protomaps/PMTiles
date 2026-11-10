@@ -47,7 +47,7 @@ MU_TEST(test_zxy_to_tileid) {
 
 MU_TEST(test_roundtrip) {
 	for (int z = 0; z < 32; z++) {
-		uint32_t dim = (1 << z) - 1;
+		uint32_t dim = (1U << z) - 1;
 		auto tl = tileid_to_zxy(zxy_to_tileid(z, 0, 0));
 		mu_check(tl.z == z);
 		mu_check(tl.x == 0);
@@ -122,7 +122,7 @@ MU_TEST(test_serialize_directory) {
 }
 
 MU_TEST(test_serialize_header) {
-	headerv3 header;
+	headerv3 header{};
 	auto len = header.serialize().size();
 	mu_check(len == 127);
 }

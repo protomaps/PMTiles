@@ -425,13 +425,12 @@ inline uint64_t zxy_to_tileid(uint8_t z, uint32_t x, uint32_t y) {
 	}
 	uint64_t acc = ((1LL << (z * 2U)) - 1) / 3;
 	uint32_t tx = x, ty = y;
-	int a = z - 1;
-	for (uint32_t s = 1LL << a; s > 0; s >>= 1) {
+	for (int a = z - 1; a >= 0; a--) {
+		uint32_t s = 1U << a;
 		uint32_t rx = s & tx;
 		uint32_t ry = s & ty;
 		rotate(s, tx, ty, rx, ry);
 		acc += ((3LL * rx) ^ ry) << a;
-		a--;
 	}
 	return acc;
 }

@@ -10,8 +10,9 @@ export function colorForIdx(idx: number) {
 export function parseHash(hash: string): Record<string, string> {
   const retval: Record<string, string> = {};
   for (const pair of hash.replace("#", "").split("&")) {
-    const parts = pair.split("=");
-    retval[parts[0]] = parts[1];
+    // Split at the first "=" only: a value such as an archive URL may contain "=".
+    const i = pair.indexOf("=");
+    if (i > 0) retval[pair.slice(0, i)] = pair.slice(i + 1);
   }
   return retval;
 }

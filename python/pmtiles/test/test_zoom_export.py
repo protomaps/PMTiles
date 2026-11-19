@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -55,15 +56,23 @@ class TestZoomExport(unittest.TestCase):
 
     def test_cli_exports(self):
         cli = Path(__file__).resolve().parents[1] / "bin" / "pmtiles-convert"
+        # The upstream test suite runs directly from the source tree.
+        env = dict(
+            os.environ,
+            PYTHONPATH=str(cli.parents[1])
+            + os.pathsep
+            + os.environ.get("PYTHONPATH", ""),
+        )
+
+        def convert(*args, **kwargs):
+            return subprocess.run([sys.executable, str(cli), *args], env=env, **kwargs)
+
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "input.pmtiles"
             with path.open("wb") as f:
                 archive(f)
             db = Path(tmp) / "tiles.mbtiles"
-            subprocess.run(
-                [sys.executable, str(cli), str(path), str(db), "--maxzoom", "1"],
-                check=True,
-            )
+            convert(str(path), str(db), "--maxzoom", "1", check=True)
             conn = sqlite3.connect(db)
             try:
                 self.assertEqual(
@@ -87,10 +96,7 @@ class TestZoomExport(unittest.TestCase):
             finally:
                 conn.close()
             out = Path(tmp) / "tiles"
-            subprocess.run(
-                [sys.executable, str(cli), str(path), str(out), "--maxzoom", "0"],
-                check=True,
-            )
+            convert(str(path), str(out), "--maxzoom", "0", check=True)
             self.assertEqual(
                 [p.relative_to(out).as_posix() for p in out.rglob("*.mvt")],
                 ["0/0/0.mvt"],
@@ -98,16 +104,12 @@ class TestZoomExport(unittest.TestCase):
             self.assertEqual(
                 json.loads((out / "metadata.json").read_text())["maxzoom"], 0
             )
-            failed = subprocess.run(
-                [
-                    sys.executable,
-                    str(cli),
-                    str(path),
-                    str(db),
-                    "--maxzoom",
-                    "-1",
-                    "--overwrite",
-                ],
+            failed = convert(
+                str(path),
+                str(db),
+                "--maxzoom",
+                "-1",
+                "--overwrite",
                 capture_output=True,
             )
             self.assertNotEqual(failed.returncode, 0)

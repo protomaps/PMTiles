@@ -5,7 +5,7 @@ import os
 import sqlite3
 from pmtiles.writer import write
 from pmtiles.reader import Reader, MmapSource, all_tiles
-from .tile import zxy_to_tileid, tileid_to_zxy, TileType, Compression
+from .tile import zxy_to_tileid, tileid_to_zxy, TileType, Compression, deserialize_header
 
 
 def mbtiles_to_header_json(mbtiles_metadata):
@@ -111,7 +111,32 @@ def mbtiles_to_pmtiles(input, output, maxzoom):
     conn.close()
 
 
-def pmtiles_to_mbtiles(input, output):
+def check_export_zoom(input, maxzoom):
+    if maxzoom is not None:
+        with open(input, "rb") as f:
+            minzoom = deserialize_header(f.read(127))["min_zoom"]
+        if not minzoom <= maxzoom <= 31:
+            raise ValueError(f"maxzoom must be between the archive minzoom ({minzoom}) and 31")
+
+
+def set_export_zoom(metadata, last_zoom):
+    if last_zoom is None:
+        raise ValueError("No tiles within the requested zoom range")
+    metadata["maxzoom"] = last_zoom
+    center = metadata.get("center")
+    parts = center.split(",") if isinstance(center, str) else center
+    if isinstance(parts, list) and len(parts) == 3:
+        try:
+            if float(parts[2]) > last_zoom:
+                metadata["center"] = (f"{parts[0]},{parts[1]},{last_zoom}" if isinstance(center, str)
+                                      else [parts[0], parts[1], last_zoom])
+        except (TypeError, ValueError):
+            pass
+
+
+def pmtiles_to_mbtiles(input, output, maxzoom=None):
+    check_export_zoom(input, maxzoom)
+    last_zoom = None
     conn = sqlite3.connect(output)
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE metadata (name text, value text);")
@@ -119,7 +144,7 @@ def pmtiles_to_mbtiles(input, output):
         "CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);"
     )
 
-    with open(input, "r+b") as f:
+    with open(input, "rb") as f:
         source = MmapSource(f)
 
         reader = Reader(source)
@@ -149,6 +174,16 @@ def pmtiles_to_mbtiles(input, output):
             if header["tile_type"] == TileType.MVT:
                 metadata["format"] = "pbf"
 
+        for zxy, tile_data in all_tiles(source, maxzoom):
+            last_zoom = zxy[0]
+            flipped_y = (1 << zxy[0]) - 1 - zxy[2]
+            cursor.execute(
+                "INSERT INTO tiles VALUES(?,?,?,?)",
+                (zxy[0], zxy[1], flipped_y, tile_data),
+            )
+        if maxzoom is not None:
+            set_export_zoom(metadata, last_zoom)
+
         json_metadata = {}
         for k, v in metadata.items():
             if k == "vector_layers":
@@ -167,13 +202,6 @@ def pmtiles_to_mbtiles(input, output):
                 ("json", json.dumps(json_metadata, ensure_ascii=False)),
             )
 
-        for zxy, tile_data in all_tiles(source):
-            flipped_y = (1 << zxy[0]) - 1 - zxy[2]
-            cursor.execute(
-                "INSERT INTO tiles VALUES(?,?,?,?)",
-                (zxy[0], zxy[1], flipped_y, tile_data),
-            )
-
     cursor.execute(
         "CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);"
     )
@@ -181,21 +209,27 @@ def pmtiles_to_mbtiles(input, output):
     conn.close()
 
 
-def pmtiles_to_dir(input, output):
+def pmtiles_to_dir(input, output, maxzoom=None):
+    check_export_zoom(input, maxzoom)
+    last_zoom = None
     os.makedirs(output)
-    with open(input, "r+b") as f:
+    with open(input, "rb") as f:
         source = MmapSource(f)
 
         reader = Reader(source)
-        with open(os.path.join(output, "metadata.json"), "w") as f:
-            f.write(json.dumps(reader.metadata()))
-
-        for zxy, tile_data in all_tiles(source):
+        metadata = reader.metadata()
+        for zxy, tile_data in all_tiles(source, maxzoom):
+            last_zoom = zxy[0]
             directory = os.path.join(output, str(zxy[0]), str(zxy[1]))
             path = os.path.join(directory, str(zxy[2]) + "." + "mvt")
             os.makedirs(directory, exist_ok=True)
             with open(path, "wb") as f:
                 f.write(tile_data)
+
+        if maxzoom is not None:
+            set_export_zoom(metadata, last_zoom)
+        with open(os.path.join(output, "metadata.json"), "w") as f:
+            f.write(json.dumps(metadata))
 
 
 def disk_to_pmtiles(directory_path, output, maxzoom, **kwargs):

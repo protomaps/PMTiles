@@ -5,7 +5,7 @@ import argparse
 import os
 import shutil
 
-from pmtiles.convert import mbtiles_to_pmtiles, pmtiles_to_mbtiles, pmtiles_to_dir, disk_to_pmtiles
+from pmtiles.convert import check_export_zoom, mbtiles_to_pmtiles, pmtiles_to_mbtiles, pmtiles_to_dir, disk_to_pmtiles
 
 parser = argparse.ArgumentParser(
     description="Convert between PMTiles and other archive formats."
@@ -29,6 +29,14 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+if args.input.endswith(".pmtiles") and args.maxzoom is not None:
+    try:
+        args.maxzoom = int(args.maxzoom)
+        if args.overwrite:
+            check_export_zoom(args.input, args.maxzoom)
+    except ValueError as e:
+        parser.error(str(e))
+
 if os.path.exists(args.output) and not args.overwrite:
     print("Output exists, use --overwrite to overwrite the output.")
     exit(1)
@@ -43,10 +51,10 @@ if args.input.endswith(".mbtiles") and args.output.endswith(".pmtiles"):
     mbtiles_to_pmtiles(args.input, args.output, args.maxzoom)
 
 elif args.input.endswith(".pmtiles") and args.output.endswith(".mbtiles"):
-    pmtiles_to_mbtiles(args.input, args.output)
+    pmtiles_to_mbtiles(args.input, args.output, args.maxzoom)
 
 elif args.input.endswith(".pmtiles"):
-    pmtiles_to_dir(args.input, args.output)
+    pmtiles_to_dir(args.input, args.output, args.maxzoom)
 
 elif args.output.endswith(".pmtiles"):
     disk_to_pmtiles(args.input, args.output, args.maxzoom, scheme=args.scheme, tile_format=args.tile_format, verbose=args.verbose)

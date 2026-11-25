@@ -1,3 +1,6 @@
+4.6.0
+* MapLibre `Protocol` adds `encoding: "mlt"` or `encoding: "mvt"` to the TileJSON for vector archives, so MLT archives work without setting `encoding` on the source [#692]
+
 4.5.0
 * abort pending directory requests when all dependent tile requests are canceled [#662]
 

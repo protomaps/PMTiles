@@ -5,7 +5,7 @@ declare const window: any;
 declare const document: DocumentLike;
 
 import type { Coords } from "leaflet";
-import { PMTiles, TileType } from "./index";
+import { PMTiles, TileType, tileTypeEncoding } from "./index";
 
 interface DocumentLike {
   // biome-ignore lint: we don't want to bring in the entire document type
@@ -235,12 +235,15 @@ export class Protocol {
         );
       }
 
+      const encoding = tileTypeEncoding(h.tileType);
+
       return {
         data: {
           tiles: [`${params.url}/{z}/{x}/{y}`],
           minzoom: h.minZoom,
           maxzoom: h.maxZoom,
           bounds: [h.minLon, h.minLat, h.maxLon, h.maxLat],
+          ...(encoding && { encoding }),
         },
       };
     }

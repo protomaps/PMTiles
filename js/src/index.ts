@@ -218,6 +218,16 @@ export function tileTypeExt(t: TileType): string {
   return "";
 }
 
+/**
+ * The TileJSON `encoding` for a vector tile type, as read by MapLibre GL JS.
+ * Returns undefined for raster and unknown tile types.
+ */
+export function tileTypeEncoding(t: TileType): "mvt" | "mlt" | undefined {
+  if (t === TileType.Mvt) return "mvt";
+  if (t === TileType.Mlt) return "mlt";
+  return undefined;
+}
+
 const HEADER_SIZE_BYTES = 127;
 
 /**
@@ -1065,6 +1075,7 @@ export class PMTiles {
     const header = await this.getHeader();
     const metadata = (await this.getMetadata()) as MetadataLike;
     const ext = tileTypeExt(header.tileType);
+    const encoding = tileTypeEncoding(header.tileType);
 
     return {
       tilejson: "3.0.0",
@@ -1080,6 +1091,7 @@ export class PMTiles {
       center: [header.centerLon, header.centerLat, header.centerZoom],
       minzoom: header.minZoom,
       maxzoom: header.maxZoom,
+      ...(encoding && { encoding }),
     };
   }
 }
